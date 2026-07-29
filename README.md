@@ -2,7 +2,7 @@
 
 # THE BONE SIEVE
 
-**An occult gambling roguelite. Six knuckles of a dead saint, a grid of hungry stone — feed it.**
+**An occult gambling roguelite. Six knuckles of a dead saint, a grid of hungry stone feed it.**
 
 [![Play](https://img.shields.io/badge/play-in%20your%20browser-d61f3c?style=for-the-badge)](#play-it)
 [![Version](https://img.shields.io/badge/version-v1.0.0%20beta.7-b04dff?style=for-the-badge)](CHANGELOG.md)
@@ -17,8 +17,8 @@
 ## What it is
 
 You cast six bones onto a five-by-five slab and the stone decides what they are
-worth. Dice that touch form **conduits** — matching values, consecutive runs,
-clusters of pure odd or pure even — and every conduit burns for blood. Bank
+worth. Dice that touch form **conduits**: matching values, consecutive runs,
+clusters of pure odd or pure even, and every conduit burns for blood. Bank
 enough of it before your casts run out and the sieve lets you descend. Fall
 short and it takes you instead.
 
@@ -28,7 +28,7 @@ rows of the board. Your altar holds only five relics and your cup only so many
 bones, so every purchase past that point is something given up. That choice is
 your build.
 
-Every fifth descent is a **Trial** — a cruel rule and a swollen quota. Break one
+Every fifth descent is a **Trial**: a cruel rule and a swollen quota. Break one
 and the sieve owes you a **Boon**. Past the tenth it also carves a **Decree**
 into the rite: permanent, and it never lifts.
 
@@ -38,7 +38,7 @@ into the rite: permanent, and it never lifts.
 
 ## Play it
 
-**[▶ Play in your browser](https://kingsaled.github.io/The-Bone-Sieve/)** — no
+**[▶ Play in your browser](https://kingsaled.github.io/The-Bone-Sieve/)**, no
 install, no account, nothing to download.
 
 Or take a copy:
@@ -47,7 +47,7 @@ Or take a copy:
    and unzip it.
 2. Open `index.html` in any modern browser.
 
-That is the whole install. Keep the `assets/` folder next to `index.html` — the
+That is the whole install. Keep the `assets/` folder next to `index.html`; the
 ritual typeface and the carved border live in it.
 
 ---
@@ -66,7 +66,7 @@ cluster, and a cluster burns if it satisfies any of these:
 | **PARITY** | Every die odd, or every die even | **×1.5** |
 
 Each burning conduit is ringed on the stone in its own colour with its blood
-price stamped beside it — gold for Kind, cyan for Run, violet for Parity. A die
+price stamped beside it: gold for Kind, cyan for Run, violet for Parity. A die
 sitting inside no ring is earning nothing.
 
 ### The loop
@@ -80,7 +80,7 @@ sitting inside no ring is earning nothing.
    the run is over.
 5. **The Ossuary** opens between floors. Spend Soul Shards, then descend deeper.
 
-Raising the Offering Multiplier is how you survive the deep — the quota climbs
+Raising the Offering Multiplier is how you survive the deep: the quota climbs
 faster than raw dice values ever will.
 
 ### Controls
@@ -93,7 +93,7 @@ faster than raw dice values ever will.
 | `G` | Open the Grimoire |
 | `ESC` | Back out of any panel |
 
-Everything is clickable too — the keys are shortcuts, not requirements.
+Everything is clickable too. The keys are shortcuts, not requirements.
 
 ---
 
@@ -104,14 +104,14 @@ Everything is clickable too — the keys are shortcuts, not requirements.
 | **37 relics** | Permanent effects, from flat blood per conduit to rewriting a conduit type's multiplier outright |
 | **11 cursed dice** | Wild faces, doubled neighbours, dice that crumble after one use, dice that refuse to be re-rolled |
 | **15 Trials** | One cruel rule per Trial floor, drawn deeper as you descend |
-| **5 kinds of Decree** | Permanent escalation carved in after deep Trials — up to six stacked at once, and they can repeat |
+| **5 kinds of Decree** | Permanent escalation carved in after deep Trials, up to six stacked at once, and they can repeat |
 | **8 Boons** | The reward for breaking a Trial, if your altar is too full for a relic |
 | **Altar chalk** | Sigils scrawled down a row or column, multiplying every conduit that crosses them |
 
 <img src="docs/screenshots/ossuary.png" alt="The Ossuary, trading a relic" width="100%">
 
-The **Grimoire** (`G`) documents all of it in-game — conduits, your relics,
-active Trials and Decrees — so nothing here is knowledge you have to bring with
+The **Grimoire** (`G`) documents all of it in-game: conduits, your relics,
+active Trials and Decrees, so nothing here is knowledge you have to bring with
 you.
 
 ---
@@ -120,15 +120,15 @@ you.
 
 Settings live behind **THE VEIL**, reachable from the title screen or mid-run.
 
-- **Sound** — five independent channels (master, music, dice, ritual, interface).
+- **Sound**: five independent channels (master, music, dice, ritual, interface).
   Click a speaker to silence it, click a number to type an exact level. All audio
   is generated live in the browser; there are no audio files.
-- **Detail** — `HIGH` / `MEDIUM` / `LOW`. Governs particle counts, glow, render
+- **Detail**: `HIGH` / `MEDIUM` / `LOW`. Governs particle counts, glow, render
   scale and how thickly the miasma gathers.
-- **Typeface** — pick the hand the crypt writes in: *Pirata One*, *Metal Mania*,
+- **Typeface**: pick the hand the crypt writes in: *Pirata One*, *Metal Mania*,
   *Pixelify Sans*, *Sixtyfour*, or the default. Each is previewed in its own
   letters. Ritual titles keep their own face regardless.
-- **Text size** — 13px to 21px, for whatever screen you are sitting in front of.
+- **Text size**: 13px to 21px, for whatever screen you are sitting in front of.
   The whole interface scales with it, not just the words.
 
 Audio and view preferences persist in `localStorage`.
@@ -145,7 +145,7 @@ git clone https://github.com/KingSaled/The-Bone-Sieve.git
 cd The-Bone-Sieve
 ```
 
-Then open `index.html` — double-click it, or serve the folder if you prefer:
+Then open `index.html` (double-click it, or serve the folder if you prefer):
 
 ```bash
 python -m http.server 8000    # then visit http://localhost:8000
@@ -158,7 +158,7 @@ back cleanly and everything still plays.
 ### Project structure
 
 ```
-index.html                  the entire game — markup, styles, engine, content
+index.html                  the entire game: markup, styles, engine, content
 assets/
   fonts/Hellbone.otf        the ritual display face
   img/                      the carved border, cut into tiling pieces
@@ -185,7 +185,7 @@ Every build is tagged and published under
 earlier version can be downloaded and played.
 
 [**CHANGELOG.md**](CHANGELOG.md) is the complete record. The game also carries
-its own changelog — the last 15 days of releases appear on the title screen
+its own changelog: the last 15 days of releases appear on the title screen
 under **CHANGELOG**, and anything older links back here.
 
 ---
@@ -194,12 +194,12 @@ under **CHANGELOG**, and anything older links back here.
 
 No frameworks, no libraries, no bundler. Everything is hand-rolled:
 
-- **Rendering** — a custom isometric engine on a single `<canvas>`, with baked
+- **Rendering**: a custom isometric engine on a single `<canvas>`, with baked
   sprite caches and an adaptive quality tier
-- **Audio** — the Web Audio API throughout: procedural sound effects and seven
+- **Audio**: the Web Audio API throughout: procedural sound effects and seven
   generative music movements that shift with the tension of the run
-- **Icons** — [Phosphor](https://phosphoricons.com/) geometry, inlined as raw SVG
-- **Type** — Hellbone for ritual titles; [Grenze](https://fonts.google.com/specimen/Grenze)
+- **Icons**: [Phosphor](https://phosphoricons.com/) geometry, inlined as raw SVG
+- **Type**: Hellbone for ritual titles; [Grenze](https://fonts.google.com/specimen/Grenze)
   and [JetBrains Mono](https://www.jetbrains.com/lp/mono/) for everything else
 
 ---
