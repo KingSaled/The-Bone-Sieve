@@ -41,9 +41,6 @@ into the rite: permanent, and it never lifts.
 **[▶ Play in your browser](https://kingsaled.github.io/The-Bone-Sieve/)** — no
 install, no account, nothing to download.
 
-> Pages hosting has to be switched on for that link to work — see
-> [Hosting it yourself](#hosting-it-yourself). Until then, grab a release below.
-
 Or take a copy:
 
 1. Download the latest [**release**](https://github.com/KingSaled/The-Bone-Sieve/releases)
