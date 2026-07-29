@@ -1,0 +1,15 @@
+# Normalise line endings in the repository regardless of the machine a commit
+# was made on. Without this, a Windows checkout commits CRLF and every line of
+# index.html reads as changed the first time anyone else touches it.
+* text=auto eol=lf
+
+# Binary assets — never normalise, never diff as text.
+*.png  binary
+*.otf  binary
+*.ttf  binary
+*.woff binary
+*.woff2 binary
+
+# index.html is the whole game; mark it so GitHub reports the language honestly
+# rather than calling the project "HTML" and hiding the engine inside it.
+index.html linguist-detectable

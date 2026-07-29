@@ -1,0 +1,15 @@
+# Claude Code's per-machine permission allowlist. It records absolute paths
+# from whichever machine it was written on, so it is never portable.
+.claude/settings.local.json
+
+# OS and editor droppings
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+
+# Nothing here is built or installed — the game is one HTML file and its
+# assets — but keep these out in case a tool is ever added under tools/.
+node_modules/
+package-lock.json
