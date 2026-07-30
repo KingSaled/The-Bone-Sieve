@@ -401,7 +401,12 @@
     box-shadow:0 0 12px rgba(255,43,82,.4), inset 0 0 8px rgba(255,43,82,.18);
     animation:cardIn .35s var(--ease-out) backwards, breathe 3s ease-in-out infinite 1s;}
 
-  #poolList{display:flex;flex-wrap:wrap;gap:5px;min-height:22px;}
+  /* Two rows, which is 16 bones at this chip size — a pool almost never runs
+     past 15, so the panel is sized to what the game actually holds instead of
+     stretching to fill the sidebar. A deeper pool simply wraps to a third row
+     and the panel grows with it; the min-height only stops it JUMPING as dice
+     are bought and rotted away. The room this gave back is the boon panel. */
+  #poolList{display:flex;flex-wrap:wrap;gap:5px;min-height:71px;align-content:flex-start;}
   .dieChip{width:33px;height:33px;border-radius:5px;display:flex;align-items:center;justify-content:center;
     font-family:var(--font-mono);font-size:15.5px;font-weight:800;
     border:1px solid;cursor:help;position:relative;
@@ -425,6 +430,31 @@
   .dieChip.gilded{background:linear-gradient(150deg,#4a3810,#241a06);color:var(--gold);border-color:var(--gold);}
   .dieChip.thorn{background:linear-gradient(150deg,#2e1f16,#160e08);color:#e0904f;border-color:#c8702f;}
   .dieChip.crimson{background:linear-gradient(150deg,#42101c,#1e060c);color:var(--crimson-hi);border-color:var(--crimson-hi);}
+
+  /* Boons wear the altar's chip language so the sidebar reads as one system,
+     but in gold rather than violet — a boon is granted by the sieve, not bound
+     by the player, and it can never be banished. Stacks carry a count corner
+     instead of taking a second chip, because a boon costs no space. */
+  #boonList{display:flex;flex-wrap:wrap;gap:5px;min-height:22px;align-content:flex-start;}
+  .boonChip{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 40% 30%,#3a2c14,#161009);
+    border:1px solid var(--gold);font-size:18px;color:var(--gold);cursor:help;position:relative;
+    box-shadow:0 0 10px rgba(255,181,77,.28), inset 0 0 8px rgba(255,181,77,.14);
+    transition:transform .18s var(--ease), box-shadow .18s var(--ease);
+    animation:cardIn .35s var(--ease-out) backwards;}
+  .boonChip:hover{transform:translateY(-3px) scale(1.1);z-index:2;
+    box-shadow:0 0 20px rgba(255,181,77,.7), inset 0 0 12px rgba(255,181,77,.3);}
+  /* the deepest favours breathe, the way a cursed relic does */
+  .boonChip.tGreat{border-color:var(--gold-hi);color:var(--gold-hi);
+    box-shadow:0 0 14px rgba(255,181,77,.5), inset 0 0 10px rgba(255,181,77,.2);}
+  .boonChip.tApo{border-color:var(--crimson-hi);color:#ffd9a0;
+    background:radial-gradient(circle at 40% 30%,#4a2418,#1c0a08);
+    box-shadow:0 0 16px rgba(255,43,82,.45), inset 0 0 10px rgba(255,181,77,.22);
+    animation:cardIn .35s var(--ease-out) backwards, breathe 3s ease-in-out infinite 1s;}
+  .boonChip .stack{position:absolute;right:-3px;bottom:-3px;min-width:15px;height:15px;
+    padding:0 3px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-mono);font-size:10.5px;font-weight:800;line-height:1;
+    background:#120d06;border:1px solid var(--gold);color:var(--gold-hi);}
 
   .empty-note{font-family:var(--font-mono);font-size:13.5px;
     color:var(--bone-faint);font-style:italic;}
@@ -1429,6 +1459,43 @@
     #swapArrow{justify-self:center;padding:0;transform:rotate(90deg);}
   }
 
+  /* ================= THE CULLING =================
+     A Decree taking a bone, so it borrows the Decree's language rather than
+     the Ossuary's: violet instead of crimson, and a slab of dark pressing in
+     from the top of the frame (the same dreadPress the decree announce uses)
+     instead of the modal's usual rise. The rows themselves are .swapRow, so
+     giving up a bone here looks and behaves exactly like giving one up at the
+     Exchange — the player has met this interaction before. */
+  .cullPress{position:fixed;left:0;right:0;top:0;height:44%;pointer-events:none;
+    background:linear-gradient(180deg,rgba(2,1,5,.95),transparent);
+    animation:dreadPress 1.1s var(--ease-out) both;}
+  .cullModal{width:min(560px,calc(94vw / var(--ui-scale,1)));
+    border-color:var(--neon-p-dk);
+    box-shadow:0 30px 90px rgba(0,0,0,.9), 0 0 0 1px rgba(176,77,255,.18) inset,
+               0 0 70px rgba(176,77,255,.13);
+    background:linear-gradient(170deg,#1a1526,#141021 45%,#0c0a13);}
+  /* the crimson/violet hairline every modal wears goes all-violet here */
+  .cullModal::before{background:linear-gradient(90deg,transparent,var(--neon-p),transparent);}
+  .cullModal h2{text-shadow:0 0 30px rgba(176,77,255,.6), 0 0 80px rgba(176,77,255,.28),
+                            3px 3px 0 #2a0a44;}
+  #cullBody{padding:2px 0 0;}
+  #cullSigil{font-size:58px;color:var(--neon-p);margin-bottom:4px;
+    filter:drop-shadow(0 0 26px rgba(176,77,255,.9));
+    animation:dreadIn .5s var(--ease-out) both;}
+  .cullKicker{font-family:var(--font-ui);font-weight:700;font-size:11.5px;
+    letter-spacing:6px;color:var(--neon-p);margin-bottom:4px;
+    animation:fadeIn .5s .12s linear both;}
+  #cullList{display:flex;flex-direction:column;gap:7px;margin:18px 0 4px;text-align:left;
+    max-height:calc(46vh / var(--ui-scale,1));overflow-y:auto;padding-right:4px;}
+  /* selection reads violet here, not crimson — this is the rite taking, not a trade */
+  #cullList .swapRow.sel{border-color:var(--neon-p);
+    box-shadow:0 0 0 1px var(--neon-p), 0 0 24px rgba(176,77,255,.34);}
+  #cullList .swapRow.sel .rMark{background:var(--neon-p);border-color:#e6c4ff;
+    box-shadow:0 0 12px rgba(176,77,255,.9);}
+  #cullList .swapRow.sel .rName{color:#e9d4ff;}
+  #cullHint{font-family:var(--font-mono);font-size:13.5px;font-style:italic;
+    color:var(--bone-faint);margin:14px 0 15px;min-height:19px;}
+
   /* ---------------- confirm + controls ----------------
      One button, not two. It used to be CONFIRM and EXCHANGE stacked as
      separate elements, hidden until a ware was picked — nothing on screen
@@ -1536,6 +1603,30 @@
     color:var(--gold-hi);font-weight:700;line-height:1.2;}
   .boonCard .cdesc{font-family:var(--font-mono);font-size:14.5px;
     color:var(--bone-dim);line-height:1.6;}
+  /* A boon's tier has to be legible ACROSS the run, not just inside one screen:
+     the player should be able to tell at a glance that the sieve is offering
+     better things at descent 25 than it did at descent 5. Tier 1 keeps the
+     plain gold tablet; the deeper tiers gain light, then heat. */
+  .boonCard.tier2{border-color:var(--gold-hi);
+    background:linear-gradient(170deg,#3b2d10,#191108);
+    box-shadow:0 12px 30px rgba(0,0,0,.6), 0 0 22px rgba(255,181,77,.22),
+               inset 0 1px 0 rgba(255,224,160,.18);}
+  .boonCard.tier3{border-color:#ffd9a0;
+    background:linear-gradient(170deg,#463316,#1d1309);
+    box-shadow:0 12px 34px rgba(0,0,0,.65), 0 0 34px rgba(255,181,77,.4),
+               inset 0 1px 0 rgba(255,224,160,.26);}
+  .boonCard.tier3 .ctype{color:var(--gold);}
+  .boonCard.tier4{border-color:var(--crimson-hi);
+    background:linear-gradient(170deg,#4d2612,#210b09);
+    box-shadow:0 14px 40px rgba(0,0,0,.72), 0 0 44px rgba(255,43,82,.42),
+               inset 0 1px 0 rgba(255,224,160,.3);
+    animation:tabletRise .5s var(--ease-out) backwards, breathe 3.2s ease-in-out infinite 1s;}
+  .boonCard.tier4 .cicon{color:#ffd9a0;
+    filter:drop-shadow(0 0 22px rgba(255,43,82,.9));}
+  .boonCard.tier4 .ctype{color:var(--crimson-hi);}
+  .boonCard.tier4:hover{border-color:#ffd2da;
+    box-shadow:0 26px 58px rgba(0,0,0,.8), 0 0 56px rgba(255,43,82,.6),
+               inset 0 1px 0 rgba(255,224,160,.3);}
   #boonHint{font-family:var(--font-mono);font-size:14px;color:var(--bone-faint);
     font-style:italic;letter-spacing:.4px;}
   /* the choice landing: the taken card flares and holds, the rest fall away */
@@ -1791,10 +1882,12 @@
   #descentFx.show #descentNum{animation:slamIn .55s var(--ease-out);}
   #descentFx.show #descentWord{animation:fadeIn .5s .1s linear both;}
 
-  /* trial announce */
+  /* trial announce. Centred on the WHOLE screen, like every other full-frame
+     beat (the Ossuary, the quota reveal) — an omen is addressed to the player,
+     not to the board, so it does not get pushed clear of the sidebar. */
   #trialFx{position:fixed;inset:0;z-index:44;pointer-events:none;opacity:0;
     transition:opacity .3s linear;display:flex;align-items:center;justify-content:center;
-    flex-direction:column;padding-left:376px;}
+    flex-direction:column;}
   #trialFx.show{opacity:1;}
   #trialFx .vign{position:absolute;inset:0;
     background:radial-gradient(60% 60% at 50% 50%,rgba(6,2,4,.55),rgba(90,7,20,.6) 70%,rgba(4,1,3,.92));}
@@ -1942,9 +2035,16 @@
     <div id="relicList"><span class="empty-note">the altar is bare</span></div>
   </div>
 
-  <div class="panel" style="flex:1;--accent:rgba(236,228,212,.35);">
+  <div class="panel" style="--accent:rgba(236,228,212,.35);">
     <div class="sechead"><i class="ic" data-ic="cube"></i>DICE POOL<span class="count" id="poolCount">0</span></div>
     <div id="poolList"></div>
+  </div>
+
+  <!-- grows into the space the dice panel gave back, but `0 auto` means it can
+       never shrink BELOW its chips on a short screen — the sidebar scrolls -->
+  <div class="panel" style="flex:1 0 auto;--accent:rgba(255,181,77,.55);">
+    <div class="sechead"><i class="ic" data-ic="trophy"></i>BOONS<span class="count" id="boonCount">0</span></div>
+    <div id="boonList"><span class="empty-note">no trial has yielded yet</span></div>
   </div>
 </div>
 
@@ -2253,6 +2353,29 @@
     <div class="shopBtns">
       <button class="ghost" id="btnSwapCancel"><i class="ic" data-ic="x"></i>KEEP EVERYTHING</button>
       <button class="primary" id="btnSwapConfirm" disabled><i class="ic" data-ic="handFist"></i>SEAL THE TRADE</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ THE CULLING ============
+     FRAILTY narrows the cup, and banishing the Femur narrows it by two — but
+     a pool already over the new cap used to just sit there, over-limit and
+     unmentioned. The rite does not choose for you: it opens the cup and waits.
+     Staged like a Decree rather than a shop dialog, because that is what it
+     is — the rite tightening, pressing down from above in violet. -->
+<div class="overlay hidden" id="cullOverlay" style="z-index:69;">
+  <div class="cullPress"></div>
+  <div class="modal cullModal">
+    <div id="cullBody">
+      <i class="ic sigil" id="cullSigil" data-ic="minus"></i>
+      <div class="cullKicker">THE CUP IS NARROWED</div>
+      <h2>GIVE UP A BONE</h2>
+      <div class="flavor" id="cullFlavor"></div>
+      <div id="cullList"></div>
+      <div id="cullHint">choose a bone to give up</div>
+      <div class="shopBtns">
+        <button class="primary" id="btnCullConfirm" disabled><i class="ic" data-ic="hammer"></i>GRIND IT TO DUST</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3355,6 +3478,21 @@ const CHANGELOG_HISTORY_URL =
 // Newest first. Add to the FRONT.
 const CHANGELOG = [
   {
+    id:'the_bone_sieve_v1.0.0_beta.8', date:'2026-07-30',
+    codename:'WHAT THE DEEP OWES',
+    flavor:'The sieve weighed what it had been asking for, and found it was asking too much.',
+    entries:[
+      {kind:'changed', text:'Boons are their own thing now, not relics handed to you early. Twenty-three of them, from small favours to run-defining pacts, and none of them ever costs you an altar slot or a place in the cup. The deeper you are when a Trial breaks, the better the sieve\'s offer — and the card itself burns hotter to tell you so.'},
+      {kind:'added',   text:'Your boons sit under the dice pool now, in gold, counted where they stack. Hover any of them to read what it is doing to your rite.'},
+      {kind:'changed', text:'A full altar is not a closed door and the Ossuary finally says so. Every ware stays yours for the taking — the price simply includes naming what you leave behind.'},
+      {kind:'balance', text:'RUN conduits pay like the rarity they are. A three-long straight is worth taking; a six-long one is the run of the descent. IRON RUNGS now lets a straight bridge a missing value outright, so chasing them is a build rather than a wish.'},
+      {kind:'balance', text:'The deep descents no longer wall you. The Soul Quota climbed faster than any offering could ever grow, and the twenty-fifth descent was killing four runs in five — it now takes a little under three in five, and the ladder goes on past it. A Trial still bites; it no longer simply ends you.'},
+      {kind:'balance', text:'THE EVEN HAND and THE ODD HAND are held back to the deeper descents and drawn far less often. They were killing more runs than any other Trial by a wide margin. They are no gentler when they land — you will just meet them far less.'},
+      {kind:'balance', text:'NINEFOLD GIFT and MARROW GIFT were paying more than their station, SOVEREIGN BLOOD less. All three now sit where they belong among their peers.'},
+      {kind:'balance', text:'Soul shards stop breeding once your purse can already buy the whole counter. Saving toward something still pays; sitting on a hoard no longer does.'},
+    ],
+  },
+  {
     id:'the_bone_sieve_v1.0.0_beta.7', date:'2026-07-29',
     codename:'THE RITE PUTS ON ITS FACE',
     flavor:'Everything you press, everything that bleeds, and the dark behind the door.',
@@ -3466,7 +3604,10 @@ const GRID = 5;
 // applyUIScale() is the only thing that writes it.
 let SIDEBAR_W = 376;
 const BASE_POOL = 12;
-const MIN_POOL  = 4;
+const MIN_POOL  = 4;              // Brittle Bone stops gnawing here
+// Famine is a flat withholding, not a floor: see startLevel().
+const FAMINE_HOLD = 3;
+const FAMINE_MIN_ACTIVE = 2;      // two bones can still touch; one never can
 const BASE_ALTAR = 5;
 const C = {
   bg:'#08070b', tile:'#1b1820', tileLine:'#3a3344', tileHover:'#2f2740',
@@ -3571,7 +3712,18 @@ const TIER_NAME  = {1:'COMMON',2:'UNCOMMON',3:'RARE',4:'CURSED'};
 // 6. TRIALS — every fifth descent bends a rule and swells the quota
 //======================================================================
 // the swell starts merciful and grows teeth as you descend
-function trialQuotaMult(level){ return 1.22 + Math.min(0.23, Math.max(0,(level-5))*0.015); }
+// Defiance flattens the swell toward 1.0 rather than subtracting from it, so it
+// can never invert into a trial that makes the quota SMALLER.
+// The swell tops out at x1.35 rather than x1.45. On its own this is a small
+// correction — measured, capping it moves the twenty-fifth descent by about a
+// point and a half — because by then the BASE curve is what has run away, not
+// the spike. It is capped anyway so a deep trial never drifts further from its
+// ordinary neighbours than a shallow one does: the spike stays a spike instead
+// of quietly becoming a second difficulty curve.
+function trialQuotaMult(level){
+  const m = 1.22 + Math.min(0.13, Math.max(0,(level-5))*0.015);
+  return 1 + (m - 1)*boonTrialSoften();
+}
 // `min` gates the crueller rules behind deeper descents, so the first Trial
 // bends the rite rather than breaking it
 const TRIALS = [
@@ -3585,8 +3737,14 @@ const TRIALS = [
   {id:'cage',    min:10, name:'TRIAL OF THE CAGE',     icon:'wall',           desc:'Only the inner nine stones will accept a bone.'},
   {id:'blind',   min:10, name:'TRIAL OF THE VEIL',     icon:'eyeClosed',      desc:'The faces stay hidden until Fate is sealed.'},
   {id:'warden',  min:10, name:'TRIAL OF THE WARDEN',   icon:'shield',         desc:'A Seal with fewer than THREE conduits banks nothing.'},
-  {id:'evens',   min:15, name:'TRIAL OF THE EVEN HAND',icon:'starFour',       desc:'ODD dice contribute nothing to any conduit.'},
-  {id:'odds',    min:15, name:'TRIAL OF THE ODD HAND', icon:'star',           desc:'EVEN dice contribute nothing to any conduit.'},
+  // The two Hands zero HALF the faces on the sieve, which is a far heavier
+  // blow than any other trial lands — they killed players at roughly five times
+  // the rate of the mildest trial. What they DO is correct and stays untouched;
+  // they are simply held back to the deeper descents and drawn far less often,
+  // so they stay a rare disaster instead of a routine one. `w` is the draw
+  // weight (1 = ordinary); see pickTrial().
+  {id:'evens',   min:20, w:0.3, name:'TRIAL OF THE EVEN HAND',icon:'starFour', desc:'ODD dice contribute nothing to any conduit.'},
+  {id:'odds',    min:20, w:0.3, name:'TRIAL OF THE ODD HAND', icon:'star',     desc:'EVEN dice contribute nothing to any conduit.'},
   {id:'glutton', min:15, name:'TRIAL OF THE GLUTTON',  icon:'cards',          desc:'KIND conduits burn cold — they score a QUARTER.'},
   {id:'chains',  min:15, name:'TRIAL OF CHAINS',       icon:'linkSimple',     desc:'RUN conduits burn cold — they score a QUARTER.'},
   {id:'looking', min:15, name:'TRIAL OF THE MIRROR',   icon:'swap',           desc:'PARITY conduits burn cold — they score a QUARTER.'},
@@ -3656,16 +3814,52 @@ function tierWeight(tier, level){
 //======================================================================
 // 9. BOONS — the reward for breaking a Trial
 //======================================================================
-const UTIL_BOONS = [
-  {id:'purse',   name:'Grave Purse',   icon:'coins',        desc:'+28 soul shards, right now.'},
-  {id:'poolUp',  name:'Wider Cup',     icon:'cube',         desc:'+2 permanent dice pool slots.'},
-  {id:'reroll',  name:'Second Sight',  icon:'arrowUUpLeft', desc:'+1 permanent re-roll every cast.'},
-  {id:'multUp',  name:'Sworn Oath',    icon:'sparkle',      desc:'+0.6 permanent Offering Multiplier.'},
-  {id:'chalkUp', name:'Fresh Chalk',   icon:'paintBrush',   desc:'A free chalk line, scrawled at once.'},
-  {id:'castUp',  name:'Stolen Hour',   icon:'clockCountdown', desc:'+1 permanent cast on every level.'},
-  {id:'mend',    name:'Mended Marrow', icon:'firstAidKit',  desc:'+15 shards and a free Bone Die.'},
-  {id:'altarUp', name:'Wider Altar',   icon:'sealCheck',    desc:'+1 permanent altar slot for relics.'},
+// A boon is NOT a relic, and it is not a purchase. Relics are objects: they are
+// found, they are bound to an altar with a finite number of slots, and they can
+// be banished to make room for better ones. A boon is the rite itself deciding
+// to treat you differently for the rest of the run — it costs no slot, occupies
+// no space, competes with nothing you already own, and can never be taken away.
+//
+// That distinction is the whole point of this table. Boons used to be relics in
+// disguise (two of the three cards were drawn straight from the shop pool), and
+// the ones that weren't handed out ALTAR SLOTS and CUP SLOTS — so "breaking a
+// Trial" could reward you with a slot that the same screen then charged you for.
+// Nothing in here touches the altar, the cup, the shard purse or the board.
+//
+// `tier` is both power and rarity; `min` gates a boon behind a depth. The offer
+// roll (boonTierBias) walks its taste up the tiers as the run deepens, so a
+// first-Trial boon and a tenth-Trial boon are not in the same league.
+const BOONS = [
+  // ---- tier 1 — the first favours, from the very first Trial ----
+  {id:'oath',     tier:1, min:5,  name:'Sworn Oath',       icon:'sparkle',       desc:'+0.5 to your Offering Multiplier.'},
+  {id:'sight',    tier:1, min:5,  name:'Second Sight',     icon:'eye',           desc:'+1 re-roll on every cast.'},
+  {id:'alms',     tier:1, min:5,  name:'Alms of the Pit',  icon:'coins',         desc:'+5 soul shards each time you sate a quota.'},
+  {id:'kindling', tier:1, min:5,  name:'Kindling',         icon:'cards',         desc:'KIND conduits burn +1.0 hotter.'},
+  {id:'rungs',    tier:1, min:5,  name:'Iron Rungs',       icon:'ladderSimple',  desc:'A RUN may bridge one missing value, and RUN conduits burn +3.0 hotter.'},
+  {id:'stillness',tier:1, min:5,  name:'Still Water',      icon:'circlesThree',  desc:'PARITY conduits burn +0.6 hotter.'},
+  {id:'marrow',   tier:1, min:5,  name:'Marrow Gift',      icon:'bone',          desc:'+6 blood for every conduit that burns.'},
+  // ---- tier 2 — from the tenth descent ----
+  {id:'hour',     tier:2, min:10, name:'Stolen Hour',      icon:'clockCountdown',desc:'+1 cast on every descent.'},
+  {id:'deepchalk',tier:2, min:10, name:'Deep Chalk',       icon:'paintBrush',    desc:'Every chalked line cuts +2 deeper.'},
+  {id:'swell',    tier:2, min:10, name:'The Swelling',     icon:'mountains',     desc:'+8% cluster size bonus per extra die.'},
+  {id:'mercy',    tier:2, min:10, name:'Small Mercy',      icon:'flowerLotus',   desc:'Every Soul Quota is 7% shallower.'},
+  {id:'feast',    tier:2, min:10, name:'The Feast',        icon:'skull',         desc:'Rare combination bonuses score +50%.'},
+  {id:'deeperoath',tier:2,min:10, name:'Deeper Oath',      icon:'star',          desc:'+1.1 to your Offering Multiplier.'},
+  // ---- tier 3 — from the fifteenth ----
+  {id:'defiance', tier:3, min:15, name:'Defiance',         icon:'shield',        desc:'Trials swell the Soul Quota only half as much.'},
+  {id:'covenant', tier:3, min:15, name:'The Covenant',     icon:'pentagram',     desc:'EVERY conduit type burns +1.0 hotter.'},
+  {id:'libation', tier:3, min:15, name:'Libation',         icon:'wine',          desc:'+2.0 to your Offering Multiplier.'},
+  {id:'tide',     tier:3, min:15, name:'The Tide',         icon:'waves',         desc:'+18% cluster size bonus per extra die.'},
+  {id:'ninefold', tier:3, min:15, name:'Ninefold Gift',    icon:'asterisk',      desc:'+20 blood for every conduit that burns.'},
+  {id:'plenty',   tier:3, min:15, name:'Horn of Plenty',   icon:'handCoins',     desc:'+14 soul shards each time you sate a quota.'},
+  // ---- tier 4 — from the twenty-fifth, and run-defining ----
+  {id:'apotheosis',tier:4,min:25, name:'Apotheosis',       icon:'crown',         desc:'+3.5 to your Offering Multiplier.'},
+  {id:'deathless',tier:4, min:25, name:'The Deathless Rite',icon:'infinity',     desc:'+1 cast on every descent AND +1 re-roll on every cast.'},
+  {id:'sovereign',tier:4, min:25, name:'Sovereign Blood',  icon:'drop',          desc:'Every Soul Quota is 26% shallower.'},
+  {id:'pyre',     tier:4, min:25, name:'Conflagration',    icon:'fire',          desc:'EVERY conduit type burns +2.5 hotter.'},
 ];
+const BOON_BY_ID = {};
+for(const b of BOONS) BOON_BY_ID[b.id] = b;
 
 //======================================================================
 // 10. GAME STATE
@@ -3684,9 +3878,15 @@ function freshState(){
     hoverDieId:null, focusRow:null,
     shopRerolls:0,
     // run-long counters that relics feed on
-    rotted:0, ouroStacks:0, bonusCasts:0, bonusRerolls:0, bonusPool:0, bonusMult:0, bonusAltar:0,
+    rotted:0, ouroStacks:0,
+    // Boons are held as a plain list of ids and every effect is DERIVED from it
+    // (see boonCount and the boon* helpers). The five loose bonusX counters that
+    // used to live here were written only by the old boon screen and read from
+    // five different formulas, which is how a boon granting altar slots ended up
+    // fighting the altar. One list, one source of truth.
+    boons:[],
     // trial bookkeeping
-    trial:null, trialsSeen:[], sealedTiles:[], withheld:[], rerolledIds:[],
+    trial:null, trialsSeen:[], sealedTiles:[], withheld:[], benched:[], rerolledIds:[],
     sealIdx:-1, sealBank:0, sealTimer:0, sealRaw:0, sealMult:1,
     stats:{conduits:0, best:0, levelsCleared:0, trialsCleared:0},
   };
@@ -3699,13 +3899,59 @@ function hasRelic(r){ return !!S && S.relics.includes(r); }
 function hasTrial(id){ return !!S && !!S.trial && S.trial.id===id; }
 function hasDecree(id){ return !!S && S.decrees.includes(id); }
 function decreeCount(id){ return S ? S.decrees.filter(d=>d===id).length : 0; }
+function boonCount(id){ return S && S.boons ? S.boons.filter(b=>b===id).length : 0; }
 function isTrialLevel(l){ return l % 5 === 0; }
+
+//------------------------------------------------------------------ boons
+// Every boon effect is read out of S.boons here and nowhere else, so a boon's
+// desc line and its behaviour cannot drift apart: each helper below is the one
+// place its number enters the game. Boons STACK — taking Sworn Oath twice is
+// worth exactly twice as much — which is why these are counts, not flags.
+// the four Offering Multiplier boons, kept in one table so the number in the
+// Grimoire's breakdown and the number actually applied are the same number
+const BOON_MULT = {oath:0.5, deeperoath:1.1, libation:2.0, apotheosis:3.5};
+function boonMultOf(id){ return BOON_MULT[id] || 0; }
+function boonMult(){
+  let m = 0;
+  for(const id in BOON_MULT) m += BOON_MULT[id]*boonCount(id);
+  return m;
+}
+function boonCasts(){   return boonCount('hour')  + boonCount('deathless'); }
+function boonRerolls(){ return boonCount('sight') + boonCount('deathless'); }
+function boonTypeBonus(type){
+  const all = boonCount('covenant')*1.0 + boonCount('pyre')*2.5;
+  if(type === 'kind')   return all + boonCount('kindling')*1.0;
+  if(type === 'run')    return all + boonCount('rungs')*3.0;
+  if(type === 'parity') return all + boonCount('stillness')*0.6;
+  return 0;
+}
+function boonConduitFlat(){ return boonCount('marrow')*6 + boonCount('ninefold')*20; }
+// how many missing values a straight may bridge beyond its wild dice
+function boonRunGap(){ return boonCount('rungs'); }
+function boonCluster(){     return boonCount('swell')*0.08 + boonCount('tide')*0.18; }
+function boonChalk(){       return boonCount('deepchalk')*2; }
+function boonAlms(){        return boonCount('alms')*5 + boonCount('plenty')*14; }
+function boonRareScale(){   return Math.pow(1.5, boonCount('feast')); }
+// quota relief is multiplicative, so stacks never dig the quota to nothing
+function boonQuotaScale(){
+  return Math.pow(0.93, boonCount('mercy')) * Math.pow(0.74, boonCount('sovereign'));
+}
+// Defiance softens the TRIAL swell itself rather than the quota as a whole
+function boonTrialSoften(){ return Math.pow(0.5, boonCount('defiance')); }
 
 //---------------------------------------------------------------- curves
 // The quota's growth RATE eases with depth instead of staying fixed. A constant
 // exponent cannot fit both ends: tuned to keep the late game alive it trivialises
 // the middle, and tuned for the middle it walls the run at a cliff.
-const QUOTA_BASE = 45, QG_FLOOR = 1.288, QG_SPAN = 0.14, QG_TAU = 9;
+// The FLOOR is where the growth rate settles once the exponential term has
+// decayed — which is to say, it is the whole late game. At 1.288 the quota
+// outran the player by about 1.2x every descent (offering multipliers grow
+// nearer 1.07), and the deficit compounded until the twenty-fifth descent
+// killed four runs in five. The floor now settles lower so the two curves
+// converge instead of diverging; SPAN is raised to keep the FIRST level's
+// growth identical (1.252+0.176 = 1.288+0.14 = 1.428), so nothing about the
+// opening descents moves.
+const QUOTA_BASE = 45, QG_FLOOR = 1.252, QG_SPAN = 0.176, QG_TAU = 9;
 function baseQuota(l){
   let q = QUOTA_BASE;
   for(let i=1; i<l; i++) q *= QG_FLOOR + QG_SPAN*Math.exp(-(i-1)/QG_TAU);
@@ -3717,34 +3963,55 @@ function quotaFor(l){
   if(hasTrial('greed')) q *= 1.30;
   q *= Math.pow(1.08, decreeCount('tithe'));
   if(hasRelic('bell')) q *= 0.88;
+  q *= boonQuotaScale();
   return Math.max(20, Math.round(q/5)*5);
 }
 function castsPerLevel(){
-  let n = 3 + (S.bonusCasts||0) + (hasRelic('chain')?1:0);
+  let n = 3 + boonCasts() + (hasRelic('chain')?1:0);
   if(hasTrial('silence')) n = Math.max(1, n-1);
   return n;
 }
 function rerollsPerCast(){
   if(hasTrial('locked')) return 0;
-  return 2 + (hasRelic('dust')?1:0) + (S.bonusRerolls||0);
+  return 2 + (hasRelic('dust')?1:0) + boonRerolls();
 }
+// No boon term here, and none in altarSlots() either — deliberately. A boon may
+// never hand out cup or altar space: those are the two scarcities the whole
+// build decision rests on, and a reward that quietly widens them is a reward
+// that erases a choice instead of adding one.
 function maxPool(){
-  return BASE_POOL + (S.bonusPool||0) + (hasRelic('femur')?2:0) - decreeCount('frailty');
+  return BASE_POOL + (hasRelic('femur')?2:0) - decreeCount('frailty');
 }
 // The altar holds only so many relics. Filling it is the whole build decision:
 // a deep run must banish an old power to bind a new one.
-function altarSlots(){ return BASE_ALTAR + (S.bonusAltar||0) + (hasRelic('shrine')?2:0); }
+function altarSlots(){ return BASE_ALTAR + (hasRelic('shrine')?2:0); }
 function altarFull(){ return S.relics.length >= altarSlots(); }
 function clusterStep(){
   let step = hasRelic('wormwood') ? 0.40 : 0.25;
   step -= decreeCount('dulled')*0.05;
+  // The floor belongs to the DECREES: however many Dulled Edges stack, a big
+  // cluster is still worth something. The Press then halves whatever survived
+  // them. Halving BEFORE the clamp meant that once the decrees had already
+  // ground the step down to the floor the Press did literally nothing — the
+  // clamp handed back exactly what the trial had just taken.
+  step = Math.max(0.05, step);
   if(hasTrial('press')) step *= 0.5;
-  return Math.max(0.05, step);
+  // boons are added after the Press, so a trial can never cancel one out
+  return step + boonCluster();
 }
 function chalkBase(){ return 3; }
 // Corpse Lamp deepens every sigil, including ones already scrawled
-function chalkMult(c){ return c.mult + (hasRelic('brush') ? 2 : 0); }
+function chalkMult(c){ return c.mult + (hasRelic('brush') ? 2 : 0) + boonChalk(); }
 function facesHidden(){ return hasTrial('blind') && S.phase !== 'sealing' && S.phase !== 'banking'; }
+// The Offering Multiplier is normally a KNOWN quantity — it is why the player
+// can plan a cast at all. But CRIMSON BONES moves it the instant a crimson die
+// lands in a live conduit, so once the bones are down the number stops being a
+// standing fact and becomes a readout of what is burning. Only that window is
+// concealed: before the cast, and while the bones are still in the air, nothing
+// is lit, so the figure on show is the honest base and stays visible.
+// multParts()/offeringMult() themselves are never touched — the mult must stay
+// true for scoring, exactly as scoringIds stays true for the veiled board.
+function multHidden(){ return facesHidden() && S.phase === 'placed'; }
 
 //======================================================================
 // 11. SCORING ENGINE
@@ -3782,10 +4049,21 @@ function effVal(d){
 // whole conduit type simply erased whichever build you had spent the run making,
 // which is a coin flip, not a challenge.
 const CHILL = 0.25;
+// A RUN forms on roughly 4% of boards — an order of magnitude rarer than KIND
+// or PARITY — because the WHOLE cluster must hold distinct consecutive values,
+// and 88% of clusters big enough to qualify are spoiled by a repeat. That
+// rarity is kept deliberately: the answer is not to make runs common but to
+// make the ones that land pay like the jackpot they are. Every die past the
+// third compounds the conduit hard, so a long straight is the biggest single
+// thing that can happen on the sieve.
+const RUN_LENGTH_STEP = 1.0;
+// Boons are added to the base BEFORE the chill, so a cold conduit is still worth
+// exactly a quarter of what it would have been — the trial's promise holds, and
+// the boon is not silently exempt from it.
 function typeMult(type){
-  if(type === 'kind')   return (hasRelic('mandible') ? 4.5 : 3) * (hasTrial('glutton') ? CHILL : 1);
-  if(type === 'run')    return (hasRelic('ladder')   ? 6   : 4) * (hasTrial('chains')  ? CHILL : 1);
-  if(type === 'parity') return (hasRelic('chalice')  ? 2.8 : 1.5) * (hasTrial('looking') ? CHILL : 1);
+  if(type === 'kind')   return ((hasRelic('mandible') ? 4.5 : 3)  + boonTypeBonus('kind'))   * (hasTrial('glutton') ? CHILL : 1);
+  if(type === 'run')    return ((hasRelic('ladder')   ? 10  : 7)  + boonTypeBonus('run'))    * (hasTrial('chains')  ? CHILL : 1);
+  if(type === 'parity') return ((hasRelic('chalice')  ? 2.8 : 1.5)+ boonTypeBonus('parity')) * (hasTrial('looking') ? CHILL : 1);
   return 0;
 }
 
@@ -3850,12 +4128,17 @@ function makeConduit(cells, type, kindVal, par){
 
   let sum = 0, flat = 0;
   for(const d of dice){
-    let v = effVal(d);
+    const base = effVal(d);
+    let v = base;
     if(hasObsidian && d.type!=='obsidian') v *= 2;
     sum += v;
-    if(d.type==='thorn') flat += 7;
+    // A bone the Even/Odd Hand has zeroed contributes NOTHING — its Thorn barb
+    // included. The +7 was flat and outside effVal(), so a thorn was the one
+    // die that scored straight through those trials.
+    if(d.type==='thorn' && base !== 0) flat += 7;
   }
   if(hasRelic('nail')) flat += 14;
+  flat += boonConduitFlat();
 
   let mult = typeMult(type);
   const dead = mult === 0;
@@ -3863,6 +4146,9 @@ function makeConduit(cells, type, kindVal, par){
     if(dice.some(d=>d.type==='rotting')) mult *= 3;
     mult *= segChalkMult(cells);
     mult *= 1 + (cells.length-2)*clusterStep();
+    // the straight's own escalator, on top of the cluster bonus every conduit
+    // gets: a 3-long run is ordinary, a 6-long one is the run of the descent
+    if(type === 'run') mult *= 1 + Math.max(0, cells.length-3)*RUN_LENGTH_STEP;
   }
   const pts = dead ? 0 : Math.round((sum+flat)*mult);
 
@@ -3931,7 +4217,11 @@ function computeConduits(){
     if(cluster.length >= 3 && new Set(solidVals).size === solidVals.length){
       const lo = Math.min(...solidVals), hi = Math.max(...solidVals);
       const gaps = (hi - lo + 1) - solidVals.length;
-      if(gaps <= wilds) conduits.push(makeConduit(cluster, 'run'));
+      // Wild dice have always been able to stand in for a missing value. Iron
+      // Rungs lets the rite itself bridge one — the only lever in the game that
+      // moves how OFTEN a straight forms rather than what it pays, and the
+      // reason chasing runs is a build instead of a wish.
+      if(gaps <= wilds + boonRunGap()) conduits.push(makeConduit(cluster, 'run'));
     }
     // parity likewise resolved per side, so a wild cannot fuse odd onto even
     for(const par of [0,1]){
@@ -3970,10 +4260,17 @@ function rareScale(){
   let s = 1 + S.level*0.14;
   if(hasRelic('maw')) s *= 2.5;
   s *= Math.pow(0.75, decreeCount('hunger'));
+  s *= boonRareScale();
   return s;
 }
 function rareBonuses(occ){
   const out = [];
+  // These read the faces directly and pay a flat scaled sum, so they used to
+  // sail straight past the Even/Odd Hand — a board of nothing but odd dice
+  // still burned a full PAGAN PENTAGRAM during the Trial of the Even Hand,
+  // which is the trial doing nothing at all on the boards it should hurt most.
+  // A zeroed bone cannot help form a board-wide combination either.
+  occ = occ.filter(c=>effVal(dieAt(c.gx,c.gy)) !== 0);
   const dice = occ.map(c=>dieAt(c.gx,c.gy));
   if(!dice.length) return out;
   const wilds = dice.filter(isWild).length;
@@ -4055,7 +4352,13 @@ function crimsonBurning(){
 function multParts(){
   const p = [];
   p.push({label:'BASE', v:1});
-  if(S.bonusMult) p.push({label:'SWORN OATH', v:S.bonusMult});
+  // boons carry their own name into the breakdown rather than pooling into one
+  // anonymous row, so the Grimoire reads as an account of what the run granted
+  for(const id of ['oath','deeperoath','libation','apotheosis']){
+    const n = boonCount(id);
+    if(n) p.push({label:BOON_BY_ID[id].name.toUpperCase() + (n>1 ? ' x'+n : ''),
+                  v:boonMultOf(id)*n});
+  }
   if(hasRelic('ember'))  p.push({label:'EMBER OF SPITE', v:0.3});
   if(hasRelic('eye'))    p.push({label:'LIDLESS EYE', v:0.8});
   if(hasRelic('spine'))  p.push({label:'ASH SPINE', v:0.45*S.relics.length});
@@ -5032,7 +5335,9 @@ function drawDie(die, x, y, opts){
     ctx.fillStyle = 'rgba(0,0,0,0.72)'; ctx.fill();
   }
 
-  if(!opts.flying && scoringIds.has(die.id)) drawScoreRune(x, y, fw, fh);
+  // the burning rune marks a bone that is in a live conduit — an answer, so it
+  // waits for the Seal while the Veil is up
+  if(!opts.flying && !facesHidden() && scoringIds.has(die.id)) drawScoreRune(x, y, fw, fh);
 
   // exotic bones bleed a thin rim of their own colour onto the stone, rather
   // than a wide filled aura that swallowed the dice around them
@@ -5795,11 +6100,19 @@ function render(t, dt){
   const segs = S.previewSegments || [];
   const sealing = (S.phase==='sealing');
   const preview = (S.phase==='placed' || S.phase==='banking');
+  // The Veil has to leave the player with a real guess. scoringIds is still
+  // computed — the mult and the relic bonuses are scored off it — but NOTHING
+  // derived from it may be drawn while the faces are hidden. Cages show which
+  // bones grouped, cold marks show which ones failed, and the crown badges
+  // show which exotics fired; between them the board answers the question the
+  // trial is asking. `reveal` is the single gate for all of it.
+  const veiled  = facesHidden();
+  const reveal  = preview && !veiled;
   const focusSet = new Set(focusedSegments());   // hover now only EMPHASISES
-  const cages = preview ? cageableSegments(segs) : [];
+  const cages = reveal ? cageableSegments(segs) : [];
 
   // regions and cages go down first, so the dice stand inside their own group
-  if(preview) drawConduitRegions(segs, cages, focusSet);
+  if(reveal) drawConduitRegions(segs, cages, focusSet);
 
   const settled = S.dicePool.filter(d=>d.gx>=0 && !d.anim)
     .sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy));
@@ -5808,7 +6121,7 @@ function render(t, dt){
   for(const d of settled){
     const p = isoPt(d.gx, d.gy);
     const D = dieDims(d);
-    const cold = preview && !d.marked && dieIsCold(d);
+    const cold = reveal && !d.marked && dieIsCold(d);
     if(cold) drawColdMark(p.x, p.y, D.fw, D.fh);
     if(d.marked){
       const lift = MARK_LIFT();
@@ -5833,14 +6146,15 @@ function render(t, dt){
     const p = isoPt(d.gx, d.gy);
     const D = dieDims(d);
     const my = d.marked ? p.y - MARK_LIFT() : p.y;
-    const cold = preview && !d.marked && dieIsCold(d);
+    const cold = reveal && !d.marked && dieIsCold(d);
     const cy2 = cold ? my + COLD_SINK : my;
     const cs = cold ? 0.94 : 1;
     if(sealing) drawDieTop(d, p.x, my, D.fw, D.fh, D.h);
     if(cold) drawColdGlyph(p.x, cy2 - D.h*cs - D.fh*cs*1.6, D.fw);
     if(d.marked) drawMarkChevron(p.x, my - D.h - D.fh*2.2, D.fw);
-    // exotic bones show a badge seated ON the crown when their effect fires
-    const act = cold ? null : dieActivation(d);
+    // exotic bones show a badge seated ON the crown when their effect fires —
+    // which is itself an answer, so the Veil takes it too
+    const act = (cold || veiled) ? null : dieActivation(d);
     if(act){
       const r = Math.max(9, D.fw*0.30);
       const bx = p.x, by = my - D.h - D.fh - r*0.66;
@@ -5855,7 +6169,11 @@ function render(t, dt){
   }
 
   drawChalkLabels();
-  if(preview) drawConduitBadges(segs, cages, focusSet);
+  // The Veil hides the offering, not just the faces: the sidebar already blanks
+  // OFFERED BLOOD and its breakdown while facesHidden(), so the badges stamped
+  // on the stone have to go dark for the same window or the number is simply
+  // readable off the board instead.
+  if(reveal) drawConduitBadges(segs, cages, focusSet);
 
   const flying = S.dicePool.filter(d=>d.anim).sort((a,b)=>a.anim.y-b.anim.y);
   for(const d of flying)
@@ -6302,11 +6620,22 @@ function renderGrimoire(){
       grimRow('skull','Satanic Majesty','+'+Math.round(300*rareScale()),'Every die on the sieve (six or more) showing the same value.') +
       '</div>';
     h += '<div class="grimSec"><h4>THE OFFERING MULTIPLIER</h4>';
-    const parts = multParts();
-    for(const p of parts) h += grimRow('sparkle', p.label, '+' + p.v.toFixed(2), '', true);
+    const hideMult = multHidden();
+    let parts = multParts();
+    if(hideMult){
+      // The CRIMSON BONES row is only emitted when one is actually burning, so
+      // under the Veil its mere PRESENCE would answer the question. It is pulled
+      // out and put back as an unknown whenever the player owns a crimson bone
+      // at all — which they know already — and stays absent when they own none.
+      parts = parts.filter(p=>p.label !== 'CRIMSON BONES');
+      if(S.dicePool.some(d=>d.type==='crimson'))
+        parts.push({label:'CRIMSON BONES', v:null});
+    }
+    for(const p of parts)
+      h += grimRow('sparkle', p.label, p.v===null ? '+???' : '+' + p.v.toFixed(2), '', true);
     if(hasRelic('scales') && boardDice().length<=8)
       h += grimRow('scales','JUDAS SCALES','x2','Eight or fewer dice rest on the sieve.', true);
-    h += grimRow('fire','CURRENT TOTAL','x'+offeringMult().toFixed(1),
+    h += grimRow('fire','CURRENT TOTAL', hideMult ? 'x???' : 'x'+offeringMult().toFixed(1),
       'All conduit blood is multiplied by this before it is banked.');
     h += '</div>';
   }
@@ -6397,6 +6726,16 @@ function activeDice(){
   const out = new Set(S.withheld);
   return S.dicePool.filter(d=>!out.has(d.id));
 }
+// How many stones will actually take a bone right now. The Cage walls off the
+// outer ring and the SEALED STONE decrees eat tiles permanently, and the two
+// stack — between them the sieve can hold fewer bones than the cup does.
+function openTileCount(){
+  let n = 0;
+  for(let gy=0; gy<GRID; gy++)
+    for(let gx=0; gx<GRID; gx++)
+      if(!S.board[gy][gx] && !tileBlocked(gx,gy)) n++;
+  return n;
+}
 
 //======================================================================
 // 21. GAME FLOW
@@ -6404,7 +6743,7 @@ function activeDice(){
 function startRun(){
   Sound.unlock();
   leaveMenu();
-  _relicSig = _poolSig = null;
+  _relicSig = _poolSig = _boonSig = null;
   // one-shot trackers must not carry over between runs
   _metShown = false; _lastLevelScore = null; _socketRelic = null;
   _pendingDecree = null; _landTag = null;
@@ -6414,19 +6753,25 @@ function startRun(){
   S.board = emptyBoard();
   for(let i=0;i<6;i++) S.dicePool.push(makeDie('bone'));
   hide('shopOverlay'); hide('gameoverOverlay'); hide('boonOverlay'); hide('settingsOverlay');
-  closeSwap();
+  closeSwap(); closeCull();
   $('grimoire').classList.remove('open');
   hideClearFx(true); $('trialFx').classList.remove('show');
   seedEmbers();
   startLevel();
 }
 
+// The rotation comes first — a trial you have not faced yet is always preferred
+// — and `w` then biases the draw WITHIN that pool. A trial with w:0.3 is drawn
+// about a third as often as its neighbours whenever it is eligible at all.
 function pickTrial(){
   const unlocked = TRIALS.filter(t=>S.level >= t.min);
   let pool = unlocked.filter(t=>!S.trialsSeen.includes(t.id));
   if(!pool.length){ S.trialsSeen = []; pool = unlocked.slice(); }
   if(!pool.length) pool = TRIALS.slice();
-  const t = pick(pool);
+  const w = pool.map(t=>t.w === undefined ? 1 : t.w);
+  let r = Math.random()*w.reduce((a,b)=>a+b, 0), i = 0;
+  while(i < pool.length-1 && r > w[i]){ r -= w[i]; i++; }
+  const t = pool[i];
   S.trialsSeen.push(t.id);
   return t;
 }
@@ -6442,11 +6787,16 @@ function startLevel(){
   S.rerollsLeft = rerollsPerCast();
   clearBoard();
 
-  // Trial of Famine holds three bones back for the whole level
+  // Trial of Famine holds three bones back for the whole level. The count is
+  // FLAT — its promise is "three of your bones stay in the cup", so a small
+  // pool must not quietly turn that into two. The only floor is the one that
+  // keeps the level from being unplayable: two bones can still touch and burn,
+  // one can never form a conduit at all. At any realistic pool (6+) this floor
+  // is never reached and exactly three are withheld.
   if(hasTrial('famine')){
-    const keep = Math.max(MIN_POOL, S.dicePool.length - 3);
+    const hold = Math.min(FAMINE_HOLD, Math.max(0, S.dicePool.length - FAMINE_MIN_ACTIVE));
     const shuffled = S.dicePool.slice().sort(()=>Math.random()-0.5);
-    S.withheld = shuffled.slice(0, Math.max(0, S.dicePool.length - keep)).map(d=>d.id);
+    S.withheld = shuffled.slice(0, hold).map(d=>d.id);
   }
   // Ninth Sigil scrawls a fresh line each descent
   if(hasRelic('sigil')) addChalk(Math.random()<0.5?'row':'col', true);
@@ -6494,6 +6844,7 @@ function addChalk(axis, temporary){
 
 function clearBoard(){
   S.board = emptyBoard();
+  S.benched = [];                 // benching is decided fresh by every cast
   for(const d of S.dicePool){ d.gx=-1; d.gy=-1; d.marked=false; d.anim=null; d.mirrorVal=null; }
   S.previewSegments = []; S.previewScore = 0;
   S.hoverDieId = null; S.focusRow = null;
@@ -6502,13 +6853,37 @@ function clearBoard(){
 
 function castDice(){
   if(S.phase!=='awaitCast') return;
+  // the cup must come down to its cap before a single bone leaves it — this
+  // also catches Space, which reaches castDice() without touching the button
+  if(poolOverflow() > 0){ enforcePoolCap(); return; }
   S.phase = 'rolling';
   S.rerollsLeft = rerollsPerCast();
   S.rerolledIds = [];
   sfx('cast');
   shake = 0.45;
+
+  // A bone with nowhere to land used to be flung anyway: chooseSlot() returned
+  // null, launchDie() quietly refused, and the die simply never appeared —
+  // indistinguishable in the pool from one that had not been cast at all. It
+  // now sits the cast out EXPLICITLY. It keeps its place in the cup, it is
+  // marked as benched in the sidebar, and the player is told.
+  const room = openTileCount();
+  let casting = activeDice();
+  S.benched = [];
+  if(casting.length > room){
+    // shuffled, so the same bones are not the ones benched every single cast
+    casting = casting.slice().sort(()=>Math.random()-0.5);
+    S.benched = casting.slice(room).map(d=>d.id);
+    casting = casting.slice(0, room);
+  }
+
   let i = 0;
-  for(const d of activeDice()) launchDie(d, i++*0.09);
+  for(const d of casting) launchDie(d, i++*0.09);
+  if(S.benched.length){
+    const n = S.benched.length;
+    toast('Only ' + room + ' stone' + (room===1?'':'s') + ' will take a bone — ' +
+          n + ' stay' + (n===1?'s':'') + ' in the cup', 'wall');
+  }
   msg('The bones tumble across the stone...');
   showTally(false);
   syncUI();
@@ -6705,9 +7080,17 @@ function onQuotaSated(){
   let award = 6 + Math.min(6, Math.floor(S.level/3));
   award += Math.min(4, Math.floor(excess / Math.max(1, S.quota*0.35)));   // overkill bonus
   award += unusedCasts * 3;
-  award += Math.min(5, Math.floor(S.shards/8));                          // interest on savings
+  // Interest on savings — but only while saving still means something. The
+  // purse used to reach roughly eight times the price of anything on the
+  // counter by the twentieth descent, because income stayed flat while the
+  // altar and the cup capped out, and this term paid MORE the less you spent.
+  // It now pays nothing once the purse can already afford the whole counter,
+  // which keeps the early "save up for the good relic" pull intact and stops
+  // rewarding a hoard that has nowhere left to go.
+  if(S.shards < 70) award += Math.min(4, Math.floor(S.shards/12));
   if(hasRelic('candle')) award += 5;
   if(hasRelic('crow'))   award += unusedCasts * 4;
+  award += boonAlms();
   if(hasTrial('greed'))  award *= 2;
   S.shards += award;
   S.stats.levelsCleared++;
@@ -6754,6 +7137,10 @@ function flushDecree(){
     renderTrialStrip();
     toast('DECREE: ' + DECREES[k].name, DECREES[k].icon);
   }, 2400);
+  // FRAILTY narrows the cup the moment it is carved, but the pool is only
+  // actually over its cap some of the time. Ask for the bone once the announce
+  // has cleared the screen — casting is barred until it is answered.
+  setTimeout(()=>enforcePoolCap('FRAILTY takes hold. The cup will not hold what it held before.'), 3300);
 }
 
 function gameOver(){
@@ -7000,8 +7387,11 @@ function renderShop(rebuild){
     el.classList.toggle('cantAfford', !it.sold && !afford);
     el.classList.toggle('selected', S.selIdx===idx);
     const note = el.querySelector('.cNote');
-    if(note) note.textContent = poolFull ? ' (the cup is full — trade a bone for it)'
-      : altarJam ? ' (the altar is full — trade a relic for it)' : '';
+    // "the altar is full" reads as a refusal. It is the opposite: the ware is
+    // still yours for the taking, the price just includes naming what you
+    // leave behind. Say what the player DOES, not what is blocked.
+    if(note) note.textContent = poolFull ? ' — still yours: trade one of your bones for it'
+      : altarJam ? ' — still yours: trade one of your relics for it' : '';
   });
 
   const btn = $('btnConfirm'), hint = $('shopHint');
@@ -7012,11 +7402,17 @@ function renderShop(rebuild){
     const poolFullG = S.offers.some(o=>o.kind==='die' && !o.sold) && S.dicePool.length >= maxPool();
     const altarFullG = S.offers.some(o=>o.kind==='relic' && !o.sold) && altarFull();
     setShopAction(btn, 'idle', 'SELECT A WARE', true, null);
-    // Priming the player before they've clicked anything: if there's no room
-    // left, say so now rather than let them discover it only after picking.
-    hint.textContent = (poolFullG && altarFullG) ? 'cup and altar are both full — pick a ware to trade for it'
-      : poolFullG ? 'your cup is full — pick a bone below to trade for it'
-      : altarFullG ? 'your altar is full — pick a relic below to trade for it'
+    // Priming the player before they've clicked anything. A full altar is the
+    // single biggest fork in the game — a player who never trades barely ever
+    // reaches the deep descents — and the old wording ("your altar is full")
+    // read as a wall rather than as an invitation. Both lines now say the same
+    // thing in the same order: you can still take it, and here is how.
+    hint.textContent = (poolFullG && altarFullG)
+        ? 'Cup and altar both full — you can still take any ware here. Choose one, then trade a bone or a relic of yours for it.'
+      : poolFullG
+        ? 'Your cup is full — but no bone here is out of reach. Choose one, then trade away a bone you already hold.'
+      : altarFullG
+        ? 'Your altar is full — but no relic here is out of reach. Choose one, then trade away a relic you already hold.'
       : 'select a ware to inspect it';
     hint.classList.toggle('urgent', poolFullG || altarFullG);
   } else {
@@ -7027,14 +7423,20 @@ function renderShop(rebuild){
     // Exchange, which is the only way to be rid of a bone or a relic now.
     const mustSwap = poolFull || altarJam;
     if(mustSwap)
-      setShopAction(btn, 'swap', icon('swap') + 'EXCHANGE — ' + sel.price + ' SHARDS',
+      setShopAction(btn, 'swap',
+                    icon('swap') + 'TRADE FOR IT — ' + sel.price + ' SHARDS',
                     !afford, openSwap);
     else
       setShopAction(btn, 'buy', icon('handFist') + 'CONFIRM — ' + sel.price + ' SHARDS',
                     !afford, buySelected);
+    // Names the ware and names the act. "Trade one away" left it unclear that
+    // the player picks WHICH one, and that the trade is a normal move rather
+    // than a penalty for having filled the altar.
     hint.textContent = !afford ? 'not enough soul shards'
-      : poolFull ? 'your cup already holds ' + maxPool() + ' bones — trade one away'
-      : altarJam ? 'the altar holds only ' + altarSlots() + ' relics — trade one away'
+      : poolFull ? 'Press TRADE FOR IT to take the ' + sel.name +
+                   ' — then choose which of your ' + S.dicePool.length + ' bones to grind to dust for it.'
+      : altarJam ? 'Press TRADE FOR IT to take the ' + sel.name +
+                   ' — then choose which of your ' + S.relics.length + ' relics to banish for it.'
       : 'seal the bargain for ' + sel.name;
     hint.classList.toggle('urgent', mustSwap || !afford);
   }
@@ -7134,7 +7536,7 @@ function renderSwap(){
     '<span class="tkPrice">' + icon('diamond') + it.price + '</span>';
 
   $('swapGiveHead').innerHTML = icon(isDie ? 'hammer' : 'trash') +
-    (isDie ? 'YOU GIVE UP A BONE' : 'YOU GIVE UP A RELIC');
+    (isDie ? 'PICK THE BONE YOU GIVE UP' : 'PICK THE RELIC YOU GIVE UP');
 
   // the rows themselves are built once by buildSwapList(); picking one only
   // moves the .sel class, so nothing re-enters
@@ -7145,7 +7547,10 @@ function renderSwap(){
   $('btnSwapConfirm').disabled = !gone || !afford;
   $('swapHint').textContent =
     !afford ? 'not enough soul shards'
-    : !gone ? (isDie ? 'choose a bone to shatter' : 'choose a relic to banish')
+    : !gone ? (isDie ? 'Click one of your bones on the right. It is ground to dust and the ' +
+                       it.name + ' takes its place.'
+                     : 'Click one of your relics on the right. It is banished and the ' +
+                       it.name + ' takes its place.')
     : (isDie ? 'the ' + gone.name + ' is ground to dust for the ' + it.name
              : 'the ' + gone.name + ' is banished for the ' + it.name);
 }
@@ -7191,13 +7596,143 @@ function confirmSwap(){
   S.selIdx = swapCtx.offerIdx;
   closeSwap();
   buySelected();                       // pays, binds the new ware, re-renders
+  // Banishing the Femur takes TWO off the cap, which can leave the pool over
+  // it just as a Frailty decree does. Same rite, same question.
+  enforcePoolCap('The Femur is banished. The cup shrinks back to its own size.');
 }
 
+//======================================================================
+// 23b. THE CULLING — the cup holding more bones than it may
+//
+// maxPool() can FALL underneath a pool that is already full: every FRAILTY
+// decree takes one off it, and banishing the Femur takes two. Nothing used to
+// happen when it did — the pool simply sat over its own cap, the count read
+// 13/12, and the only visible effect was that dice could no longer be bought.
+// The decree said "your dice pool holds one fewer bone" and the pool went on
+// holding exactly as many as before.
+//
+// The rite does not pick for you. It opens the cup and waits.
+//======================================================================
+let cullCtx = null;                    // {pick, reason}
+
+function poolOverflow(){ return S ? Math.max(0, S.dicePool.length - maxPool()) : 0; }
+function cullPending(){ return !!cullCtx; }
+
+// Called after anything that can narrow the cup. Silent unless it actually
+// bites — most Frailty procs land on a pool that is already under the cap.
+function enforcePoolCap(reason){
+  if(!S || cullPending() || poolOverflow() <= 0) return false;
+  cullCtx = {pick:null,
+    reason: reason || 'The cup holds more bones than it may. One must go.'};
+  buildCullList();
+  renderCull();
+  show('cullOverlay');
+  // the cup being upended, not a shop chime — this is being taken, not traded
+  sfx('snatch');
+  shake = Math.max(shake, 0.5);
+  return true;
+}
+
+function buildCullList(){
+  const list = $('cullList');
+  list.innerHTML = '';
+  S.dicePool.forEach((d, i)=>{
+    const T = DIE_TYPES[d.type];
+    const row = document.createElement('div');
+    row.className = 'swapRow';
+    row.dataset.id = d.id;
+    row.style.setProperty('--rowc', T.edge);
+    row.style.animationDelay = (i*30) + 'ms';
+    row.innerHTML =
+      '<span class="rIcon">' + icon(T.icon) + '</span>' +
+      '<span class="rBody"><span class="rName">' + T.name + '</span>' +
+      '<span class="rMeta">Faces ' + T.faces.join(' ') + '</span></span>' +
+      '<span class="rMark"></span>';
+    setTip(row, {title:T.name, body:T.desc, meta:'Faces ' + T.faces.join(' '),
+                 icon:T.icon, color:T.edge});
+    row.onclick = ()=>{
+      cullCtx.pick = (cullCtx.pick === d.id) ? null : d.id;
+      sfx('mark', {off:cullCtx.pick === null});
+      renderCull();
+    };
+    list.appendChild(row);
+  });
+}
+
+function renderCull(){
+  if(!cullCtx) return;
+  const owed = poolOverflow();
+  $('cullFlavor').textContent = cullCtx.reason;
+  for(const row of $('cullList').children)
+    row.classList.toggle('sel', row.dataset.id === String(cullCtx.pick));
+  $('btnCullConfirm').disabled = cullCtx.pick === null;
+  $('cullHint').textContent = owed > 1
+    ? (cullCtx.pick === null
+        ? 'choose a bone to give up — ' + owed + ' must go'
+        : owed + ' must go; this is the first')
+    : (cullCtx.pick === null ? 'choose a bone to give up'
+                             : 'the cup closes over the rest');
+}
+
+// Takes the bone out of everything that could still be holding a reference to
+// it. The board one is defensive — the cull is gated to happen before a cast —
+// but a stale board cell would be a ghost die that cannot be re-rolled.
+function cullDie(id){
+  const i = S.dicePool.findIndex(d=>d.id === id);
+  if(i < 0) return false;
+  const d = S.dicePool[i];
+  if(d.gx >= 0 && S.board[d.gy] && S.board[d.gy][d.gx] === d) S.board[d.gy][d.gx] = null;
+  S.dicePool.splice(i, 1);
+  S.withheld = S.withheld.filter(x=>x !== id);
+  S.benched  = S.benched.filter(x=>x !== id);
+  if(S.hoverDieId === id) S.hoverDieId = null;
+  toast('The ' + DIE_TYPES[d.type].name + ' is ground to dust', 'hammer');
+  return true;
+}
+
+function confirmCull(){
+  if(!cullCtx || cullCtx.pick === null) return;
+  if(!cullDie(cullCtx.pick)) return;
+  sfx('shatter');
+  shake = Math.max(shake, 0.45);
+  _poolSig = null;                     // the chip list must rebuild
+  // more than one may be owed (banishing the Femur costs two). Stay open and
+  // ask again rather than closing and re-entering.
+  if(poolOverflow() > 0){
+    cullCtx.pick = null;
+    buildCullList();
+    renderCull();
+    syncUI();
+    return;
+  }
+  closeCull();
+  syncUI();
+}
+
+function closeCull(){
+  cullCtx = null;
+  hide('cullOverlay');
+  hideTip();
+}
+
+// The Ossuary's NEXT QUOTA figure. A decree is carved a full level before it is
+// announced (see flushDecree), which is deliberate — but THE TITHE moves this
+// number, and this is the one screen where the player is budgeting against it.
+// Quoting a quota already raised by a decree they have not been shown reads as
+// the figure moving for no reason. The pending stack is held out of THIS
+// FIGURE ONLY: it is genuinely in force, and the descent's own quota will
+// include it — by which point the decree has announced itself and the jump has
+// a name. Frailty and Sealed Stone need no such handling; Frailty gets its own
+// moment from the culling, and a sealed stone changes no choice made here.
 function quotaForNext(){
-  const save = S.level, saveTrial = S.trial;
+  const save = S.level, saveTrial = S.trial, saveDecrees = S.decrees;
+  if(_pendingDecree === 'tithe'){
+    const i = S.decrees.lastIndexOf('tithe');
+    if(i >= 0) S.decrees = S.decrees.slice(0, i).concat(S.decrees.slice(i+1));
+  }
   S.level = save + 1; S.trial = isTrialLevel(S.level) ? {id:'?'} : null;
   const q = quotaFor(S.level);
-  S.level = save; S.trial = saveTrial;
+  S.level = save; S.trial = saveTrial; S.decrees = saveDecrees;
   return q.toLocaleString();
 }
 function buySelected(){
@@ -7214,7 +7749,9 @@ function buySelected(){
     S.dicePool.push(makeDie(it.die));
     sfx('buy');
   } else if(it.kind==='chalk'){
-    sfx('chalk');
+    // every purchase in the Ossuary lands with the same weight — 'chalk' is the
+    // shop's own thin re-roll noise and read as a lesser transaction
+    sfx('socket');
     if(it.axis==='cross'){ chalkOrDeepen('row'); chalkOrDeepen('col'); }
     else if(it.axis==='deepen') deepenChalk();
     else chalkOrDeepen(it.axis);
@@ -7268,33 +7805,37 @@ function descend(){
 //======================================================================
 // 23. BOONS
 //======================================================================
-function pickDistinct(arr, k){
-  const bag = arr.slice(), out = [];
-  while(out.length < k && bag.length) out.push(bag.splice(rnd(bag.length),1)[0]);
-  return out;
-}
+// The sieve's taste in favours walks UP the tiers as it drags you deeper: this
+// is the tier it is aiming at, and the roll below prefers whatever sits nearest
+// to it. At the first Trial that is tier 1; by the depths it is tier 4.
+function boonTierBias(level){ return 1 + Math.min(3, Math.max(0, level - 5)/8); }
+
+// Three distinct boons, weighted toward the bias and away from what it has
+// already given you this run — so a deep run keeps finding new favours instead
+// of being offered its third Sworn Oath.
 function rollBoons(){
+  const bias = boonTierBias(S.level);
+  const bag = BOONS.filter(b => S.level >= b.min);
   const out = [];
-  // a full altar cannot accept a relic, so the sieve offers other favours
-  if(altarFull()){
-    return pickDistinct(UTIL_BOONS, 3).map(u=>({kind:'util', id:u.id, name:u.name,
-      icon:u.icon, desc:u.desc, tag:'BOON'}));
-  }
-  const free = Object.keys(RELICS).filter(id=>!S.relics.includes(id));
-  // two relics, biased toward the deeper tiers
-  const bag = free.slice();
-  for(let k=0; k<2 && bag.length; k++){
-    const w = bag.map(id=>RELICS[id].tier===4 ? 1.4 : RELICS[id].tier===3 ? 2.2 : RELICS[id].tier===2 ? 1.6 : 0.7);
+  while(out.length < 3 && bag.length){
+    const w = bag.map(b=>{
+      // Asymmetric on purpose. Being ABOVE the sieve's current taste is merely
+      // unlikely; being below it is close to disqualifying, because a tier-1
+      // favour offered at descent 30 is not a choice, it is a wasted card.
+      const d = b.tier - bias;
+      let x = d < 0 ? 1/(1 - d*3.0) : 1/(1 + d*1.6);
+      x /= 1 + boonCount(b.id)*1.5;          // seen it already? less likely again
+      return x;
+    });
     let total = w.reduce((a,b)=>a+b,0), r = Math.random()*total, i = 0;
     while(i < bag.length-1 && r > w[i]){ r -= w[i]; i++; }
-    const id = bag[i]; bag.splice(i,1);
-    out.push({kind:'relic', id, name:RELICS[id].name, icon:RELICS[id].icon,
-              desc:RELICS[id].desc, tag:TIER_NAME[RELICS[id].tier] + ' RELIC'});
+    const b = bag.splice(i,1)[0];
+    out.push({id:b.id, name:b.name, icon:b.icon, desc:b.desc,
+              tier:b.tier, tag:BOON_TIER_NAME[b.tier]});
   }
-  const util = pick(UTIL_BOONS);
-  out.push({kind:'util', id:util.id, name:util.name, icon:util.icon, desc:util.desc, tag:'BOON'});
-  return out.sort(()=>Math.random()-0.5);
+  return out;
 }
+const BOON_TIER_NAME = {1:'A FAVOUR', 2:'A BLESSING', 3:'A GREAT BOON', 4:'AN APOTHEOSIS'};
 function openBoon(){
   S.phase = 'boon';
   const boons = rollBoons();
@@ -7302,7 +7843,7 @@ function openBoon(){
   wrap.innerHTML = '';
   boons.forEach((b, i)=>{
     const el = document.createElement('div');
-    el.className = 'boonCard';
+    el.className = 'boonCard tier' + b.tier;
     // the cards land last, after the trophy, title and flavor have read
     el.style.animationDelay = (620 + i*130) + 'ms';
     el.innerHTML = '<div class="cicon">' + icon(b.icon) + '</div>' +
@@ -7340,27 +7881,15 @@ function claimBoon(b, el){
     openShop();
   }, 620);
 }
+// Claiming a boon is now a single line: push the id. Every effect is derived
+// from that list, so there is no second place for a boon to half-apply itself.
 function applyBoon(b){
   sfx('buy');
-  if(b.kind==='relic'){
-    S.relics.push(b.id);
-    toast('RELIC BOUND: ' + RELICS[b.id].name, RELICS[b.id].icon, 'gold');
-    return;
-  }
-  switch(b.id){
-    case 'purse':   S.shards += 28; toast('+28 soul shards', 'coins', 'gold'); break;
-    case 'poolUp':  S.bonusPool += 2; toast('The cup widens: +2 slots', 'cube'); break;
-    case 'reroll':  S.bonusRerolls += 1; toast('+1 re-roll every cast', 'arrowUUpLeft'); break;
-    case 'multUp':  S.bonusMult += 0.6; toast('+0.6 Offering Multiplier', 'sparkle', 'gold'); break;
-    case 'chalkUp': addChalk(Math.random()<0.5?'row':'col'); sfx('chalk'); toast('A fresh sigil is scrawled', 'paintBrush'); break;
-    case 'castUp':  S.bonusCasts += 1; toast('+1 cast on every level', 'clockCountdown', 'gold'); break;
-    case 'altarUp': S.bonusAltar += 1; toast('The altar widens: +1 relic slot', 'sealCheck', 'gold'); break;
-    case 'mend':
-      S.shards += 15;
-      if(S.dicePool.length < maxPool()) S.dicePool.push(makeDie('bone'));
-      toast('+15 shards and a fresh bone', 'firstAidKit', 'green');
-      break;
-  }
+  const def = BOON_BY_ID[b.id];
+  if(!def) return;
+  S.boons.push(def.id);
+  _boonSig = null;                    // the sidebar panel must rebuild
+  toast('BOON GRANTED: ' + def.name, def.icon, 'gold');
 }
 
 //======================================================================
@@ -7416,7 +7945,7 @@ function renderTrialStrip(){
   });
 }
 
-let _relicSig = null, _poolSig = null;
+let _relicSig = null, _poolSig = null, _boonSig = null;
 // transition trackers for the sidebar's one-shot reactions
 let _metShown = false, _lastLevelScore = null, _socketRelic = null, _surgeTimer = null;
 function syncUI(){
@@ -7513,7 +8042,8 @@ function syncUI(){
         r.onmouseleave = ()=>{ S.focusRow = null; syncFocusRows(); };
       });
     }
-    mu.textContent = 'x' + (tallying ? S.sealMult : S.previewMult).toFixed(1);
+    mu.textContent = multHidden() ? 'x???'
+      : 'x' + (tallying ? S.sealMult : S.previewMult).toFixed(1);
   } else {
     pvl.innerHTML = icon('fire') + 'OFFERED BLOOD';
     pv.textContent = '—';
@@ -7528,7 +8058,7 @@ function syncUI(){
   const inShop = (S.phase==='shop');
   const relicSig = S.relics.join(',') + '|' + altarSlots();
   const poolSig = S.dicePool.map(d=>d.id+':'+d.type+':'+shownValue(d)+':'+(d.gx>=0?1:0)).join(',')
-    + '|' + S.withheld.join('.') + '|' + blind + '|' + maxPool();
+    + '|' + S.withheld.join('.') + '|' + S.benched.join('.') + '|' + blind + '|' + maxPool();
 
   const rl = $('relicList');
   $('relicCount').textContent = S.relics.length + '/' + altarSlots();
@@ -7560,6 +8090,7 @@ function syncUI(){
   const pl = $('poolList');
   $('poolCount').textContent = S.dicePool.length + '/' + maxPool();
   const withheld = new Set(S.withheld);
+  const benched  = new Set(S.benched);
   if(poolSig !== _poolSig){
   _poolSig = poolSig;
   pl.innerHTML = '';
@@ -7567,13 +8098,41 @@ function syncUI(){
     const el = document.createElement('div');
     el.className = 'dieChip ' + d.type;
     el.style.animationDelay = (i*26) + 'ms';
+    // withheld = out for the level; benched = no stone free for it this cast
     if(withheld.has(d.id)) el.style.opacity = '.32';
-    el.textContent = (d.gx>=0 && !blind) ? shownValue(d) : '?';
+    else if(benched.has(d.id)) el.style.opacity = '.5';
+    el.textContent = (d.gx>=0 && !blind) ? shownValue(d)
+                   : benched.has(d.id) ? '–' : '?';
     const T = DIE_TYPES[d.type];
     setTip(el, {title:T.name, body:T.desc, icon:T.icon, color:T.edge,
       meta:'Faces ' + T.faces.join(' ') +
-        (withheld.has(d.id) ? ' · WITHHELD this level' : '')});
+        (withheld.has(d.id) ? ' · WITHHELD this level'
+         : benched.has(d.id) ? ' · NO STONE FREE — sits out this cast' : '')});
     pl.appendChild(el);
+  });
+  }
+
+  // boons — one chip per DISTINCT favour, stacks counted in the corner
+  const bl = $('boonList');
+  const boonSig = S.boons.join(',');
+  $('boonCount').textContent = S.boons.length;
+  if(boonSig !== _boonSig){
+  _boonSig = boonSig;
+  bl.innerHTML = '';
+  if(!S.boons.length) bl.innerHTML = '<span class="empty-note">no trial has yielded yet</span>';
+  const seen = [];
+  for(const id of S.boons) if(!seen.includes(id)) seen.push(id);   // grant order
+  seen.forEach((id, i)=>{
+    const def = BOON_BY_ID[id];
+    if(!def) return;
+    const n = boonCount(id);
+    const el = document.createElement('div');
+    el.className = 'boonChip' + (def.tier===4 ? ' tApo' : def.tier===3 ? ' tGreat' : '');
+    el.style.animationDelay = (i*40) + 'ms';
+    el.innerHTML = icon(def.icon) + (n>1 ? '<span class="stack">' + n + '</span>' : '');
+    setTip(el, {title:def.name, body:def.desc, icon:def.icon, color:'var(--gold)',
+      meta:BOON_TIER_NAME[def.tier] + (n>1 ? ' · granted ' + n + ' times' : '')});
+    bl.appendChild(el);
   });
   }
 
@@ -7583,6 +8142,14 @@ function syncUI(){
   // buttons
   const bCast = $('btnCast'), bRe = $('btnReroll'), bReAll = $('btnRerollAll'), bSeal = $('btnSeal');
   bCast.style.display  = (S.phase==='awaitCast') ? '' : 'none';
+  // An over-full cup is answered before anything is thrown. The button says so
+  // and stays LIVE rather than going dead under the player's hand — pressing it
+  // re-opens the culling, so the moment can never strand the run.
+  const owed = poolOverflow();
+  bCast.classList.toggle('danger', owed > 0);
+  bCast.innerHTML = owed > 0
+    ? icon('minus') + 'GIVE UP ' + (owed>1 ? owed + ' BONES' : 'A BONE')
+    : icon('diceSix') + 'CAST THE BONES';
   bRe.style.display    = (S.phase==='placed') ? '' : 'none';
   bReAll.style.display = (S.phase==='placed') ? '' : 'none';
   bSeal.style.display  = (S.phase==='placed') ? '' : 'none';
@@ -7749,6 +8316,8 @@ document.querySelectorAll('.gtab').forEach(t=>{
 
 $('btnSwapCancel').onclick = ()=>{ sfx('click'); closeSwap(); };
 $('btnSwapConfirm').onclick = confirmSwap;
+// no cancel: the cup is over its cap and the rite is not asking whether
+$('btnCullConfirm').onclick = confirmCull;
 $('swapOverlay').addEventListener('click', e=>{
   if(e.target === $('swapOverlay')) closeSwap();
 });

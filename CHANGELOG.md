@@ -51,6 +51,98 @@ Rules:
 
 ---
 
+## the_bone_sieve_v1.0.0_beta.8 — "WHAT THE DEEP OWES" · 2026-07-30
+
+*A balance release, driven by roughly 40,000 simulated runs against the shipped
+model. Boons stop being relics in disguise, RUN conduits stop being dead
+content, and the quota curve stops outrunning every offering a player can build.*
+
+### Added
+- **Boons are a system.** `BOONS` — 23 entries across four tiers, gated by `min`
+  descent. `S.boons` is a flat list of ids and **every** effect is derived from
+  it through one helper apiece (`boonMult`, `boonCasts`, `boonRerolls`,
+  `boonTypeBonus`, `boonConduitFlat`, `boonCluster`, `boonChalk`, `boonAlms`,
+  `boonRareScale`, `boonQuotaScale`, `boonTrialSoften`, `boonRunGap`). The five
+  loose `bonusX` counters that used to live on the state are gone; they were
+  written only by the old boon screen and read from five different formulas,
+  which is how a boon granting altar slots ended up fighting the altar.
+  `maxPool()` and `altarSlots()` deliberately carry **no** boon term — the cup
+  and the altar are the two scarcities the build decision rests on.
+- **Depth-scaled offers.** `boonTierBias(level)` walks the sieve's taste from
+  tier 1 to tier 4 across a run. The weight is asymmetric on purpose: sitting
+  *above* the current bias is merely unlikely, sitting *below* it is close to
+  disqualifying, because a tier-1 favour at descent 30 is a wasted card. Measured
+  offer mix moves from 100% tier 1 at L5 to 11/13/22/54% at L30. Cards carry a
+  `tier1`..`tier4` class so the escalation is legible on screen.
+- **Boon panel.** Sidebar, below the dice pool, in gold rather than the altar's
+  violet — a boon is granted, not bound, and cannot be banished. One chip per
+  distinct boon with a stack count in the corner. `flex:1 0 auto` so it fills the
+  space the dice panel gave back but can never shrink below its own chips.
+- **`w` draw-weight on trials.** `pickTrial()` is weighted; the unseen-first
+  rotation is unchanged.
+
+### Changed
+- **Exchange messaging, four surfaces.** The card note, both shop hints, the
+  action button and the modal heading and hint. `EXCHANGE` was doing the work as
+  a *noun* — a place, not an act — and "your altar is full" read as a refusal.
+  Now `TRADE FOR IT`, and every line says the same thing in the same order: you
+  can still take it, and here is how. Retest showed a player who uses the
+  Exchange clears L20 at 67% against 12% for one who never does; it is the single
+  largest performance factor measured in the game, and nothing on screen said so.
+- **RUN conduits.** Base `typeMult` 4 → 7 (Ossuary Ladder 6 → 10) plus a
+  run-only length escalator (`RUN_LENGTH_STEP = 1.0`) applied on top of the
+  cluster bonus. A 3-long straight goes 30 → 53, a 6-long 168 → 1,176. The
+  formation rule is **untouched** — measurement showed 88–91% of eligible
+  clusters fail on a repeated value, not on gaps, and resolving runs on subsets
+  the way KIND and PARITY are resolved would have pushed them from ~5% of boards
+  to 17–24%, making them a third reliable strategy rather than a jackpot.
+- **Iron Rungs** grants gap tolerance: `gaps <= wilds + boonRunGap()`. The only
+  lever in the game that moves how *often* a straight forms rather than what it
+  pays. One copy takes RUN incidence 5.2% → 7.7%, two → 10.1%.
+
+### Balance
+- **The quota curve.** `QG_FLOOR` 1.288 → 1.252, `QG_SPAN` 0.14 → 0.176.
+  `FLOOR + SPAN` is preserved at 1.428 so the first level's growth is bit-identical
+  and the opening descents do not move. The floor is the whole late game: at
+  1.288 the quota outran offering multipliers (which grow nearer 1.07/level) by
+  about 1.2× per descent, and the deficit compounded until L25 killed four runs
+  in five. L25 clear rate 23.7% → 41.3%; L30 7.2% → 20.0%; ordinary-vs-trial
+  gap holds at 29pt so the spike is still felt; 0% of runs reach L45, so runs
+  still end.
+- **Trial swell cap** 0.23 → 0.13 (x1.45 → x1.35 maximum). Measured in isolation
+  this moves L25 by ~1.5 points — by that depth the base curve is what has run
+  away, not the spike. Capped anyway so a deep trial never drifts further from
+  its ordinary neighbours than a shallow one does.
+- **Even/Odd Hand** `min` 15 → 20, `w` 0.3. They were killing 9.2% of all runs,
+  roughly 5× the mildest trial, as an unretuned side effect of the beta.7-era
+  correctness fix that made Thorn dice and the rare board-wide bonuses respect
+  them. Behaviour is unchanged; they now kill 3.1% of runs. Conditional fatality
+  is *higher* (they only land deep now) — deliberately.
+- **Ninefold Gift** 40 → 20 blood/conduit (power 12.61 → 9.49 by forced-grant
+  A/B; it was outperforming every tier-4). **Marrow Gift** 10 → 6 — same
+  mechanic, tier 1, and tuning one without the other would have left a tier-1
+  and a tier-3 nearly equal. **Sovereign Blood** −18% → −26% quota (5.86 → 7.70;
+  it was the weakest tier-4 by a wide margin). **Iron Rungs** 0.30 → 1.87 via the
+  gap-tolerance rework; its mean-depth score stays modest by design, but p99 of
+  the biggest single conduit on a board goes 704 → 1,706 at two stacks.
+- **Shard interest.** `Math.min(5, floor(shards/8))` →
+  `if (shards < 70) Math.min(4, floor(shards/12))`. The term paid *more* the less
+  you spent, on a purse that had nowhere to go once the altar and cup capped.
+  Purse at L20 133 → 111 shards (7.8× → 6.5× the mean ware price); the early game,
+  where shards genuinely constrain, is untouched.
+
+### Notes for the next session
+- Tier means after tuning: t1 3.73 · t2 3.94 · t3 5.89 · t4 8.93. **Tiers 1 and
+  2 remain statistically indistinguishable** — not addressed here.
+- Trial clear rates at L5–L20 are now flat (88/83/84/82%) where they used to
+  escalate. The escalation moved to L25/L30 and to the ordinary levels
+  (L21 98% → L29 72%). If early trials should ramp again, the lever is the trial
+  *rules* getting harsher with depth, not the quota.
+- Tier-4 boons gate at `min:25`, which only ~41% of runs that reach L25 clear —
+  they remain the least-seen content in the game.
+
+---
+
 ## the_bone_sieve_v1.0.0_beta.7 — "THE RITE PUTS ON ITS FACE" · 2026-07-29
 
 *A visual pass over every surface the player touches: one blood material, one
