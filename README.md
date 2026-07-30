@@ -5,7 +5,7 @@
 **An occult gambling roguelite. Six knuckles of a dead saint, a grid of hungry stone feed it.**
 
 [![Play](https://img.shields.io/badge/play-in%20your%20browser-d61f3c?style=for-the-badge)](#play-it)
-[![Version](https://img.shields.io/badge/version-v1.0.0%20beta.7-b04dff?style=for-the-badge)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v1.0.0%20beta.8-b04dff?style=for-the-badge)](CHANGELOG.md)
 [![No build](https://img.shields.io/badge/build-none%20required-46ff8e?style=for-the-badge)](#running-it-locally)
 
 <img src="docs/screenshots/menu.png" alt="The Bone Sieve title screen" width="100%">
