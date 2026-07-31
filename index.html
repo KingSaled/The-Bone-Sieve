@@ -1374,14 +1374,23 @@
   @keyframes cursedPulse{0%,100%{opacity:.28;} 50%{opacity:1;}}
 
   /* ---- states ----
-     Selection reads purely through the gold outline now — a "CHOSEN" pill
-     used to straddle the card's top edge here, but it nudged the row's
-     height every time a card was picked. The outline alone is unmistakable
-     and never touches layout. */
+     Selection reads purely through the outline — a "CHOSEN" pill used to
+     straddle the card's top edge here, but it nudged the row's height every
+     time a card was picked. The outline alone is unmistakable and never
+     touches layout.
+
+     That outline is VIOLET, and must not go back to gold. Gold is tier 3's
+     rarity rim (and the gold cEtch frame that comes with it), so a gold
+     selection ring left an unselected RARE ware looking exactly like a
+     selected one — the two states were the same colour on the same edge of
+     the same element. Violet is the rite's existing "this is marked" colour:
+     marked dice, decrees, and the Culling's own selected row already use it,
+     and no rarity tier claims it. It reads clean against all four rims —
+     tier 1 grey, tier 2 steel, tier 3 gold, tier 4 crimson. */
   .card.selected .cInner{
     box-shadow:inset 0 1px 0 rgba(255,255,255,.14), inset 0 -2px 0 rgba(0,0,0,.75),
-               0 0 0 2px var(--gold), 0 0 0 3px rgba(0,0,0,.6),
-               0 30px 58px rgba(0,0,0,.72), 0 0 40px rgba(255,181,77,.45);}
+               0 0 0 2px var(--neon-p), 0 0 0 3px rgba(0,0,0,.6),
+               0 30px 58px rgba(0,0,0,.72), 0 0 40px rgba(176,77,255,.5);}
   .card.cantAfford .cInner{opacity:.5;}
   .card.sold{cursor:default;}
   .card.sold .cInner{opacity:.3;filter:grayscale(.85);}
@@ -1644,6 +1653,202 @@
   @keyframes boonLost{
     0%{transform:translateY(0) scale(1);opacity:1;filter:none;}
     100%{transform:translateY(18px) scale(.93);opacity:0;filter:grayscale(1) brightness(.5);}}
+
+  /* ================= THE ARCHIVE =================
+     The career screen: every bone and relic in the game, what it costs in
+     Marrow, and what has already been paid for.
+
+     Deliberately NOT built on .card. The Ossuary's wares are 3D-tilting slabs
+     with promoted layers and a drifting nebula behind the glass, and the note
+     on .cInner says out loud why that is affordable: there are only ever four
+     or five on screen. The Archive puts FORTY-EIGHT up at once. So these are
+     flat plaques that borrow the same palette and rarity ribbon and none of
+     the machinery — no perspective, no will-change, no per-card animation. */
+  #menuArchive{max-width:min(1180px,calc(94vw / var(--ui-scale,1)));width:100%;}
+  #menuArchive .menuH2{margin-bottom:4px;}
+  .arcFlavor{font-family:var(--font-mono);color:var(--bone-dim);font-style:italic;
+    font-size:14px;margin-bottom:16px;letter-spacing:.4px;}
+
+  /* the ledger bar — the same furniture as the Ossuary's, so the two screens
+     read as the same game keeping two sets of books */
+  #arcLedger{display:flex;align-items:center;justify-content:space-between;gap:18px;
+    flex-wrap:wrap;width:100%;margin-bottom:14px;padding:11px 18px;
+    background:linear-gradient(180deg,rgba(10,7,15,.85),rgba(6,4,10,.7));
+    border:1px solid var(--line);border-top-color:var(--line-hi);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05), inset 0 -12px 24px rgba(0,0,0,.5);}
+  #arcMarrow{font-family:var(--font-mono);font-size:22px;font-weight:800;color:var(--gold);
+    display:flex;align-items:center;gap:9px;white-space:nowrap;
+    text-shadow:0 0 18px rgba(255,181,77,.5);}
+  #arcMarrow .ic{font-size:22px;}
+  #arcMarrow small{font-family:var(--font-ui);font-size:11.5px;font-weight:700;
+    letter-spacing:3px;color:var(--bone-faint);text-shadow:none;}
+  #arcLife{display:flex;gap:20px;flex-wrap:wrap;justify-content:flex-end;
+    font-family:var(--font-mono);font-size:13px;color:var(--bone-faint);}
+  #arcLife span{display:flex;align-items:center;gap:6px;}
+  #arcLife .ic{font-size:15px;color:var(--line-hi);}
+  #arcLife b{color:var(--bone);font-weight:800;}
+
+  /* the roster scrolls; the ledger and the buttons do not scroll away with it */
+  #arcRoster{width:100%;max-height:calc(60vh / var(--ui-scale,1));
+    overflow-y:auto;overflow-x:hidden;padding-right:6px;text-align:left;}
+  .arcGroup{font-family:var(--font-display);font-weight:400;font-size:23px;
+    letter-spacing:4px;color:var(--bone);margin:16px 0 2px;
+    display:flex;align-items:center;gap:12px;}
+  .arcGroup:first-child{margin-top:0;}
+  .arcGroup::after{content:'';flex:1;height:1px;
+    background:linear-gradient(90deg,var(--line-hi),transparent);}
+  /* how much of this half of the roster is paid for — the one number a
+     returning player looks for first */
+  .arcCount{order:1;font:800 12px var(--font-mono);font-style:normal;
+    letter-spacing:1px;color:var(--bone-faint);}
+  .arcTier{font-family:var(--font-ui);font-weight:700;font-size:11px;letter-spacing:3.4px;
+    color:var(--bone-faint);margin:14px 0 8px;}
+  .arcGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:10px;}
+
+  .arcItem{position:relative;display:flex;gap:11px;align-items:flex-start;
+    padding:11px 12px 11px 13px;border-radius:9px;text-align:left;width:100%;
+    background:linear-gradient(168deg,#251f30,#181322 62%,#100c18);
+    border:1px solid var(--aRim,#3f3850);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 6px 16px rgba(0,0,0,.5);
+    transition:border-color .16s linear, transform .16s var(--ease), box-shadow .16s linear;}
+  /* the rarity ribbon, same read as the Ossuary's */
+  .arcItem::before{content:'';position:absolute;left:9px;right:9px;top:0;height:2px;
+    border-radius:2px;background:var(--aRim,#3f3850);opacity:.85;}
+  .arcItem .aIco{flex:0 0 auto;width:38px;height:38px;display:flex;align-items:center;
+    justify-content:center;border-radius:7px;
+    background:radial-gradient(115% 96% at 50% 6%,#241d33,#0a0710 76%);
+    box-shadow:inset 0 3px 9px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.16);}
+  .arcItem .aIco .ic{font-size:21px;color:var(--aKey,#a89ec0);}
+  .arcItem .aBody{flex:1;min-width:0;}
+  .arcItem .aName{font-family:var(--font-ui);font-weight:700;font-size:14.5px;
+    letter-spacing:1.2px;color:var(--bone);line-height:1.2;}
+  .arcItem .aDesc{font-family:var(--font-mono);font-size:11.5px;line-height:1.5;
+    color:var(--bone-dim);margin-top:4px;}
+  .arcItem .aFoot{display:flex;align-items:center;gap:6px;margin-top:8px;
+    font-family:var(--font-mono);font-weight:800;font-size:13px;letter-spacing:.4px;}
+  .arcItem .aFoot .ic{font-size:14px;}
+
+  /* ---- the four states a plaque can be in ----
+     Owned, affordable, too expensive, and depth-locked. They must be tellable
+     apart at a glance and without relying on colour alone, so each also carries
+     its own word in the footer. */
+  .arcItem.tier1{--aRim:#4f4759;--aKey:#a89ec0;}
+  .arcItem.tier2{--aRim:#7d8aa3;--aKey:#b9c6dd;}
+  .arcItem.tier3{--aRim:var(--gold);--aKey:var(--gold-hi);}
+  .arcItem.tier4{--aRim:var(--crimson-hi);--aKey:#ff7fb0;}
+
+  .arcItem.owned{background:linear-gradient(168deg,#1b2a20,#141d18 62%,#0d130f);}
+  .arcItem.owned .aFoot{color:var(--neon-g);}
+  .arcItem.owned .aName{color:#dcf3e4;}
+
+  /* buyable: the only state that lifts to the pointer, because it is the only
+     one that does anything when clicked */
+  .arcItem.buy{cursor:pointer;}
+  .arcItem.buy .aFoot{color:var(--gold);}
+  .arcItem.buy:hover{transform:translateY(-2px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 12px 24px rgba(0,0,0,.6), 0 0 20px rgba(255,181,77,.25);}
+
+  /* locked states stay fully legible — design §4 is explicit that a Marrow
+     item is a shopping list entry, not a mystery. Dimmed, never hidden. */
+  .arcItem.locked{opacity:.62;}
+  .arcItem.locked .aFoot{color:var(--bone-faint);}
+  .arcItem.gated{opacity:.62;}
+  .arcItem.gated .aFoot{color:var(--neon-p);}
+
+  /* ---- the purchase confirmation ---- */
+  /* same reasoning as the wipe dialog — see the note there */
+  #arcConfirmOverlay .modal{max-width:560px;width:min(560px,calc(92vw / var(--ui-scale,1)));
+    padding:26px 32px 24px;overflow:visible;max-height:none;}
+  #arcConfirmOverlay h2{font-size:clamp(28px,3.2vw,38px);margin-bottom:8px;}
+  #arcConfirmOverlay .flavor{margin-bottom:14px;font-size:14px;}
+  #arcConfirmOverlay .menuBtnRow{margin-top:18px;}
+  #arcWhat{display:flex;align-items:center;justify-content:center;gap:12px;
+    margin:6px 0 4px;font-family:var(--font-ui);font-weight:700;font-size:20px;
+    letter-spacing:2px;color:var(--bone);}
+  #arcWhat .ic{font-size:26px;color:var(--gold-hi);}
+  #arcWhatDesc{font-family:var(--font-mono);font-size:12.5px;line-height:1.6;
+    color:var(--bone-dim);margin-bottom:16px;}
+  #arcCost{display:flex;justify-content:center;gap:26px;flex-wrap:wrap;margin-bottom:6px;}
+  #arcCost div{font-family:var(--font-mono);font-size:12px;color:var(--bone-faint);
+    letter-spacing:1.4px;}
+  #arcCost b{display:block;font-size:23px;font-weight:800;margin-top:3px;
+    color:var(--bone);letter-spacing:-.4px;}
+  #arcCost .pay b{color:var(--gold);}
+  #arcCost .after b{color:var(--bone-dim);}
+
+  /* ---- scouring the Archive ---- */
+  /* The one destructive control in the Veil, so it is fenced off: its own rule
+     above it, crimson where everything else in the panel is bone, and a button
+     that opens a dialog rather than doing anything itself. */
+  #veilDanger{margin-top:26px;padding-top:18px;border-top:1px solid #3a2028;}
+  .veilHead.danger{color:#c98a96;}
+  .veilHead.danger .ic{color:var(--crimson);}
+  #btnWipe{display:flex;margin:14px auto 0;border-color:#5c2732;color:#e0b4bc;}
+  #btnWipe:hover:not(:disabled){border-color:var(--crimson-hi);color:#ffd2da;
+    box-shadow:0 0 18px rgba(214,31,60,.28);}
+  #wipeOverlay{background:radial-gradient(85% 85% at 50% 46%,
+    rgba(46,4,12,.86), rgba(3,2,4,.98) 74%);}
+  /* Sized so the whole decision — mark, title, copy, the four numbers, the
+     warning and both buttons — is on screen at once. A confirmation you have
+     to scroll is a confirmation you did not really read. overflow stays
+     visible so nothing can quietly clip; the content is short enough that it
+     does not need to scroll on any normal desktop window. */
+  #wipeOverlay .modal{max-width:600px;width:min(600px,calc(92vw / var(--ui-scale,1)));
+    padding:26px 32px 24px;overflow:visible;max-height:none;
+    background:linear-gradient(170deg,#1e1014,#170b0f 46%,#0c0608);}
+  #wipeOverlay h2{color:var(--crimson-hi);font-size:clamp(28px,3.2vw,38px);
+    margin-bottom:8px;}
+  #wipeOverlay .sigil{color:var(--crimson);font-size:38px;margin-bottom:4px;}
+  #wipeOverlay .flavor{margin-bottom:14px;font-size:14px;}
+  #wipeOverlay .menuBtnRow{margin-top:18px;}
+  /* what is about to be lost, counted out — an abstract warning is easy to
+     click past, a number you recognise as yours is not */
+  #wipeWhat{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;
+    margin:14px 0 16px;padding:12px 14px;border-radius:9px;
+    background:rgba(0,0,0,.35);border:1px solid #3a2830;}
+  #wipeWhat div{font-family:var(--font-mono);font-size:11px;letter-spacing:1.6px;
+    color:#8a7078;}
+  #wipeWhat b{display:block;font-size:21px;font-weight:800;margin-top:3px;
+    color:#e4d2d6;letter-spacing:-.4px;}
+  #wipeWhat .marrow b{color:var(--gold);}
+  #wipeWarn{display:flex;align-items:center;justify-content:center;gap:9px;
+    font-family:var(--font-ui);font-weight:700;font-size:13px;letter-spacing:3.4px;
+    color:var(--crimson-hi);margin-bottom:4px;}
+  #wipeWarn .ic{font-size:16px;}
+
+  /* ---- what the run paid out, on the death screen ---- */
+  /* Not a seventh .gslab: the six slabs are a record of what the descent LOST,
+     and the grid note above them says they are fixed three-across because a
+     seventh would orphan onto its own row. This is the opposite number — the
+     one thing carried out of the crypt — so it gets its own band, in gold
+     against all that grey, rather than being filed in with the losses. */
+  #goMarrow{position:relative;margin:0 0 22px;padding:15px 18px 14px;border-radius:10px;
+    background:linear-gradient(180deg,rgba(46,33,12,.72),rgba(20,14,6,.6) 60%,rgba(11,8,4,.7));
+    border:1px solid #5c4620;
+    box-shadow:inset 0 1px 0 rgba(255,224,160,.14), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 8px 22px rgba(0,0,0,.55);
+    animation:tabletRise .5s 1s var(--ease-out) backwards;}
+  #goMarrow::before{content:'';position:absolute;left:12px;right:12px;top:0;height:1px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .goMarrowHead{font-family:var(--font-ui);font-weight:700;font-size:10.5px;
+    letter-spacing:2.6px;color:#9c8452;margin-bottom:6px;}
+  .goMarrowVal{font-family:var(--font-mono);font-weight:800;font-size:38px;line-height:1;
+    color:var(--gold);letter-spacing:-1px;text-shadow:0 0 26px rgba(255,181,77,.55);
+    display:flex;align-items:center;justify-content:center;gap:10px;}
+  .goMarrowVal .ic{font-size:30px;}
+  .goMarrowParts{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:11px;}
+  .goMarrowParts span{font-family:var(--font-mono);font-size:11px;letter-spacing:.6px;
+    color:#a8925f;padding:4px 9px;border-radius:5px;
+    background:rgba(0,0,0,.34);border:1px solid #4a3819;}
+  .goMarrowParts span b{color:var(--gold-hi);font-weight:800;}
+  /* the personal-best chip is the loudest thing on the band, because beating
+     your own depth is the biggest single payout in the economy */
+  .goMarrowParts span.pb{border-color:var(--gold);color:var(--gold-hi);
+    background:rgba(90,62,14,.5);box-shadow:0 0 16px rgba(255,181,77,.3);}
+  .goMarrowFoot{font-family:var(--font-mono);font-size:11.5px;color:#8a7a55;margin-top:10px;}
+  .goMarrowFoot b{color:var(--gold);font-weight:800;}
 
   /* ================= GAME OVER =================
      Losing is a big beat too, so it gets the same carved frame and staged
@@ -2133,6 +2338,23 @@
         </div>
       </div>
 
+      <!-- Set apart from the settings above it by a rule and its own colour,
+           because nothing else in this panel destroys anything. -->
+      <div class="veilSection" id="veilDanger">
+        <div class="veilHead danger"><i class="ic" data-ic="warningOctagon"></i>THE LONG MEMORY</div>
+        <div class="veilNote">
+          The Archive remembers every rite you have ever run — your Marrow, your
+          unlocked bones, chalks and relics, and how deep you have ever gone.
+          Scouring it puts you back where a stranger starts.
+        </div>
+        <button class="ghost" id="btnWipe"><i class="ic" data-ic="trash"></i>SCOUR THE ARCHIVE</button>
+        <!-- centred by #btnWipe's own auto margins: .veilSection is text-align
+             left for its body copy, which would otherwise strand the button
+             against the edge while every other control in the Veil is a full
+             width row -->
+
+      </div>
+
       <div id="nowPlaying">silence</div>
       <div class="menuBtnRow">
         <button class="ghost" id="btnAbandon" style="display:none;">
@@ -2262,6 +2484,7 @@
     <nav class="menuNav">
       <button class="menuItem" id="miStart"><i class="ic" data-ic="pentagram"></i><span>BEGIN THE RITE</span></button>
       <button class="menuItem" id="miRules"><i class="ic" data-ic="bookOpenText"></i><span>THE RITE</span></button>
+      <button class="menuItem" id="miArchive"><i class="ic" data-ic="cards"></i><span>THE ARCHIVE</span></button>
       <button class="menuItem" id="miGrim"><i class="ic" data-ic="crownSimple"></i><span>GRIMOIRE</span></button>
       <button class="menuItem" id="miVeil"><i class="ic" data-ic="gearSix"></i><span>THE VEIL</span></button>
       <button class="menuItem" id="miLog"><i class="ic" data-ic="sealCheck"></i><span>CHANGELOG</span></button>
@@ -2300,6 +2523,67 @@
     <div class="menuBtnRow">
       <button class="ghost" id="miRulesBack"><i class="ic" data-ic="caretRight" style="transform:rotate(180deg);"></i>RETURN</button>
       <button class="primary big" id="btnStart"><i class="ic" data-ic="pentagram"></i>BEGIN THE RITE</button>
+    </div>
+  </div>
+
+  <!-- ============ THE ARCHIVE ============
+       The career screen. Everything the sieve has ever offered, what it costs
+       in Marrow, and what has already been bought. Locked entries show in
+       full — name, icon, description, price — because design §4 wants this to
+       read as a shopping list, never as a mystery box. -->
+  <div class="menuScreen hidden" id="menuArchive">
+    <h2 class="menuH2">THE ARCHIVE</h2>
+    <div class="arcFlavor">What the deep has already been paid for, and what it still wants.</div>
+    <div id="arcLedger">
+      <div id="arcMarrow"></div>
+      <div id="arcLife"></div>
+    </div>
+    <div id="arcRoster"></div>
+    <div class="menuBtnRow">
+      <button class="ghost" id="miArchiveBack"><i class="ic" data-ic="caretRight" style="transform:rotate(180deg);"></i>RETURN</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ARCHIVE PURCHASE ============
+     Unlocks are permanent and Marrow is slow, so a mis-click must never be
+     able to spend it. Same two-button shape as the Ossuary's Exchange. -->
+<!-- Frameless, for the same reason as the wipe dialog below it. -->
+<div class="overlay hidden" id="arcConfirmOverlay" style="z-index:67;">
+  <div class="modal">
+    <h2>PAY THE ARCHIVE</h2>
+    <div class="flavor">What is bought here is bought for good.</div>
+    <div id="arcWhat"></div>
+    <div id="arcWhatDesc"></div>
+    <div id="arcCost"></div>
+    <div class="menuBtnRow">
+      <button class="ghost" id="btnArcCancel"><i class="ic" data-ic="x"></i>NOT YET</button>
+      <button class="primary" id="btnArcConfirm"><i class="ic" data-ic="handFist"></i>PAY IN MARROW</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCOUR THE ARCHIVE ============
+     The only irreversible thing in the game. It sits above the Veil that
+     launched it, keeps the cancel on the left where the safe answer belongs,
+     and names out loud what is about to be lost. -->
+<!-- No <div class="boneFrame">. The ornament is sized for the big panels — its
+     band reaches ~86px into whatever it wraps, and it overhangs the box by
+     18px, which against .modal's overflow-y:auto put scrollbars on BOTH axes
+     and buried the content. Panels that carry it (the Ossuary, the Boon, the
+     death screen, the Veil) all pair it with an inner body padded by
+     --bf-pad; a 600px dialog has no room for that. The Exchange and the
+     Culling — this dialog's actual peers — carry no frame either. -->
+<div class="overlay hidden" id="wipeOverlay" style="z-index:70;">
+  <div class="modal wipeModal">
+    <i class="ic sigil" data-ic="warningOctagon"></i>
+    <h2>SCOUR THE ARCHIVE</h2>
+    <div class="flavor">The deep forgets you. Everything it owed you goes with it.</div>
+    <div id="wipeWhat"></div>
+    <div id="wipeWarn"><i class="ic" data-ic="prohibit"></i>THIS CANNOT BE UNDONE</div>
+    <div class="menuBtnRow">
+      <button class="primary" id="btnWipeCancel"><i class="ic" data-ic="check"></i>KEEP MY ARCHIVE</button>
+      <button class="danger" id="btnWipeConfirm"><i class="ic" data-ic="trash"></i>SCOUR IT ALL</button>
     </div>
   </div>
 </div>
@@ -2415,6 +2699,7 @@
       <h2>THE SIEVE FEEDS</h2>
       <div class="flavor">Your marrow joins the mortar. Another gambler will find your dice.</div>
       <div class="goStats" id="goStats"></div>
+      <div id="goMarrow"></div>
       <div class="menuBtnRow">
         <button class="ghost" id="btnToMenu"><i class="ic" data-ic="pentagram"></i>THE ALTAR</button>
         <button class="primary big" id="btnRestart"><i class="ic" data-ic="arrowsCounterClockwise"></i>RISE AGAIN</button>
@@ -3785,7 +4070,17 @@ const CHALK_WARES = [
    desc:'Scrawls a sigil down a random COLUMN. Conduits lying on it score x3.'},
   {id:'chalk_cross',  kind:'chalk', axis:'cross',icon:'crosshairSimple', name:'Crossed Sigil', price:22, tier:3,
    desc:'Scrawls BOTH a row and a column at once.'},
-  {id:'chalk_deepen', kind:'chalk', axis:'deepen',icon:'paintBrush', name:'Deepen the Sigil', price:16, tier:2,
+  // Tier 4, and priced above every other chalk on the counter. This is the one
+  // ware in the game with no ceiling on it: every other multiplier is a fixed
+  // number you buy once, but Deepen can be bought again and again against the
+  // SAME line, and a conduit lying on that line is multiplied by the result
+  // every cast. That compounding is what let a fresh save with no relics at
+  // all reach descent 20+, which is tier-4 behaviour at a tier-2 price.
+  // Moving the tier does three things at once, which is why it is the whole
+  // fix: it raises the shard cost, it moves the ware onto tierWeight()'s
+  // tier-4 curve so it surfaces rarely and only in the deep, and it puts the
+  // Archive unlock behind design §9's descent-25 key.
+  {id:'chalk_deepen', kind:'chalk', axis:'deepen',icon:'paintBrush', name:'Deepen the Sigil', price:30, tier:4,
    desc:'Cuts an existing chalk line deeper: its multiplier gains +2.'},
 ];
 function buildShopPool(){
@@ -3862,6 +4157,465 @@ const BOON_BY_ID = {};
 for(const b of BOONS) BOON_BY_ID[b.id] = b;
 
 //======================================================================
+// 9b. THE MARROW LEDGER — the save that outlives the run
+//
+//  ┌──────────────────────────────────────────────────────────────────┐
+//  │  Everything else in this file is ONE DESCENT. `S` is born in     │
+//  │  freshState() and forfeit in gameOver(), and that is correct —   │
+//  │  losing the run is the game.                                     │
+//  │                                                                  │
+//  │  This is the other ledger: what the sieve remembers about a      │
+//  │  PLAYER rather than a descent. Its own localStorage key, its     │
+//  │  own shape, read once at boot. Nothing in a run may touch it     │
+//  │  mid-descent — Marrow is awarded between runs, never during one, │
+//  │  which is what keeps the tuned in-run shard economy untouched.   │
+//  │                                                                  │
+//  │  The shape below is the WHOLE meta-progression design            │
+//  │  (bone-sieve-meta-progression-design.md §7, plus §11), declared  │
+//  │  in full now on purpose: later phases should add BEHAVIOUR to    │
+//  │  fields that already exist, never a migration over a career a    │
+//  │  player has already spent thirty runs building.                  │
+//  │                                                                  │
+//  │  WHAT IS LIVE SO FAR:                                            │
+//  │    · the ledger itself — load, save, repair, persist  (phase 1)  │
+//  │    · unlockedDice / unlockedRelics gate what a run may draw,     │
+//  │      through runShopPool() at the foot of this section (phase 2) │
+//  │                                                                  │
+//  │  NOTHING GRANTS ANYTHING YET. `marrow` is never awarded and no   │
+//  │  unlock is ever purchased, so a fresh save is permanently held   │
+//  │  at the starting set. That is deliberate, not an oversight —     │
+//  │  earning and spending are a later phase, and until then this     │
+//  │  ledger only ever WITHHOLDS.                                     │
+//  └──────────────────────────────────────────────────────────────────┘
+//======================================================================
+
+// Its own key, alongside boneSieveAudio / boneSieveDetail / boneSieveView /
+// boneSieveSeenVersion — never folded in with them. Those four are PREFERENCES:
+// losing one costs a player a slider position. This is a CAREER, and it is the
+// only stored thing in the game whose loss would actually hurt.
+const META_KEY = 'boneSieveMeta';
+
+// Bumped only when the shape changes in a way a stored ledger cannot be read
+// straight through. Every load runs migrateMeta() on the way in, so an old or
+// damaged ledger is REPAIRED rather than discarded — see the note there.
+const META_VERSION = 1;
+
+// Sanity ceilings for anything read back off disk. localStorage is a text file
+// the player can edit, so every number that comes out of it is untrusted input,
+// not a number. These are absurdly high on purpose: they exist to stop NaN,
+// Infinity and hand-typed nonsense from poisoning arithmetic later, not to cap
+// legitimate play. A ledger sits in the low thousands of Marrow (design §5).
+const META_MAX_MARROW = 1e9;
+const META_MAX_STAT   = 1e12;
+const META_MAX_IDS    = 512;
+
+// The bone die alone (design §2 — it is already the sole starting die, so a
+// fresh ledger matches today's build exactly). Not derived from DIE_WARES tier
+// 1, which also holds `runt` and `rotting`; those are the first two PURCHASES.
+const META_START_DICE = ['bone'];
+
+// Every tier-1 relic, derived rather than listed (design §9). Deriving means a
+// tier-1 relic added to RELICS later is automatically part of a fresh ledger,
+// with no second list to remember to update — the same reason DIE_ORDER and
+// buildShopPool() read their content out of the tables instead of restating it.
+function metaStartRelics(){
+  return Object.keys(RELICS).filter(id => RELICS[id].tier === 1);
+}
+
+function freshMeta(){
+  return {
+    version: META_VERSION,
+
+    // ---- the currency (design §1, §5) --------------------------------
+    // Earned at the end of every run, identically, with no win-state branch.
+    marrow: 0,
+
+    // ---- what the player owns (design §2, §9, §12) --------------------
+    // One list apiece, TWO ways into each: bought with Marrow, or granted by a
+    // story flag. §12 is explicit that the grant paths differ but the record
+    // does not, so the pool filter that Phase 2 needs stays a single check.
+    unlockedDice:   META_START_DICE.slice(),
+    unlockedRelics: metaStartRelics(),
+    // Chalks start entirely locked, and unlike dice and relics there is no
+    // opening gift at all. Design §2 gated only dice and relics — chalks were
+    // left ungated on the reasoning that they are consumable board effects
+    // rather than collectible content. Playtesting killed that: a fresh save
+    // with no relic support was still reaching descent 20+ on stacked chalk
+    // alone, because a chalk multiplies a conduit that a deepened chalk then
+    // multiplies again. That is not a garnish on a build, it IS a build, so
+    // it is gated like one.
+    unlockedChalks: [],
+
+    // ---- loadout toggles (design §11) ---------------------------------
+    // Unlocking is permanent; toggling is a per-run loadout choice made in the
+    // hub ("no wild dice this run"). Stored as the EXCEPTIONS rather than a
+    // flag per item, because the overwhelmingly common state is "on" and a
+    // sparse list cannot drift out of sync with the content tables.
+    // Not in design §7's block — §11 needs it, and it would have been exactly
+    // the field that forced the first migration.
+    disabledDice:   [],
+    disabledRelics: [],
+    disabledChalks: [],
+
+    // ---- small permanent power (design §3) ----------------------------
+    // Buy-once flags, never counters: §3 is explicit that none of these stack.
+    // `extraAltar` is reserved but undecided — §3 files it under "possibly,
+    // much later", gated expensive so it does not undercut the `shrine` relic.
+    // A reserved `false` costs nothing; discovering we want it after players
+    // have ledgers costs a migration.
+    rites: {
+      extraDie:     false,
+      extraReroll:  false,
+      cheapReroll:  false,
+      extraShards:  false,
+      extraAltar:   false,
+    },
+
+    // ---- the career (design §4, §5, §9) --------------------------------
+    // `deepestLevel` carries three jobs at once: the hub's headline stat, the
+    // test for §5's one-time personal-best Marrow bonus, and the level-15 /
+    // level-25 depth gates that hold back tier-3 and tier-4 content. It is the
+    // single most load-bearing number in this ledger.
+    lifetime: {
+      runs:          0,
+      deepestLevel:  0,
+      bestOffering:  0,
+      trialsCleared: 0,
+    },
+
+    // ---- narrative (design §12; story bible §3) -------------------------
+    // Beat keys in the order they fired, so the milestone dispatcher can never
+    // re-fire one and the hub knows which story-gated entries have opened.
+    storyBeatsFired: [],
+    storyComplete:   false,
+
+    // ---- tutorial ------------------------------------------------------
+    // Reserved during THIS build even though the tutorial ships later, for the
+    // same reason as everything else here: no migration for it afterwards.
+    tutorial: { seen:false, skipped:false },
+  };
+}
+
+//---- reading untrusted values back off disk ---------------------------
+function metaInt(v, fallback, max){
+  const n = Math.floor(Number(v));
+  if(!isFinite(n)) return fallback;
+  return Math.max(0, Math.min(max, n));
+}
+function metaBool(v, fallback){ return typeof v === 'boolean' ? v : fallback; }
+
+// Ids are validated for SHAPE — non-empty string, sane length, no duplicates —
+// and deliberately NOT filtered against DIE_TYPES / RELICS. Design §12A has the
+// deep dying author new die entries at runtime, so a perfectly legitimate
+// unlocked id may name something no static table in this file has ever heard
+// of. Dropping an unrecognised id would silently delete content the player
+// earned; carrying a stale string costs nothing, since the pool filter has to
+// resolve ids against live content anyway before it can use them.
+function metaIdList(v, fallback){
+  if(!Array.isArray(v)) return fallback;
+  const out = [], seen = Object.create(null);
+  for(const raw of v){
+    if(typeof raw !== 'string') continue;
+    const id = raw.trim();
+    if(!id || id.length > 64 || seen[id]) continue;
+    seen[id] = true;
+    out.push(id);
+    if(out.length >= META_MAX_IDS) break;
+  }
+  return out;
+}
+
+// A ledger from an older shape is repaired on the way in, never thrown away.
+// v1 is the first shape ever written, so there is nothing behind it to migrate
+// FROM and this is a pass-through today. It exists now so that the next shape
+// change is a few lines here rather than a decision about whether it is
+// acceptable to wipe everyone's career — by then it would be, and it isn't.
+function migrateMeta(raw){
+  if(!raw || typeof raw !== 'object') return null;
+  // const v = metaInt(raw.version, 0, 999);
+  // if(v < 2){ ...fold the v1 field into its v2 home...; }
+  return raw;
+}
+
+// Merge a stored ledger onto a fresh one field by field, so a save missing a
+// key (written before that key existed) gets the default rather than an
+// undefined, and a save carrying a key we no longer know about simply loses it.
+function hydrateMeta(raw){
+  const d = freshMeta();
+  if(!raw || typeof raw !== 'object') return d;
+
+  d.marrow = metaInt(raw.marrow, 0, META_MAX_MARROW);
+
+  d.unlockedDice   = metaIdList(raw.unlockedDice,   d.unlockedDice);
+  d.unlockedRelics = metaIdList(raw.unlockedRelics, d.unlockedRelics);
+  // A ledger written before chalks were gated simply has no such key, and the
+  // default — everything locked — is exactly the state that change wanted. No
+  // migration step and no META_VERSION bump: an ADDITIVE field is readable
+  // straight through, which is the bar migrateMeta() sets for bumping.
+  d.unlockedChalks = metaIdList(raw.unlockedChalks, d.unlockedChalks);
+  d.disabledDice   = metaIdList(raw.disabledDice,   []);
+  d.disabledRelics = metaIdList(raw.disabledRelics, []);
+  d.disabledChalks = metaIdList(raw.disabledChalks, []);
+  // The starting content is a floor, not an initial value. A ledger that has
+  // somehow lost the bone die is a ledger that cannot roll anything, so the
+  // opening set is unioned back in rather than trusted from disk.
+  for(const id of META_START_DICE)   if(!d.unlockedDice.includes(id))   d.unlockedDice.push(id);
+  for(const id of metaStartRelics()) if(!d.unlockedRelics.includes(id)) d.unlockedRelics.push(id);
+
+  if(raw.rites && typeof raw.rites === 'object')
+    for(const k in d.rites) d.rites[k] = metaBool(raw.rites[k], d.rites[k]);
+
+  if(raw.lifetime && typeof raw.lifetime === 'object')
+    for(const k in d.lifetime) d.lifetime[k] = metaInt(raw.lifetime[k], d.lifetime[k], META_MAX_STAT);
+
+  d.storyBeatsFired = metaIdList(raw.storyBeatsFired, []);
+  d.storyComplete   = metaBool(raw.storyComplete, false);
+
+  if(raw.tutorial && typeof raw.tutorial === 'object')
+    for(const k in d.tutorial) d.tutorial[k] = metaBool(raw.tutorial[k], d.tutorial[k]);
+
+  return d;
+}
+
+// Same shape as View below — a live object, a load() and a save() — so this
+// reads as one more thing the game remembers rather than a subsystem. Callers
+// mutate Meta.data and call Meta.save(), exactly as View.font is set and then
+// View.save() is called. Deliberately no grant/spend/unlock helpers yet: those
+// are meta-progression RULES, and this phase is only the place they will live.
+const Meta = {
+  data: freshMeta(),
+
+  load(){
+    let raw = null;
+    try{
+      const txt = localStorage.getItem(META_KEY);
+      // A ledger that will not parse reads as no ledger at all. There is
+      // nothing better to do with half a JSON object, and refusing to boot
+      // over one would be worse than starting a career again.
+      if(txt) raw = JSON.parse(txt);
+    }catch(e){ raw = null; }
+    this.data = hydrateMeta(migrateMeta(raw));
+    // Write straight back: on a first launch this is what puts the ledger on
+    // disk at all (so "close the game and reopen it" is testable from the very
+    // first boot), and on every later launch it flushes the repairs hydration
+    // just made instead of leaving a damaged copy stored.
+    this.save();
+    return this.data;
+  },
+
+  save(){
+    try{ localStorage.setItem(META_KEY, JSON.stringify(this.data)); return true; }
+    catch(e){ return false; }   // private mode, full quota — never fatal
+  },
+
+  // Wipes the career back to a fresh ledger — the same state a player who has
+  // never launched the game would see. SCOUR THE ARCHIVE in the Veil is the
+  // only thing that calls it, behind its own confirmation.
+  reset(){
+    this.data = freshMeta();
+    this.save();
+    return this.data;
+  },
+};
+
+//---- what the ledger gates --------------------------------------------
+// Design §2: a locked die or relic is simply absent from the pool a run draws
+// from. That is the whole mechanism, and it is deliberately the ONLY one —
+// there is no second "is this locked?" test guarding a purchase, because
+// content that was never dealt cannot be bought, banished, rolled or rewarded.
+// One filter, one place, no gameplay code touched.
+//
+// Both checks read unlock AND toggle together on purpose. Unlocking is
+// permanent and toggling is a loadout choice (design §11), but nothing that
+// draws content ever cares about the difference — it only wants to know
+// whether this run is allowed to see the thing.
+function dieAvailable(id){
+  const m = Meta.data;
+  return m.unlockedDice.includes(id) && !m.disabledDice.includes(id);
+}
+function relicAvailable(id){
+  const m = Meta.data;
+  return m.unlockedRelics.includes(id) && !m.disabledRelics.includes(id);
+}
+// Keyed on the WARE id ('chalk_row'), not an axis: 'cross' and 'deepen' are
+// wares in their own right and unlock separately from the plain lines.
+function chalkAvailable(id){
+  const m = Meta.data;
+  return m.unlockedChalks.includes(id) && !m.disabledChalks.includes(id);
+}
+
+// SHOP_POOL stays the whole CATALOGUE — every die, chalk and relic in the game.
+// The Archive has to render locked entries with their names and prices (design
+// §4), so the complete list must survive somewhere untouched. This derives the
+// subset one descent is permitted to draw from.
+//
+// Snapshotted per run rather than filtered per draw, because design §11 makes
+// the toggles a choice taken BEFORE a run: a switch flipped while a descent is
+// live must never change what the Ossuary is already holding, and a filter
+// evaluated at draw time would do exactly that.
+//
+// Chalks are gated too, as of the post-Phase-3 balance pass. They were exempt
+// on the theory that they were board garnish and that leaving them in kept a
+// fresh save's counter from being seven relics and a bone die. Both halves of
+// that turned out to be wrong: stacked chalk carried relic-less runs past
+// descent 20, and a thin opening counter is the intended shape of a fresh
+// save rather than a problem to pad around.
+function runShopPool(){
+  return SHOP_POOL.filter(it=>{
+    if(it.kind === 'die')   return dieAvailable(it.die);
+    if(it.kind === 'relic') return relicAvailable(it.relic);
+    if(it.kind === 'chalk') return chalkAvailable(it.id);
+    return true;
+  });
+}
+
+// The Grimoire is the book for THIS descent, so it asks the run's own snapshot
+// what exists rather than asking the ledger — otherwise a toggle flipped
+// between runs could leave the book and the counter disagreeing about what is
+// down here. A relic already bound to the altar always shows, whatever the
+// ledger has since been told, because the player is plainly holding it.
+function runKnowsDie(id){
+  return !!S && S.wares.some(w => w.kind === 'die' && w.die === id);
+}
+function runKnowsRelic(id){
+  return !!S && (S.relics.includes(id) ||
+                 S.wares.some(w => w.kind === 'relic' && w.relic === id));
+}
+
+//---- what the deep owes: earning Marrow (design §5) --------------------
+// Awarded on EVERY run end, identically. There is no win state in this game
+// and so there is no win bonus, no branch and no special case — see design §5,
+// which is emphatic about it.
+//
+// The three inputs live on wildly different scales: depth is a small integer
+// while blood and best-offering run from the low thousands into six figures.
+// Added raw, blood would drown depth entirely, which is backwards — depth is
+// the thing this economy exists to reward. So blood and best-offering are
+// square-rooted and capped, and depth stays linear and uncapped.
+const MARROW_PER_LEVEL  = 3;
+const MARROW_BLOOD_CAP  = 60;
+const MARROW_ROLL_CAP   = 20;
+// The single biggest payday in the game, and deliberately so: it fires only on
+// the run that beats your lifetime deepest, and never again at that depth. A
+// player farming a safe shallow build caps out on blood and offering within a
+// few runs and never sees this at all. A player actually pushing deeper earns
+// steadily AND spikes. That is the whole anti-grind mechanism, not a bolt-on.
+const MARROW_PB_BONUS   = 50;
+
+function marrowFor(level, blood, bestOffering, priorDeepest){
+  const depth = Math.max(0, level) * MARROW_PER_LEVEL;
+  const bloodC = Math.min(MARROW_BLOOD_CAP, Math.floor(Math.sqrt(Math.max(0, blood)) / 10));
+  const rollC  = Math.min(MARROW_ROLL_CAP,  Math.floor(Math.max(0, bestOffering) / 1000));
+  const pb     = level > priorDeepest ? MARROW_PB_BONUS : 0;
+  return {depth, blood:bloodC, roll:rollC, pb, total: depth + bloodC + rollC + pb};
+}
+
+// Called once as a run ends. Returns the award so the death screen can show its
+// working; the ledger is already updated and written by the time it returns.
+//
+// The PB test has to read lifetime.deepestLevel BEFORE it is raised, or the
+// bonus could never fire — hence the local copy on the first line.
+function closeOutRun(){
+  const m = Meta.data;
+  const priorDeepest = m.lifetime.deepestLevel;
+  const award = marrowFor(S.level, S.totalScore, S.stats.best, priorDeepest);
+  m.marrow += award.total;
+  m.lifetime.runs++;
+  m.lifetime.deepestLevel  = Math.max(priorDeepest,           S.level);
+  m.lifetime.bestOffering  = Math.max(m.lifetime.bestOffering, S.stats.best);
+  m.lifetime.trialsCleared += S.stats.trialsCleared;
+  Meta.save();
+  return award;
+}
+
+//---- what it buys: Archive pricing (design §10) ------------------------
+// PLACEHOLDER MULTIPLIER — expected to be tuned, and the only number that
+// should need to move.
+//
+// Design §10: rather than hand-tuning a second economy, a Marrow price is the
+// item's existing SHARD price times one flat constant, so the relative costs
+// inside and across tiers automatically mirror balance work already done.
+//
+// Why 3, so a future tuning pass has the arithmetic rather than a bare number:
+// every locked item's shard price totals 769 (144 in dice, 625 in relics), so
+// x3 puts the full roster at 2,307 Marrow. Design §5's own calibration table
+// has a strong run paying ~150, a modest one ~49 and a rough one ~19; a player
+// improving across a career averages somewhere near 80-100 with PB spikes,
+// which clears the roster in roughly 23-29 runs. Design §6 asks for 15-25.
+// It also keeps the early hook: the cheapest locked die (Runt, 5 shards) costs
+// 15 Marrow, inside the reach of a single bad first run.
+const MARROW_PRICE_MULT = 3;
+function marrowPrice(shardPrice){ return shardPrice * MARROW_PRICE_MULT; }
+
+// Shard price and tier by die id, lifted off the ware table so the Archive
+// never restates a number the Ossuary already owns.
+const DIE_PRICE = {}, DIE_TIER = {};
+for(const w of DIE_WARES){ DIE_PRICE[w.die] = w.price; DIE_TIER[w.die] = w.tier; }
+
+// Design §9's depth gates, layered ON TOP of the Marrow cost. Marrow can be
+// earned at any depth, but the deep content needs a one-time "prove you got
+// this far" key as well — so a shallow grinder can stockpile currency and
+// still be unable to spend it on the top tiers. Purely a function of tier:
+// tier 3 (obsidian, mirror, the rare relics) wants descent 15, tier 4
+// (crimson, the cursed relics) wants descent 25.
+const MARROW_DEPTH_GATE = {3:15, 4:25};
+function depthGateFor(tier){ return MARROW_DEPTH_GATE[tier] || 0; }
+function depthGateMet(tier){ return Meta.data.lifetime.deepestLevel >= depthGateFor(tier); }
+
+// One row per gateable thing in the game, dice first, tiers ascending. The
+// Archive renders straight off this, so what the screen shows and what the
+// unlock actually does can never drift.
+function archiveRoster(){
+  const out = [];
+  for(const id of DIE_ORDER){
+    // A die with no ware entry has no shard price to convert, so it cannot be
+    // priced and is not Archive content. Nothing is in that state today; the
+    // guard is here for the story-generated dice of design §12A, which are
+    // granted outright and must never turn up as a purchase.
+    if(!(id in DIE_PRICE)) continue;
+    const T = DIE_TYPES[id];
+    out.push({kind:'die', id, name:T.name, icon:T.icon, desc:T.desc,
+              tier:DIE_TIER[id], price:marrowPrice(DIE_PRICE[id]),
+              owned:Meta.data.unlockedDice.includes(id)});
+  }
+  for(const w of CHALK_WARES){
+    out.push({kind:'chalk', id:w.id, name:w.name, icon:w.icon, desc:w.desc,
+              tier:w.tier, price:marrowPrice(w.price),
+              owned:Meta.data.unlockedChalks.includes(w.id)});
+  }
+  for(const id in RELICS){
+    const r = RELICS[id];
+    out.push({kind:'relic', id, name:r.name, icon:r.icon, desc:r.desc,
+              tier:r.tier, price:marrowPrice(r.price),
+              owned:Meta.data.unlockedRelics.includes(id)});
+  }
+  return out;
+}
+// Which ledger list a purchase lands in. One lookup, so buyUnlock never has to
+// grow a chain of ifs as kinds are added.
+const META_UNLOCK_LIST = {die:'unlockedDice', chalk:'unlockedChalks', relic:'unlockedRelics'};
+
+// The one place a purchase happens. Returns true only if the ledger actually
+// changed, so the caller never has to re-derive whether it worked.
+function buyUnlock(kind, id){
+  const row = archiveRoster().find(e => e.kind === kind && e.id === id);
+  if(!row || row.owned) return false;
+  if(!depthGateMet(row.tier)) return false;
+  if(Meta.data.marrow < row.price) return false;
+  const list = META_UNLOCK_LIST[kind];
+  if(!list) return false;
+  Meta.data.marrow -= row.price;
+  Meta.data[list].push(id);
+  Meta.save();
+  // The pool a run draws from is snapshotted when the run is born, and at the
+  // menu that snapshot is already sitting in S from the last freshState().
+  // Re-take it so the Grimoire — which reads the run's snapshot, not the
+  // ledger — agrees with what was just bought without waiting for a run.
+  if(menuMode && S) S.wares = runShopPool();
+  return true;
+}
+
+//======================================================================
 // 10. GAME STATE
 //======================================================================
 let S = null;
@@ -3874,11 +4628,18 @@ function freshState(){
     castNum:1, rerollsLeft:2,
     dicePool:[], board:[], relics:[], chalks:[], decrees:[],
     previewSegments:[], previewScore:0, previewMult:1,
+    // The catalogue this descent is allowed to draw from, fixed the moment the
+    // run is born. Every later draw reads THIS, never SHOP_POOL — see
+    // runShopPool() for why it is a snapshot and not a live filter.
+    wares: runShopPool(),
     offers:[], selIdx:null, hoverTile:null,
     hoverDieId:null, focusRow:null,
     shopRerolls:0,
     // run-long counters that relics feed on
     rotted:0, ouroStacks:0,
+    // set the instant the run's Marrow is paid into the ledger, so it can only
+    // ever happen once however gameOver() is reached
+    marrowPaid:false,
     // Boons are held as a plain list of ids and every effect is DERIVED from it
     // (see boonCount and the boon* helpers). The five loose bonusX counters that
     // used to live here were written only by the old boon screen and read from
@@ -6640,8 +7401,15 @@ function renderGrimoire(){
     h += '</div>';
   }
   else if(grimTab === 'relics'){
+    // The Grimoire is the run's reference book, so it answers "what can I find
+    // down here?" — it lists what the ledger has opened, at the shard price the
+    // Ossuary will actually charge. Listing a locked relic here would quote a
+    // price for something the counter can never lay out, which reads as a bug
+    // rather than as a goal. Locked content gets its shopfront in The Archive
+    // (design §4), where a Marrow price is the honest number to show.
     for(const tier of [4,3,2,1]){
-      const ids = Object.keys(RELICS).filter(id=>RELICS[id].tier===tier);
+      const ids = Object.keys(RELICS).filter(id=>RELICS[id].tier===tier && runKnowsRelic(id));
+      if(!ids.length) continue;   // no bare "CURSED" heading over an empty tier
       h += '<div class="grimSec"><h4>' + TIER_NAME[tier] + '</h4>';
       for(const id of ids){
         const r = RELICS[id];
@@ -6654,6 +7422,7 @@ function renderGrimoire(){
   else if(grimTab === 'dice'){
     h += '<div class="grimSec"><h4>THE BONES</h4>';
     for(const k of DIE_ORDER){
+      if(!runKnowsDie(k)) continue;   // same reasoning as the relic tab above
       const T = DIE_TYPES[k];
       const n = S ? S.dicePool.filter(d=>d.type===k).length : 0;
       h += grimRow(T.icon, T.name, n ? ('x'+n+' HELD') : '-', T.desc, n>0);
@@ -7144,6 +7913,16 @@ function flushDecree(){
 }
 
 function gameOver(){
+  // The ledger is settled here and nowhere else, and exactly once: gameOver()
+  // has a single caller today, but the run's other one-shot trackers are all
+  // flagged rather than trusted (see startRun), and paying a career currency
+  // twice is the one bookkeeping bug that would be worth a player's anger.
+  let award = null;
+  if(!S.marrowPaid){
+    S.marrowPaid = true;
+    award = closeOutRun();
+  }
+
   // one slab per number, landing in sequence after the title has burned in
   const slab = (ico, label, val, cls, i) =>
     '<div class="gslab" style="animation-delay:' + (700 + i*90) + 'ms">' +
@@ -7158,6 +7937,33 @@ function gameOver(){
     slab('sealCheck',   'TRIALS BROKEN',  S.stats.trialsCleared,            '',        4) +
     slab('warningOctagon','FELL SHORT BY',
          Math.max(0, S.quota - S.levelScore).toLocaleString(),              'crimson', 5);
+
+  // What the descent is worth to the NEXT one. The six slabs above are the run
+  // and are all past tense; this is the only line on the screen pointing
+  // forward, so it is staged apart from them and lands after they have all
+  // settled. The breakdown is shown rather than a bare total because the whole
+  // point of design §5's formula is to teach that depth pays best — a player
+  // who can see DEPTH +75 next to BLOOD +55 learns that in one glance.
+  const mp = $('goMarrow');
+  if(award){
+    const chip = (label, v, cls) => v > 0
+      ? '<span class="' + (cls||'') + '">' + label + ' <b>+' + v + '</b></span>' : '';
+    mp.innerHTML =
+      '<div class="goMarrowHead">' + (award.pb ? 'A NEW DEEPEST — THE ARCHIVE PAYS' : 'THE ARCHIVE PAYS') + '</div>' +
+      '<div class="goMarrowVal">' + icon('bone') + '+' + award.total.toLocaleString() + '</div>' +
+      '<div class="goMarrowParts">' +
+        chip('DEPTH', award.depth) +
+        chip('BLOOD', award.blood) +
+        chip('OFFERING', award.roll) +
+        chip('DEEPER THAN EVER', award.pb, 'pb') +
+      '</div>' +
+      '<div class="goMarrowFoot">the Archive holds <b>' +
+        Meta.data.marrow.toLocaleString() + '</b> marrow</div>';
+    mp.style.display = '';
+  } else {
+    mp.style.display = 'none';
+  }
+
   show('gameoverOverlay');
   buildBoneFrames($('gameoverOverlay'));
   showTally(false);
@@ -7171,7 +7977,11 @@ function gameOver(){
 //======================================================================
 function shopRerollCost(){ return hasRelic('key') ? 1 : 3 + S.shopRerolls; }
 function rollOffers(){
-  const bag = SHOP_POOL.filter(it=>{
+  // S.wares, not SHOP_POOL: the Ossuary lays out what this run has unlocked,
+  // not everything that exists. The filters below are the run's OWN reasons to
+  // withhold a ware (already bound, no line left to chalk); the unlock gate has
+  // already happened upstream and never needs restating here.
+  const bag = S.wares.filter(it=>{
     if(it.kind==='relic' && S.relics.includes(it.relic)) return false;
     if(it.id==='chalk_deepen' && !S.chalks.length) return false;
     if(it.kind==='chalk' && it.axis!=='deepen'){
@@ -7815,7 +8625,21 @@ function boonTierBias(level){ return 1 + Math.min(3, Math.max(0, level - 5)/8); 
 // of being offered its third Sworn Oath.
 function rollBoons(){
   const bias = boonTierBias(S.level);
-  const bag = BOONS.filter(b => S.level >= b.min);
+  // DEEPEN THE CHALK sharpens chalk lines, so on a run that can never have one
+  // it is a card that cannot do anything. A boon is a forced one-of-three at a
+  // Trial rather than a purchase the player can decline, so a guaranteed-dead
+  // card there quietly costs them a third of their reward for breaking it.
+  //
+  // The question is "can a line exist this descent?", which has three answers
+  // and needs all three: a line already scrawled, a chalk ware the run may
+  // still buy, or the Ninth Sigil, which draws one free every level and so
+  // keeps the boon live even on a save that has unlocked no chalk at all.
+  // Note this is NOT "has drawn no line yet" — taking it early against lines
+  // you intend to chalk later is a real gamble, and stays available.
+  const chalkPossible = S.chalks.length > 0 ||
+                        S.wares.some(w => w.kind === 'chalk') ||
+                        hasRelic('sigil');
+  const bag = BOONS.filter(b => S.level >= b.min && (b.id !== 'deepchalk' || chalkPossible));
   const out = [];
   while(out.length < 3 && bag.length){
     const w = bag.map(b=>{
@@ -8248,17 +9072,159 @@ window.addEventListener('keydown', e=>{
   if(e.code==='KeyA' && S.phase==='placed') rerollAll();
   if(e.code==='KeyG'){ toggleGrimoire(); }
   if(e.code==='Escape'){
-    if(!$('swapOverlay').classList.contains('hidden')) closeSwap();
+    // innermost first: the purchase dialog sits over the Archive, which sits
+    // over the title screen, so Escape backs out one layer at a time
+    if(!$('wipeOverlay').classList.contains('hidden')) closeWipe();
+    else if(!$('arcConfirmOverlay').classList.contains('hidden')) closeArchiveBuy();
+    else if(!$('swapOverlay').classList.contains('hidden')) closeSwap();
     else if($('grimoire').classList.contains('open')) $('grimoire').classList.remove('open');
     else if(!$('settingsOverlay').classList.contains('hidden')) closeSettings();
+    else if(!$('menuArchive').classList.contains('hidden')) menuScreen('menuHome');
   }
 });
 window.addEventListener('pointerdown', ()=>Sound.unlock(), {once:false});
 
 //---- title screen ----
 function menuScreen(id){
-  ['menuHome','menuRules'].forEach(s=>$(s).classList.toggle('hidden', s!==id));
+  ['menuHome','menuRules','menuArchive'].forEach(s=>$(s).classList.toggle('hidden', s!==id));
 }
+
+//---- THE ARCHIVE -----------------------------------------------------
+// Rendered fresh every time it opens or a purchase lands. Forty-eight plaques
+// of static markup costs nothing next to keeping a diff of them in sync.
+const ARC_TIER_LABEL = {1:'COMMON', 2:'UNCOMMON', 3:'RARE', 4:'CURSED'};
+
+// The four states, resolved in one place so the plaque, the click handler and
+// the confirm dialog can never disagree about what an entry is.
+//   owned  — already paid for, or free from a fresh save
+//   gated  — design §9's depth key not yet cut, whatever the purse holds
+//   buy    — affordable and unlocked
+//   locked — known, priced, and simply not affordable yet
+function arcState(e){
+  if(e.owned) return 'owned';
+  if(!depthGateMet(e.tier)) return 'gated';
+  return Meta.data.marrow >= e.price ? 'buy' : 'locked';
+}
+function arcFoot(e, state){
+  if(state === 'owned')  return icon('sealCheck') + 'IN THE POOL';
+  if(state === 'gated')  return icon('stairs') + 'REACH DESCENT ' + depthGateFor(e.tier);
+  return icon('bone') + e.price + (state === 'locked' ? ' — NOT ENOUGH' : '');
+}
+function renderArchive(){
+  const m = Meta.data;
+  $('arcMarrow').innerHTML =
+    icon('bone') + m.marrow.toLocaleString() + '<small>MARROW</small>';
+  $('arcLife').innerHTML =
+    '<span>' + icon('pentagram') + 'RITES <b>' + m.lifetime.runs.toLocaleString() + '</b></span>' +
+    '<span>' + icon('stairs')    + 'DEEPEST <b>' + m.lifetime.deepestLevel + '</b></span>' +
+    '<span>' + icon('fire')      + 'BEST OFFERING <b>' + m.lifetime.bestOffering.toLocaleString() + '</b></span>' +
+    '<span>' + icon('sealCheck') + 'TRIALS <b>' + m.lifetime.trialsCleared.toLocaleString() + '</b></span>';
+
+  const roster = archiveRoster();
+  let h = '';
+  for(const group of [{kind:'die',   label:'THE BONES'},
+                      {kind:'chalk', label:'THE CHALKS'},
+                      {kind:'relic', label:'THE RELICS'}]){
+    const mine = roster.filter(e => e.kind === group.kind);
+    const owned = mine.filter(e => e.owned).length;
+    h += '<div class="arcGroup">' + group.label +
+         '<em class="arcCount">' + owned + '/' + mine.length + '</em></div>';
+    for(const tier of [1,2,3,4]){
+      const rows = mine.filter(e => e.tier === tier);
+      if(!rows.length) continue;
+      const gate = depthGateFor(tier);
+      h += '<div class="arcTier">' + ARC_TIER_LABEL[tier] +
+           (gate ? ' &nbsp;·&nbsp; needs descent ' + gate : '') + '</div>';
+      h += '<div class="arcGrid">';
+      for(const e of rows){
+        const state = arcState(e);
+        h += '<div class="arcItem tier' + e.tier + ' ' + state + '"' +
+               ' data-kind="' + e.kind + '" data-id="' + e.id + '">' +
+               '<div class="aIco">' + icon(e.icon) + '</div>' +
+               '<div class="aBody">' +
+                 '<div class="aName">' + e.name + '</div>' +
+                 '<div class="aDesc">' + e.desc + '</div>' +
+                 '<div class="aFoot">' + arcFoot(e, state) + '</div>' +
+               '</div>' +
+             '</div>';
+      }
+      h += '</div>';
+    }
+  }
+  $('arcRoster').innerHTML = h;
+}
+function openArchive(){
+  renderArchive();
+  menuScreen('menuArchive');
+}
+
+// The pending purchase. Held here rather than on the button so a stale click
+// on a re-rendered plaque cannot pay for something else.
+let arcPending = null;
+function askArchiveBuy(kind, id){
+  const e = archiveRoster().find(x => x.kind === kind && x.id === id);
+  if(!e || arcState(e) !== 'buy') return;
+  arcPending = {kind, id};
+  $('arcWhat').innerHTML = icon(e.icon) + e.name;
+  $('arcWhatDesc').textContent = e.desc;
+  $('arcCost').innerHTML =
+    '<div>YOU HOLD<b>' + Meta.data.marrow.toLocaleString() + '</b></div>' +
+    '<div class="pay">THIS COSTS<b>' + e.price.toLocaleString() + '</b></div>' +
+    '<div class="after">YOU KEEP<b>' + (Meta.data.marrow - e.price).toLocaleString() + '</b></div>';
+  show('arcConfirmOverlay');
+  sfx('click');
+}
+function closeArchiveBuy(){ arcPending = null; hide('arcConfirmOverlay'); }
+
+$('arcRoster').addEventListener('mouseenter', e=>{
+  if(e.target.closest && e.target.closest('.arcItem.buy')) sfx('hover');
+}, true);
+$('arcRoster').onclick = ev=>{
+  const el = ev.target.closest('.arcItem');
+  if(!el || !el.classList.contains('buy')) return;
+  askArchiveBuy(el.dataset.kind, el.dataset.id);
+};
+//---- scouring the Archive --------------------------------------------
+// Deliberately a dialog rather than the arm-then-confirm pattern the ABANDON
+// button next to it uses. Arming in place is two clicks on the same spot,
+// which a double-click satisfies on its own — fine for forfeiting one run,
+// not for erasing a career that cannot be got back.
+function openWipe(){
+  const m = Meta.data;
+  const unlocks = m.unlockedDice.length + m.unlockedChalks.length + m.unlockedRelics.length;
+  $('wipeWhat').innerHTML =
+    '<div class="marrow">MARROW<b>' + m.marrow.toLocaleString() + '</b></div>' +
+    '<div>UNLOCKED<b>' + unlocks + '</b></div>' +
+    '<div>RITES RUN<b>' + m.lifetime.runs.toLocaleString() + '</b></div>' +
+    '<div>DEEPEST<b>' + m.lifetime.deepestLevel + '</b></div>';
+  show('wipeOverlay');
+  sfx('mark');
+}
+function closeWipe(){ hide('wipeOverlay'); }
+$('btnWipe').onclick = ()=>{ sfx('click'); openWipe(); };
+$('btnWipeCancel').onclick = ()=>{ sfx('click'); closeWipe(); };
+$('btnWipeConfirm').onclick = ()=>{
+  Meta.reset();
+  closeWipe();
+  // A run in progress keeps whatever it was already holding — the ledger only
+  // ever decides what the NEXT run may draw — but at the menu the snapshot is
+  // stale the instant the ledger changes, exactly as after a purchase.
+  if(menuMode && S) S.wares = runShopPool();
+  if(!$('menuArchive').classList.contains('hidden')) renderArchive();
+  sfx('shatter');
+  toast('THE ARCHIVE IS SCOURED', 'trash');
+};
+
+$('btnArcCancel').onclick = ()=>{ sfx('click'); closeArchiveBuy(); };
+$('btnArcConfirm').onclick = ()=>{
+  if(!arcPending) return;
+  const e = archiveRoster().find(x => x.kind === arcPending.kind && x.id === arcPending.id);
+  if(!buyUnlock(arcPending.kind, arcPending.id)){ closeArchiveBuy(); return; }
+  closeArchiveBuy();
+  sfx('socket');
+  toast(e.name.toUpperCase() + ' JOINS THE POOL', e.icon);
+  renderArchive();
+};
 function openMenu(){
   menuMode = true;
   document.body.classList.add('menuMode');
@@ -8275,6 +9241,8 @@ function leaveMenu(){
 $('miStart').onclick = ()=>{ sfx('click'); startRun(); };
 $('miRules').onclick = ()=>{ sfx('click'); menuScreen('menuRules'); };
 $('miRulesBack').onclick = ()=>{ sfx('click'); menuScreen('menuHome'); };
+$('miArchive').onclick = ()=>{ sfx('click'); openArchive(); };
+$('miArchiveBack').onclick = ()=>{ sfx('click'); menuScreen('menuHome'); };
 $('miGrim').onclick  = ()=>{ toggleGrimoire(); };
 $('miVeil').onclick  = ()=>{ Sound.unlock(); openSettings(); };
 $('miLog').onclick   = ()=>openChangelog();
@@ -8734,6 +9702,10 @@ buildBoneFrames(document);
 hydrateIcons(document);
 View.load();
 Perf.restore();
+// The career ledger is read before anything can ask what the player owns — and
+// something does now: freshState() snapshots the unlocked pool the moment a run
+// is born, including the boot-time state built a few lines below.
+Meta.load();
 // Detail owns the miasma now that the Veil's MIASMA slider is gone, so derive
 // it here rather than trusting a fog value saved back when it was separate —
 // otherwise a player who had once slid it to zero would sit at HIGH detail
