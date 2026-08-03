@@ -196,6 +196,39 @@ shop-choice loop that's core to the run).
 > The "+1 altar slot" idea and its shrine-relic conflict were not
 > revisited — still an open idea, not scheduled.
 >
+> BUILT (Phase 4). All four ladders are live, with the caps, the strict
+> progression and the 15/25 gates on the last two rungs exactly as
+> specified above. What was decided during the build:
+>
+> - **They are called THE OATHS in the UI**, not the Rites. In this
+>   game's own voice a *rite* is a run — the title screen says BEGIN THE
+>   RITE, the Archive's ledger counts RITES to mean runs performed, and a
+>   *descent* is a level within one. A tab called THE RITES beside a stat
+>   called RITES was two meanings of one word an arm's length apart. The
+>   save field, every identifier and this document still say `rites`;
+>   only the player-facing strings changed. `ARC_OATH_LABEL` and the four
+>   `name` fields are the only strings to move if this reads wrong.
+> - **Effects, per level, stacking additively:** +1 bone in the opening
+>   cup (clamped to the pool cap); +1 re-roll on every cast; −1 shard on
+>   the Ossuary's re-roll cost, floored at 2; +3 opening soul shards.
+> - **The re-roll floor of 2 is deliberate.** `Skeleton Key` (tier 2)
+>   makes new wares a flat 1 *and* lays out a fifth ware. Letting the
+>   ladder reach 1 would have eaten half a relic the player can still be
+>   charged shards for — the same care §3 asked for around `shrine` and
+>   the altar slot. The relic stays strictly better.
+> - **Prices (placeholder, same caveat as §10):** power ladders
+>   60/160/340, economy ladders 40/90/160/250/360. All four ladders
+>   together are 2,920 Marrow — more than the whole 2,535 content roster,
+>   which is intended: content is revealed once, an Oath is collected on
+>   for the rest of a career. Everything in the Archive is then ~5,455
+>   Marrow, or 55–68 runs. That is a long tail *by design* (§3 wanted a
+>   sink for a player who has bought the roster out), but it is the
+>   number to check first if the endless game feels like a grind.
+> - **The run snapshots its Oaths at birth**, in `freshState()`, the same
+>   way `S.wares` snapshots the unlock pool and for the same reason: a
+>   ladder bought between runs is the player's to buy, but a descent
+>   already in progress must not have its own rules move under it.
+>
 > SCHEMA LANDED AHEAD OF THE BUILD: the save side of this restructure is
 > now live, separately from Phase 4 itself. `rites` was four booleans; it
 > is now four integer ladder levels plus `extraAltar`, which stays a
@@ -248,8 +281,20 @@ Two tabs:
 > current content and again once three more content types land on the
 > same screen.
 >
-> Rites tab does not exist yet — see §3 update, about to be built as
-> Phase 4.
+> The Rites tab is now live (Phase 4), shipped as **THE OATHS** — see the
+> §3 update for why the label differs from the code. The screen is now
+> genuinely two tabs (THE ROSTER / THE OATHS) sharing one ledger bar,
+> since both halves spend one purse. Each Oath renders as a single wide
+> plaque rather than a grid cell: a ladder has to answer three questions
+> at once (how far up, what the next rung costs, what it does), which
+> reads better stacked. Rungs are shown as pips in three states — paid
+> for, reachable, still behind a descent key — so the two locked reasons
+> never look alike. Purchases reuse the same confirm dialog as the
+> roster; an Oath is permanent spend exactly as an unlock is, and a
+> player should not have to learn a second way to buy on one screen.
+>
+> The deferred visual redesign noted above still stands, and now has one
+> more content type on the screen to redesign around.
 >
 > A related feature landed alongside this, not originally scoped in this
 > doc: a **save-wipe option** ("Scour the Archive") in the settings menu,
@@ -657,6 +702,16 @@ it.
 >   partially-unlocked save whose owned relics skew tier-1-heavy relative
 >   to their depth. Needs its own balance pass with real data — flagged,
 >   not fixed.
+> - **New (Phase 4):** Oath pricing is a placeholder on the same footing
+>   as §10's multiplier, and it is the larger of the two open pricing
+>   questions now — the four ladders total 2,920 Marrow against the
+>   roster's 2,535. Needs the same real-data pass, and should probably be
+>   tuned *after* §10, since the roster is the thing §6's pacing target
+>   is actually written about.
+> - **New (Phase 4):** whether THE OATHS is the right player-facing name
+>   for what the code calls rites. Decided during the build to avoid a
+>   collision with "rite = one run"; flagged here because it is a naming
+>   call the director may want to overrule, and it is four strings.
 > - **New:** a UI collision where the tier-3+ rarity rim and the
 >   "selected" card outline used the same gold color, found during
 >   playtesting and fixed (selection now uses violet) — noted here only

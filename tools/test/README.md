@@ -43,6 +43,7 @@ syntax error anywhere in the game fails the run even if no suite covers it.
 | `test-gameover.js` | The death screen's Marrow payout band (jsdom) |
 | `test-archive-ui.js` | The Archive, driven by real clicks (jsdom) |
 | `test-chalk-wipe.js` | Chalk gating, the deepchalk boon, SCOUR THE ARCHIVE (jsdom) |
+| `test-oaths.js` | The four Rite ladders, and what they do to a real started run (jsdom) |
 
 ## What they do not cover
 

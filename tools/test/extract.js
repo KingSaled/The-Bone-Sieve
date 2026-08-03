@@ -43,6 +43,18 @@ fs.writeFileSync(out('meta.js'), econ);   // and so does the ledger suite
 
 fs.writeFileSync(out('arcui.js'),
   L.slice(at(/^\/\/---- THE ARCHIVE ---/), at(/^function openMenu/)).join('\n'));
+
+// The mouth of a run: the run-state block (S, the Oath snapshot, freshState,
+// makeDie) plus the four places an Oath is actually spent. This is what lets a
+// suite start a real run and count what is in the cup, rather than trusting a
+// reimplementation of the same arithmetic.
+fs.writeFileSync(out('runstart.js'), [
+  L.slice(at(/^let S = null;/), at(/^function isTrialLevel/) + 1).join('\n'),
+  fn(/^function maxPool\(\)\{/),
+  fn(/^function rerollsPerCast\(\)\{/),
+  fn(/^function shopRerollCost\(\)\{/),
+  fn(/^function startRun\(\)\{/),
+].join('\n\n'));
 fs.writeFileSync(out('gameover.js'), fn(/^function gameOver\(\)\{/));
 // the wipe block: from its banner down to the Archive's cancel handler
 fs.writeFileSync(out('wipe.js'),

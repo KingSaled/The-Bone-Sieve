@@ -1757,6 +1757,56 @@
   .arcItem.gated{opacity:.62;}
   .arcItem.gated .aFoot{color:var(--neon-p);}
 
+  /* ---- the two tabs ----
+     Underlined rather than boxed: the ledger bar directly above is already a
+     hard-edged slab, and a second one would fence the roster in on both
+     sides. The active tab is the only one drawn in full bone. */
+  #arcTabs{display:flex;gap:4px;width:100%;margin-bottom:12px;
+    border-bottom:1px solid var(--line);}
+  .arcTab{appearance:none;background:none;border:0;cursor:pointer;
+    font-family:var(--font-ui);font-weight:700;font-size:12.5px;letter-spacing:2.6px;
+    color:var(--bone-faint);padding:9px 16px 8px;margin-bottom:-1px;
+    border-bottom:2px solid transparent;display:flex;align-items:center;gap:8px;
+    transition:color .16s linear, border-color .16s linear;}
+  .arcTab .ic{font-size:15px;}
+  .arcTab:hover{color:var(--bone-dim);}
+  .arcTab.on{color:var(--bone);border-bottom-color:var(--gold);}
+  .arcTab.on .ic{color:var(--gold);}
+
+  /* ---- the Oaths ----
+     Same plaque, one column instead of a grid: a ladder carries three lines of
+     state where a ware carries one, and four of them read better stacked than
+     squeezed into 232px cells. Their own rim colour, because an Oath has no
+     tier and must not borrow the roster's rarity language. */
+  #arcOaths{width:100%;max-height:calc(60vh / var(--ui-scale,1));
+    overflow-y:auto;overflow-x:hidden;padding-right:6px;text-align:left;}
+  .oathFlavor{margin:2px 0 14px;font-size:12.5px;}
+  .riteItem{--aRim:#6b5a86;--aKey:#c9b6e8;margin-bottom:10px;}
+  .riteItem .aName{display:flex;align-items:baseline;gap:10px;}
+  .rLvl{margin-left:auto;font:800 12px var(--font-mono);font-style:normal;
+    letter-spacing:1px;color:var(--bone-faint);}
+  .riteItem.owned .rLvl{color:var(--neon-g);}
+
+  /* the rungs. Same pip vocabulary as the re-roll counter in the sidebar —
+     which is, not by accident, the thing one of these ladders buys. */
+  .rPips{display:flex;gap:5px;margin-top:8px;}
+  .rPip{width:20px;height:5px;border-radius:3px;background:#241f30;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
+  .rPip.on{background:var(--aKey);box-shadow:0 0 8px rgba(201,182,232,.5);}
+  /* a rung still behind a descent key is drawn as an outline, so the two
+     locked reasons — cannot afford, cannot yet reach — never look alike */
+  .rPip.gated{background:transparent;border:1px solid var(--neon-p);opacity:.5;}
+  .riteItem.owned .rPip.on{background:var(--neon-g);box-shadow:0 0 8px rgba(94,222,138,.45);}
+
+  .rNow{display:flex;align-items:center;gap:6px;margin-top:8px;
+    font-family:var(--font-mono);font-size:11.5px;color:var(--bone-dim);}
+  .rNow .ic{font-size:13px;color:var(--aKey);}
+  .rNone{font-style:italic;color:var(--bone-faint);}
+  .rStep{margin-left:8px;font:700 10.5px var(--font-ui);font-style:normal;
+    letter-spacing:2px;color:var(--bone-faint);}
+  .rRung{font:700 11px var(--font-ui);letter-spacing:2.4px;color:var(--bone-faint);
+    font-style:normal;}
+
   /* ---- the purchase confirmation ---- */
   /* same reasoning as the wipe dialog — see the note there */
   #arcConfirmOverlay .modal{max-width:560px;width:min(560px,calc(92vw / var(--ui-scale,1)));
@@ -2538,7 +2588,16 @@
       <div id="arcMarrow"></div>
       <div id="arcLife"></div>
     </div>
+    <!-- Two tabs, per design §4. They share one ledger bar above them because
+         they spend one purse: the split is what the Marrow buys, not what it
+         is. THE OATHS rather than "the Rites" — see the note over RITES in the
+         script, where a rite already means a run. -->
+    <div id="arcTabs">
+      <button class="arcTab on" id="arcTabRoster"><i class="ic" data-ic="cards"></i>THE ROSTER</button>
+      <button class="arcTab" id="arcTabOaths"><i class="ic" data-ic="handFist"></i>THE OATHS</button>
+    </div>
     <div id="arcRoster"></div>
+    <div id="arcOaths" class="hidden"></div>
     <div class="menuBtnRow">
       <button class="ghost" id="miArchiveBack"><i class="ic" data-ic="caretRight" style="transform:rotate(180deg);"></i>RETURN</button>
     </div>
@@ -3889,6 +3948,9 @@ const GRID = 5;
 // applyUIScale() is the only thing that writes it.
 let SIDEBAR_W = 376;
 const BASE_POOL = 12;
+// What the cup holds at the mouth of a run, before any Rite adds to it. The
+// pool CAP is BASE_POOL above; this is how many bones are actually in hand.
+const STARTING_BONES = 6;
 const MIN_POOL  = 4;              // Brittle Bone stops gnawing here
 // Famine is a flat withholding, not a floor: see startLevel().
 const FAMINE_HOLD = 3;
@@ -4182,10 +4244,11 @@ for(const b of BOONS) BOON_BY_ID[b.id] = b;
 //  │      run may draw, through runShopPool() below         (phase 2) │
 //  │    · Marrow is earned at every run end by closeOutRun(), and     │
 //  │      spent through buyUnlock() from The Archive        (phase 3) │
+//  │    · the four Rite ladders of §3 — bought through buyRite(),     │
+//  │      snapshotted into the run by riteSnapshot()        (phase 4) │
+//  │      (the player reads them as THE OATHS: see RITES below)       │
 //  │                                                                  │
-//  │  STILL WITHHELD: the Rites of §3 are declared here and clamped   │
-//  │  on load, but nothing sells a level and nothing reads one yet —  │
-//  │  that is phase 4. The story fields of §12 are reserved and       │
+//  │  STILL WITHHELD: the story fields of §12 are reserved and        │
 //  │  untouched, and the loadout toggles of §11 are honoured by the   │
 //  │  pool filter but have no UI writing to them.                     │
 //  └──────────────────────────────────────────────────────────────────┘
@@ -4676,17 +4739,168 @@ function buyUnlock(kind, id){
   return true;
 }
 
+//---- the Oaths: permanent power (design §3, restructured) --------------
+// The other half of what Marrow buys. Everything above this line UNLOCKS
+// content that was always in the game and merely hidden; these four make every
+// future run begin stronger, which is a different kind of purchase and is
+// deliberately priced and gated as one.
+//
+// A NOTE ON THE NAME. Design §3 calls these "Rites", and so does the save
+// field, and so do all the identifiers here — changing that now would churn a
+// schema that has just been migrated for no gain. But in this game's own voice
+// a *rite* is a RUN: the title screen says BEGIN THE RITE, the ledger counts
+// RITES to mean runs performed, and a descent means a level within one. A
+// screen called THE RITES sitting next to a stat called RITES would be two
+// different meanings of the word an arm's length apart. So the code says rite
+// and the player reads OATH — a standing promise carried into every rite,
+// which is what these actually are. If that reads wrong, ARC_OATH_LABEL and
+// the four `name` fields below are the only strings that need to move.
+const ARC_OATH_LABEL = 'THE OATHS';
+
+// How much one level of each economy Oath is actually worth in play.
+//
+// The floor matters more than it looks. Skeleton Key (tier 2, 14 shards) makes
+// new wares cost a flat 1 AND lays out a fifth ware; an Oath that reached 1
+// would have quietly eaten half of a relic a player can still be asked to pay
+// shards for. Stopping at 2 keeps the relic strictly the better thing, which
+// is the same care design §3 asked for around the altar slot and `shrine`.
+const RITE_REROLL_FLOOR = 2;
+// Design §3's own figure for one purchase, kept as the per-level step: five
+// levels is +15 shards at the mouth of a run, a little over one tier-1 relic.
+const RITE_SHARD_STEP = 3;
+
+// Two shapes of ladder, for two different kinds of effect.
+//
+//   Extra bones and extra re-rolls are run POWER. They compound with every
+//   relic, boon and die a player will ever unlock, so they stop at 3 and the
+//   climb is steep.
+//
+//   Cheaper wares and a fuller opening purse are economy SMOOTHING. They fade
+//   in relevance as a run deepens — an extra 15 shards is a head start, not a
+//   build — so they can run to 5 and act as the long sink the endless mode
+//   needs once the roster is bought out.
+//
+// PLACEHOLDER PRICES, on the same footing as MARROW_PRICE_MULT above and
+// expected to move once there is real data. The arithmetic, so a tuning pass
+// has something to argue with: design §5 puts a modest run near 49 Marrow and
+// a strong one near 150, so a first level at 40-60 is one honest run — cheap
+// enough to be the thing a new player buys early, dear enough to compete with
+// unlocking content. The last level of a power ladder is 340, which is over
+// three times the dearest thing on the roster (a tier-4 relic at ~108), and
+// that gap is the point: content is revealed once, an Oath is paid once and
+// then collected on for the rest of the career.
+const RITES = [
+  {key:'extraDie', name:'The Ninth Bone', icon:'bone',
+   prices:[60, 160, 340],
+   per:'+1 bone in the cup when a rite begins.',
+   now:  n => '+' + n + ' bone' + (n === 1 ? '' : 's') + ' at the mouth of every run'},
+
+  {key:'extraReroll', name:'The Steady Hand', icon:'arrowsClockwise',
+   prices:[60, 160, 340],
+   per:'+1 re-roll on every cast.',
+   now:  n => '+' + n + ' re-roll' + (n === 1 ? '' : 's') + ' on every cast'},
+
+  {key:'cheapReroll', name:"The Ossuary's Favour", icon:'shuffle',
+   prices:[40, 90, 160, 250, 360],
+   per:'New wares cost 1 shard less.',
+   now:  n => 'new wares cost ' + n + ' shard' + (n === 1 ? '' : 's') +
+              ' less, never below ' + RITE_REROLL_FLOOR},
+
+  {key:'extraShards', name:'The Full Purse', icon:'coins',
+   prices:[40, 90, 160, 250, 360],
+   per:'+' + RITE_SHARD_STEP + ' soul shards in the purse when a rite begins.',
+   now:  n => '+' + (n * RITE_SHARD_STEP) + ' soul shards at the mouth of every run'},
+];
+const RITE_BY_KEY = {};
+for(const r of RITES) RITE_BY_KEY[r.key] = r;
+
+// Every price array must agree with the cap it is climbing, or a ladder would
+// either run out of prices or hide a level nobody can reach. Cheaper to assert
+// it here than to find it as an undefined price in a confirm dialog.
+for(const r of RITES){
+  if(r.prices.length !== RITE_MAX[r.key])
+    console.warn('rite ' + r.key + ': ' + r.prices.length + ' prices for ' +
+                 RITE_MAX[r.key] + ' levels');
+}
+
+function riteLevel(key){ return Meta.data.rites[key] || 0; }
+// `level` here is the level being BOUGHT, 1-based.
+function ritePrice(key, level){
+  const r = RITE_BY_KEY[key];
+  return r ? r.prices[level - 1] : undefined;
+}
+
+// Design §9's depth keys, reused rather than reinvented — the same "prove you
+// can survive this far" language the roster already speaks. The LAST TWO rungs
+// of every ladder are gated, whatever its height: the final rung wants descent
+// 25 and the one below it descent 15. That is what stops a player emptying
+// their first few payouts into a maxed ladder before they have met most of the
+// content the Archive exists to hand out.
+function riteDepthGate(key, level){
+  const max = RITE_MAX[key];
+  if(level >= max)     return 25;
+  if(level === max - 1) return 15;
+  return 0;
+}
+function riteGateMet(key, level){
+  return Meta.data.lifetime.deepestLevel >= riteDepthGate(key, level);
+}
+
+// The rung a purchase would buy next, or 0 once the ladder is topped out.
+// There is no argument for which level to buy, and that is the strict
+// progression: the only rung ever on offer is the one immediately above the
+// one already paid for, so a full purse cannot skip ahead.
+function riteNextLevel(key){
+  const cur = riteLevel(key), max = RITE_MAX[key];
+  return cur >= max ? 0 : cur + 1;
+}
+function buyRite(key){
+  if(!RITE_BY_KEY[key]) return false;
+  const next = riteNextLevel(key);
+  if(!next) return false;                              // already at the top
+  if(!riteGateMet(key, next)) return false;
+  const price = ritePrice(key, next);
+  if(!(price >= 0)) return false;
+  if(Meta.data.marrow < price) return false;
+  Meta.data.marrow -= price;
+  Meta.data.rites[key] = next;
+  Meta.save();
+  return true;
+}
+
 //======================================================================
 // 10. GAME STATE
 //======================================================================
 let S = null;
 let dieUid = 0;
 
+// The Oaths a run is played under, read once at the mouth of it and then never
+// again. Exactly the reasoning behind S.wares: a purchase made between runs is
+// the player's to make, but a ledger that changed underneath a descent already
+// in progress would be a run whose own rules moved while it was being played.
+// Snapshotting also means every reader downstream is a plain property lookup
+// with no opinion about where the number came from.
+function riteSnapshot(){
+  const out = {};
+  for(const k in RITE_MAX) out[k] = Meta.data.rites[k] || 0;
+  return out;
+}
+// The one way the run side asks about an Oath. Answers 0 rather than throwing
+// when there is no run — the menu, and anything that reaches a scoring helper
+// before a descent exists, both land here.
+function runRite(key){ return (S && S.rites && S.rites[key]) || 0; }
+
 function freshState(){
+  const rites = riteSnapshot();
   return {
     phase:'menu',        // menu|awaitCast|rolling|placed|sealing|shopWait|shop|boon|gameover
-    level:1, quota:60, levelScore:0, totalScore:0, shards:0,
+    level:1, quota:60, levelScore:0, totalScore:0,
+    // The Full Purse is the only Oath that pays out once rather than standing
+    // over the whole run, so it is spent here, into the opening shard count.
+    shards: RITE_SHARD_STEP * rites.extraShards,
     castNum:1, rerollsLeft:2,
+    // What this descent is played under. See riteSnapshot().
+    rites,
     dicePool:[], board:[], relics:[], chalks:[], decrees:[],
     previewSegments:[], previewScore:0, previewMult:1,
     // The catalogue this descent is allowed to draw from, fixed the moment the
@@ -4795,7 +5009,7 @@ function castsPerLevel(){
 }
 function rerollsPerCast(){
   if(hasTrial('locked')) return 0;
-  return 2 + (hasRelic('dust')?1:0) + boonRerolls();
+  return 2 + (hasRelic('dust')?1:0) + boonRerolls() + runRite('extraReroll');
 }
 // No boon term here, and none in altarSlots() either — deliberately. A boon may
 // never hand out cup or altar space: those are the two scarcities the whole
@@ -7581,7 +7795,13 @@ function startRun(){
   $('trialFx').classList.remove('decree');
   S = freshState();
   S.board = emptyBoard();
-  for(let i=0;i<6;i++) S.dicePool.push(makeDie('bone'));
+  // The Ninth Bone adds to the opening handful. Clamped to the pool cap for
+  // the same reason every other pool write is: the cup is the one scarcity the
+  // whole build decision rests on, and nothing may quietly widen it past its
+  // ceiling. At today's numbers (6 + 3 against a cap of 12) it never bites —
+  // the clamp is here so it still cannot if either number ever moves.
+  const bones = Math.min(maxPool(), STARTING_BONES + S.rites.extraDie);
+  for(let i=0;i<bones;i++) S.dicePool.push(makeDie('bone'));
   hide('shopOverlay'); hide('gameoverOverlay'); hide('boonOverlay'); hide('settingsOverlay');
   closeSwap(); closeCull();
   $('grimoire').classList.remove('open');
@@ -8036,7 +8256,14 @@ function gameOver(){
 //======================================================================
 // 22. THE OSSUARY
 //======================================================================
-function shopRerollCost(){ return hasRelic('key') ? 1 : 3 + S.shopRerolls; }
+// Skeleton Key still wins outright and is checked first: a flat 1 beats
+// anything the Oath can reach, which is deliberate — see RITE_REROLL_FLOOR.
+// The Oath discounts the whole cost, escalation included, so a player who has
+// paid for it feels it on the fourth re-roll of a shop as well as the first.
+function shopRerollCost(){
+  if(hasRelic('key')) return 1;
+  return Math.max(RITE_REROLL_FLOOR, 3 + S.shopRerolls - runRite('cheapReroll'));
+}
 function rollOffers(){
   // S.wares, not SHOP_POOL: the Ossuary lays out what this run has unlocked,
   // not everything that exists. The filters below are the run's OWN reasons to
@@ -9213,9 +9440,80 @@ function renderArchive(){
     }
   }
   $('arcRoster').innerHTML = h;
+  renderOaths();
 }
+
+// ---- THE OATHS ----
+// A ladder is not a plaque: it is never simply owned or not owned, so the row
+// has to answer three questions at once — how far up am I, what does the next
+// rung cost, and what is it going to do. The pips carry the first (the same
+// vocabulary as the re-roll pips in the sidebar, which is exactly what one of
+// these ladders buys), the footer carries the second, and the line above it
+// states the total standing effect rather than the per-level one, because
+// "+2 re-rolls on every cast" is the thing a player actually wants to read
+// back. The per-level line stays underneath the name as the rule.
+function oathState(key){
+  const next = riteNextLevel(key);
+  if(!next) return 'owned';                     // topped out
+  if(!riteGateMet(key, next)) return 'gated';
+  return Meta.data.marrow >= ritePrice(key, next) ? 'buy' : 'locked';
+}
+function oathFoot(key, state){
+  const next = riteNextLevel(key);
+  if(state === 'owned') return icon('sealCheck') + 'SWORN IN FULL';
+  if(state === 'gated') return icon('stairs') + 'REACH DESCENT ' + riteDepthGate(key, next);
+  return icon('bone') + ritePrice(key, next) +
+         (state === 'locked' ? ' — NOT ENOUGH' : '') +
+         '<em class="rStep">FOR RUNG ' + next + '</em>';
+}
+function renderOaths(){
+  const sworn = RITES.filter(r => riteLevel(r.key) > 0).length;
+  let h = '<div class="arcGroup">' + ARC_OATH_LABEL +
+          '<em class="arcCount">' + sworn + '/' + RITES.length + '</em></div>' +
+          '<div class="arcFlavor oathFlavor">Bought once and kept for good. ' +
+          'Every rite after begins under them.</div>';
+  for(const r of RITES){
+    const lvl = riteLevel(r.key), max = RITE_MAX[r.key], state = oathState(r.key);
+    let pips = '';
+    for(let i = 1; i <= max; i++){
+      // A rung that is paid for, one that is merely reachable, and one still
+      // behind a descent key are three different things and read as three.
+      const cls = i <= lvl ? 'on' : (riteDepthGate(r.key, i) ? 'gated' : '');
+      pips += '<i class="rPip ' + cls + '"></i>';
+    }
+    h += '<div class="arcItem riteItem ' + state + '" data-rite="' + r.key + '">' +
+           '<div class="aIco">' + icon(r.icon) + '</div>' +
+           '<div class="aBody">' +
+             '<div class="aName">' + r.name +
+               '<em class="rLvl">' + lvl + ' / ' + max + '</em></div>' +
+             '<div class="aDesc">' + r.per + '</div>' +
+             '<div class="rPips">' + pips + '</div>' +
+             '<div class="rNow">' +
+               (lvl ? icon('sparkle') + r.now(lvl) : '<span class="rNone">not yet sworn</span>') +
+             '</div>' +
+             '<div class="aFoot">' + oathFoot(r.key, state) + '</div>' +
+           '</div>' +
+         '</div>';
+  }
+  $('arcOaths').innerHTML = h;
+}
+// Which half of the Archive is showing. Held here rather than read back off the
+// DOM so that a re-render — which happens after every purchase — cannot drop
+// the player back onto the other tab mid-shop.
+let arcTab = 'roster';
+function arcShowTab(which){
+  arcTab = which;
+  $('arcRoster').classList.toggle('hidden', which !== 'roster');
+  $('arcOaths').classList.toggle('hidden', which !== 'oaths');
+  $('arcTabRoster').classList.toggle('on', which === 'roster');
+  $('arcTabOaths').classList.toggle('on', which === 'oaths');
+}
+$('arcTabRoster').onclick = ()=>{ sfx('click'); arcShowTab('roster'); };
+$('arcTabOaths').onclick  = ()=>{ sfx('click'); arcShowTab('oaths'); };
+
 function openArchive(){
   renderArchive();
+  arcShowTab(arcTab);
   menuScreen('menuArchive');
 }
 
@@ -9235,6 +9533,25 @@ function askArchiveBuy(kind, id){
   show('arcConfirmOverlay');
   sfx('click');
 }
+// Same dialog, same two buttons, same confirmation — an Oath is permanent
+// spend exactly as an unlock is, and a player should not have to learn a
+// second way to buy something on the same screen. Only the middle of it
+// differs: a rung is bought at a level, so it names which one.
+function askOathBuy(key){
+  const r = RITE_BY_KEY[key];
+  if(!r || oathState(key) !== 'buy') return;
+  const next = riteNextLevel(key), price = ritePrice(key, next);
+  arcPending = {kind:'rite', key};
+  $('arcWhat').innerHTML = icon(r.icon) + r.name +
+    '<em class="rRung">RUNG ' + next + ' OF ' + RITE_MAX[key] + '</em>';
+  $('arcWhatDesc').textContent = r.per + ' Once sworn: ' + r.now(next) + '.';
+  $('arcCost').innerHTML =
+    '<div>YOU HOLD<b>' + Meta.data.marrow.toLocaleString() + '</b></div>' +
+    '<div class="pay">THIS COSTS<b>' + price.toLocaleString() + '</b></div>' +
+    '<div class="after">YOU KEEP<b>' + (Meta.data.marrow - price).toLocaleString() + '</b></div>';
+  show('arcConfirmOverlay');
+  sfx('click');
+}
 function closeArchiveBuy(){ arcPending = null; hide('arcConfirmOverlay'); }
 
 $('arcRoster').addEventListener('mouseenter', e=>{
@@ -9244,6 +9561,14 @@ $('arcRoster').onclick = ev=>{
   const el = ev.target.closest('.arcItem');
   if(!el || !el.classList.contains('buy')) return;
   askArchiveBuy(el.dataset.kind, el.dataset.id);
+};
+$('arcOaths').addEventListener('mouseenter', e=>{
+  if(e.target.closest && e.target.closest('.riteItem.buy')) sfx('hover');
+}, true);
+$('arcOaths').onclick = ev=>{
+  const el = ev.target.closest('.riteItem');
+  if(!el || !el.classList.contains('buy')) return;
+  askOathBuy(el.dataset.rite);
 };
 //---- scouring the Archive --------------------------------------------
 // Deliberately a dialog rather than the arm-then-confirm pattern the ABANDON
@@ -9279,6 +9604,20 @@ $('btnWipeConfirm').onclick = ()=>{
 $('btnArcCancel').onclick = ()=>{ sfx('click'); closeArchiveBuy(); };
 $('btnArcConfirm').onclick = ()=>{
   if(!arcPending) return;
+  // An Oath and an unlock are the same transaction to the player and two
+  // different ledger writes underneath, so they part company here and nowhere
+  // else. Both read what they are about to buy BEFORE buying it, because the
+  // purchase is what makes the description stale.
+  if(arcPending.kind === 'rite'){
+    const r = RITE_BY_KEY[arcPending.key];
+    const rung = riteNextLevel(arcPending.key);
+    if(!buyRite(arcPending.key)){ closeArchiveBuy(); return; }
+    closeArchiveBuy();
+    sfx('socket');
+    toast(r.name.toUpperCase() + ' SWORN — RUNG ' + rung, r.icon);
+    renderArchive();
+    return;
+  }
   const e = archiveRoster().find(x => x.kind === arcPending.kind && x.id === arcPending.id);
   if(!buyUnlock(arcPending.kind, arcPending.id)){ closeArchiveBuy(); return; }
   closeArchiveBuy();
