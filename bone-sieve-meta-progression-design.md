@@ -272,14 +272,48 @@ Two tabs:
 > (rites run, deepest descent, best offering, trials cleared), and each
 > half of the roster shows an owned count.
 >
-> Current layout is intentionally plain — flat plaques, not the shop's
+> ~~Current layout is intentionally plain — flat plaques, not the shop's
 > 3D-tilting/compositor-layered ware cards — because the shop's treatment
 > assumes only 4–5 cards on screen at once and the Archive shows up to 52.
-> **A full visual redesign is planned but deliberately deferred** until
-> Rites, loadout toggles, and the story `???` scaffold are all functionally
-> in place — redesigning now would mean redesigning twice, once for the
-> current content and again once three more content types land on the
-> same screen.
+> **A full visual redesign is planned but deliberately deferred**~~
+>
+> UPDATE (after Phase 5): the redesign was brought FORWARD, before the §12
+> story scaffold, because the screen had stopped being usable — the ledger
+> bar sat off the top of a 1080p display before the player scrolled
+> anywhere. What landed:
+>
+> - **A real panel.** `.arcPanel` takes the same treatment every modal in
+>   the game wears (gradient, `--line` border, crimson-into-violet top
+>   rule) and owns its own height, with exactly ONE scrolling region
+>   inside it. The title, the purse, the tabs and the filters are outside
+>   that region and can no longer scroll away. No ornamental frame — the
+>   boneFrame overhangs its box by 18px and is a reveal; this is a
+>   workbench, like the Veil and the Exchange.
+> - **Filters instead of section headers.** Twelve tier headings were
+>   costing more height than the content. Rarity moved onto the tile, and
+>   the group/state counts moved onto filter chips (SHOW: all/bones/
+>   chalks/relics; STATE: everything/in the pool/can afford/not yet/set
+>   aside) plus a search box over name and rule text. This is what
+>   actually removes the scrolling: the roster is still 52 and always
+>   will be, it is just no longer all on screen.
+> - **One uniform tile.** Every region has a fixed height and its own
+>   container — rarity strip, art window, name, recessed rule box,
+>   footer. Measured: one height and one width across all 52. The art
+>   window is the constant the card is built around, since those icons
+>   are placeholders for real painted art.
+> - **Juice**: staggered entrance on a rebuilt rack only (never on a
+>   toggle — replaying 52 entrances per click is the blink the Ossuary's
+>   cards were fixed for), a gold flash on a card just paid for, and
+>   hover lift on anything actually buyable.
+> - **Short screens** get a compact mode at `max-height:880px` so a
+>   1366×768 laptop still gets two full rows.
+>
+> Two bugs fell out of doing this, both invisible to the existing tests:
+> the tab panes were switched with a `hidden` class **no CSS rule
+> matched**, so both tabs had been rendering on top of each other since
+> Phase 4; and the replacement rule lost on specificity to `#arcRoster`
+> until it was written as an id selector. Tests now load the real
+> stylesheet and assert computed display rather than class names.
 >
 > The Rites tab is now live (Phase 4), shipped as **THE OATHS** — see the
 > §3 update for why the label differs from the code. The screen is now

@@ -52,7 +52,7 @@ const G = run(window, document,
 
 const $ = id => document.getElementById(id);
 const plaque = (kind, id) => $('arcRoster').querySelector(
-  '.arcItem[data-kind="' + kind + '"][data-id="' + id + '"]');
+  '.arcCard[data-kind="' + kind + '"][data-id="' + id + '"]');
 const click = el => el.dispatchEvent(new window.MouseEvent('click', {bubbles:true}));
 const stateOf = (kind, id) => {
   const c = plaque(kind, id).className;
@@ -65,7 +65,7 @@ console.log('\n1. the screen opens and renders the full roster');
 G.openArchive();
 eq('archive screen is the visible one', $('menuArchive').classList.contains('hidden'), false);
 eq('home screen hidden', $('menuHome').classList.contains('hidden'), true);
-eq('52 plaques rendered', $('arcRoster').querySelectorAll('.arcItem').length, 52);
+eq('52 plaques rendered', $('arcRoster').querySelectorAll('.arcCard').length, 52);
 eq('marrow readout present', /MARROW/.test($('arcMarrow').innerHTML), true);
 eq('marrow starts at 0', /^0/.test($('arcMarrow').textContent), true);
 eq('lifetime stats shown', ['RITES','DEEPEST','BEST OFFERING','TRIALS']
@@ -78,19 +78,23 @@ eq('runt locked (no marrow)', stateOf('die','runt'), 'locked');
 eq('lidless eye locked', stateOf('relic','eye'), 'locked');
 eq('ash spine depth-gated', stateOf('relic','spine'), 'gated');
 eq('crimson depth-gated', stateOf('die','crimson'), 'gated');
-eq('owned count on the bones header', /1\/11/.test($('arcRoster').innerHTML), true);
-eq('owned count on the relics header', /7\/37/.test($('arcRoster').innerHTML), true);
+// the owned counts live on the filter chips now — the section headers they
+// used to sit on were what made the rack too tall to fit a screen
+eq('owned count on the bones chip', /1\/11/.test($('arcGroupChips').innerHTML), true);
+eq('owned count on the relics chip', /7\/37/.test($('arcGroupChips').innerHTML), true);
 
 console.log('\n3. locked entries show everything — a shopping list, not a mystery');
 {
   const p = plaque('relic','eye');
-  eq('name shown',  p.querySelector('.aName').textContent, 'Lidless Eye');
-  eq('desc shown',  p.querySelector('.aDesc').textContent, '+0.8 to your Offering Multiplier.');
-  eq('price shown', /60/.test(p.querySelector('.aFoot').textContent), true);
-  eq('reads as unaffordable', /NOT ENOUGH/.test(p.querySelector('.aFoot').textContent), true);
+  eq('name shown',  p.querySelector('.acName').textContent, 'Lidless Eye');
+  eq('desc shown',  p.querySelector('.acDesc').textContent, '+0.8 to your Offering Multiplier.');
+  eq('price shown', /60/.test(p.querySelector('.acFoot').textContent), true);
+  eq('reads as unaffordable', /NOT ENOUGH/.test(p.querySelector('.acFoot').textContent), true);
+  eq('rarity named on the tile', p.querySelector('.acTier').textContent, 'UNCOMMON');
+  eq('and it carries its art window', !!p.querySelector('.acArt .ic'), true);
   const g = plaque('relic','spine');
-  eq('gated entry names its depth', /REACH DESCENT 15/.test(g.querySelector('.aFoot').textContent), true);
-  eq('gated entry still shows its desc', g.querySelector('.aDesc').textContent.length > 10, true);
+  eq('gated entry names its depth', /REACH DESCENT 15/.test(g.querySelector('.acFoot').textContent), true);
+  eq('gated entry still shows its desc', g.querySelector('.acDesc').textContent.length > 10, true);
 }
 
 console.log('\n4. clicking an unaffordable plaque does nothing');
@@ -122,7 +126,7 @@ eq('marrow spent', G.Meta.data.marrow, 84);
 eq('runt now owned on screen', stateOf('die','runt'), 'owned');
 eq('confirm closed', $('arcConfirmOverlay').classList.contains('hidden'), true);
 eq('a toast announced it', toasts.pop(), 'RUNT DIE JOINS THE POOL');
-eq('bones header now 2/11', /2\/11/.test($('arcRoster').innerHTML), true);
+eq('bones chip now 2/11', /2\/11/.test($('arcGroupChips').innerHTML), true);
 
 console.log('\n6. buy a relic too, then confirm both reach a run');
 G.Meta.data.marrow = 500; G.renderArchive();

@@ -65,6 +65,16 @@ fs.writeFileSync(out('boons.js'),
 fs.writeFileSync(out('body.html'),
   html.slice(html.indexOf('<body'), html.indexOf('<script>')) + '</body>');
 
+// The stylesheet, so a suite can ask jsdom what a class actually DOES rather
+// than only whether it was applied. This exists because it was possible to
+// hide a pane with a class no rule matched: `.hidden` is declared only as
+// `.overlay.hidden` and `.menuScreen.hidden`, so `#arcOaths.hidden` set the
+// class, passed a className assertion, and rendered anyway underneath the tab
+// that was supposedly showing. A test that reads computed display catches that
+// class of mistake; a test that reads classList never can.
+fs.writeFileSync(out('style.css'),
+  html.slice(html.indexOf('<style>') + 7, html.indexOf('</style>')));
+
 // the shipped file must itself parse
 new Function(html.match(/<script>([\s\S]*)<\/script>/)[1]);
 console.log('extracts regenerated; index.html parses');

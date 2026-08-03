@@ -61,7 +61,7 @@ const G = run(window, document,
   t => toasts.push(t));
 
 const $ = id => document.getElementById(id);
-const row = key => $('arcOaths').querySelector('.riteItem[data-rite="' + key + '"]');
+const row = key => $('arcOaths').querySelector('.oathCard[data-rite="' + key + '"]');
 const click = el => el.dispatchEvent(new window.MouseEvent('click', {bubbles:true}));
 const stateOf = key =>
   ['owned','gated','buy','locked'].filter(s => row(key).className.split(' ').includes(s))[0];
@@ -95,17 +95,23 @@ for(const k of KEYS){
 console.log('\n3. a fresh ledger owns none of it');
 G.openArchive();
 G.arcShowTab('oaths');
-eq('four rows rendered', $('arcOaths').querySelectorAll('.riteItem').length, 4);
+eq('four cards rendered', $('arcOaths').querySelectorAll('.oathCard').length, 4);
 eq('all at level 0', KEYS.map(G.riteLevel), [0, 0, 0, 0]);
-eq('none sworn', /0\/4/.test($('arcOaths').innerHTML), true);
+eq('none sworn', /0\/4 SWORN/.test($('arcOaths').innerHTML), true);
 eq('every ladder reads as unaffordable', KEYS.map(stateOf),
    ['locked','locked','locked','locked']);
-eq('a row states its per-level rule',
-   row('extraReroll').querySelector('.aDesc').textContent, '+1 re-roll on every cast.');
-eq('an unsworn row says so', /not yet sworn/.test(row('extraDie').textContent), true);
-eq('the pips count the rungs', row('cheapReroll').querySelectorAll('.rPip').length, 5);
+eq('a card states its per-level rule',
+   row('extraReroll').querySelector('.acDesc').textContent, '+1 re-roll on every cast.');
+eq('an unsworn card says so', /not yet sworn/.test(row('extraDie').textContent), true);
+eq('and its header reads unsworn', row('extraDie').querySelector('.acTier').textContent, 'UNSWORN');
+eq('the pips count the rungs', row('cheapReroll').querySelectorAll('.oPip').length, 5);
+eq('every pip carries a channel to fill',
+   row('cheapReroll').querySelectorAll('.oPip .oPipFill').length, 5);
+eq('none of them is filled yet', row('cheapReroll').querySelectorAll('.oPip.on').length, 0);
 eq('the two gated rungs are drawn apart from the rest',
-   row('cheapReroll').querySelectorAll('.rPip.gated').length, 2);
+   row('cheapReroll').querySelectorAll('.oPip.gated').length, 2);
+eq('an Oath carries the same art window as a roster tile',
+   !!row('extraDie').querySelector('.acArt .ic'), true);
 
 console.log('\n4. strict progression — a full purse cannot skip a rung');
 G.Meta.data.marrow = 99999;
@@ -131,7 +137,9 @@ eq('and cannot be bought again', G.buyRite('extraDie'), false);
 G.renderArchive();
 eq('it reads as fully sworn', stateOf('extraDie'), 'owned');
 eq('and says so', /SWORN IN FULL/.test(row('extraDie').textContent), true);
-eq('all three pips lit', row('extraDie').querySelectorAll('.rPip.on').length, 3);
+eq('all three pips filled', row('extraDie').querySelectorAll('.oPip.on').length, 3);
+eq('its header counts the rungs', row('extraDie').querySelector('.acTier').textContent,
+   'RUNG 3 OF 3');
 
 console.log('\n6. too poor is refused, and costs nothing');
 G.Meta.data.marrow = 10;                       // rung 1 of any ladder is 40+
@@ -159,12 +167,25 @@ click($('btnArcConfirm'));
 eq('marrow spent', G.Meta.data.marrow, 440);
 eq('level recorded', G.riteLevel('extraReroll'), 1);
 eq('a toast announced the rung', toasts.pop(), 'THE STEADY HAND SWORN — RUNG 1');
-eq('the row shows the level owned', row('extraReroll').querySelector('.rLvl').textContent, '1 / 3');
+eq('the card shows the rung owned', row('extraReroll').querySelector('.acTier').textContent,
+   'RUNG 1 OF 3');
+eq('one pip filled', row('extraReroll').querySelectorAll('.oPip.on').length, 1);
+// the rung just paid for pours rather than simply being full on the next paint
+eq('and that pip pours', row('extraReroll').querySelectorAll('.oPip.pour').length, 1);
+eq('the card flashes as paid', row('extraReroll').classList.contains('justPaid'), true);
 eq('and the standing effect', /\+1 re-roll on every cast/.test(
-   row('extraReroll').querySelector('.rNow').textContent), true);
+   row('extraReroll').querySelector('.oathNow').textContent), true);
 // two ladders have been touched by now: extraDie was topped out in §5 above,
 // and extraReroll has just taken its first rung
-eq('the header counts two ladders sworn of four', /2\/4/.test($('arcOaths').innerHTML), true);
+eq('the header counts two ladders sworn of four',
+   /2\/4 SWORN/.test($('arcOaths').innerHTML), true);
+// the flash belongs to the transaction: it must not still be on the card the
+// next time anything re-renders
+G.renderArchive();
+eq('the flash does not persist past its own render',
+   row('extraReroll').classList.contains('justPaid'), false);
+eq('but the pip stays filled', row('extraReroll').querySelectorAll('.oPip.on').length, 1);
+eq('and stops pouring', row('extraReroll').querySelectorAll('.oPip.pour').length, 0);
 eq('a purchase does not throw the player back to the roster',
    $('arcOaths').classList.contains('hidden'), false);
 

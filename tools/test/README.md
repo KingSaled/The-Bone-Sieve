@@ -45,10 +45,39 @@ syntax error anywhere in the game fails the run even if no suite covers it.
 | `test-chalk-wipe.js` | Chalk gating, the deepchalk boon, SCOUR THE ARCHIVE (jsdom) |
 | `test-oaths.js` | The four Rite ladders, and what they do to a real started run (jsdom) |
 | `test-loadout.js` | §11 switches: owned content set aside, and gone from shop and boon draws (jsdom) |
+| `test-archive-view.js` | The screen itself: panel, tabs, filters, search — with the real CSS loaded |
+
+## Seeing it: `shoot.js`
+
+```
+node shoot.js                         # the Archive at 1920x1080 -> shots/
+node shoot.js --width 1366 --height 768 --out shots/laptop
+```
+
+Drives the **real Chrome already installed on the machine** through
+puppeteer-core (which downloads no browser of its own), seeds a career worth
+looking at, opens the Archive and screenshots it. It also prints the numbers
+that matter for a layout change: whether the panel fits the viewport, whether
+the page scrolls when it should not, how many tiles are on a row, and whether
+every tile is the same size.
+
+Set `CHROME=/path/to/chrome` if it is somewhere unusual.
+
+Earlier work on this branch recorded that there was no browser here and left
+layout unverified for three phases running. That was simply wrong — nobody had
+looked. Two of the bugs in the Archive redesign were invisible to jsdom and
+obvious in a screenshot.
 
 ## What they do not cover
 
-**Layout and paint.** There is no browser in the dev environment, so jsdom
-gives us structure, class names and text — never geometry, never colour,
-never whether a thing is actually visible on screen. Anything about how the
-game *looks* still has to be checked by opening `index.html`.
+**Paint, motion and feel.** `test-archive-view.js` loads the real stylesheet
+into jsdom, so it can answer what a class *does* — but jsdom has no layout
+engine, so it will happily report a height for a box that has none. `shoot.js`
+covers geometry. Neither covers animation, colour rendering, or whether the
+thing looks any good, and nothing here should be read as claiming otherwise.
+
+**A note on class assertions.** Checking `classList.contains('hidden')` proves
+the class was applied and nothing else. The tab panes were switched with a
+class no CSS rule matched, and every assertion passed while both tabs rendered
+on top of each other. Where a class is supposed to *do* something, assert the
+computed style instead.

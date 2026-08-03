@@ -54,7 +54,7 @@ const G = run(window, document,
 
 const $ = id => document.getElementById(id);
 const plaque = (kind, id) => $('arcRoster').querySelector(
-  '.arcItem[data-kind="' + kind + '"][data-id="' + id + '"]');
+  '.arcCard[data-kind="' + kind + '"][data-id="' + id + '"]');
 const switchOf = (kind, id) => plaque(kind, id).querySelector('.aSwitch');
 const click = el => el.dispatchEvent(new window.MouseEvent('click', {bubbles:true}));
 const classesOf = (kind, id) => plaque(kind, id).className.split(' ');
@@ -121,7 +121,8 @@ console.log('\n4. it still reads as OWNED, not as locked');
   // the two are different states and must not collapse into one look
   eq('a locked plaque is a different thing entirely',
      classesOf('relic','ash').includes('off'), false);
-  eq('the group header counts it', /1 SET ASIDE/.test($('arcRoster').innerHTML), true);
+  // the count lives on the SET ASIDE filter chip now, not on a section header
+  eq('the filter chip counts it', /SET ASIDE<b>1<\/b>/.test($('arcStateChips').innerHTML), true);
 }
 
 console.log('\n5. it leaves the next run\'s pool, and the Ossuary stops offering it');
@@ -140,7 +141,7 @@ eq('the switch reads on again', switchOf('relic','dust').classList.contains('on'
 eq('no longer marked off', classesOf('relic','dust').includes('off'), false);
 eq('back in the pool', G.runShopPool().some(i=>i.relic==='dust'), true);
 eq('and offered again', seenInShop(mkRun(8), 4000).has('relic:dust'), true);
-eq('the header stops counting it', /SET ASIDE/.test($('arcRoster').innerHTML), false);
+eq('the chip stops counting it', /SET ASIDE<b>0<\/b>/.test($('arcStateChips').innerHTML), true);
 
 console.log('\n7. it works the same for dice and for chalks');
 click(switchOf('die','runt'));

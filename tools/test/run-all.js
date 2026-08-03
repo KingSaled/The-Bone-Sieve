@@ -13,6 +13,7 @@ const SUITES = [
   'test-chalk-wipe.js',  // chalk gating, the deepchalk boon, and the wipe (jsdom)
   'test-oaths.js',       // the four Rite ladders, and what they do to a real run
   'test-loadout.js',     // §11 switches: owned content set aside for a run (jsdom)
+  'test-archive-view.js',// the screen itself: panel, tabs, filters, search (jsdom + CSS)
 ];
 
 const verbose = process.argv.includes('--verbose');

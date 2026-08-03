@@ -1655,130 +1655,297 @@
     100%{transform:translateY(18px) scale(.93);opacity:0;filter:grayscale(1) brightness(.5);}}
 
   /* ================= THE ARCHIVE =================
-     The career screen: every bone, chalk and relic in the game, what it costs
-     in Marrow, and what has already been paid for.
+     The career screen, rebuilt as a panel instead of a column of content
+     floating on the title screen's fog.
 
-     Deliberately NOT built on .card. The Ossuary's wares are 3D-tilting slabs
-     with promoted layers and a drifting nebula behind the glass, and the note
-     on .cInner says out loud why that is affordable: there are only ever four
-     or five on screen. The Archive puts FIFTY-TWO up at once. So these are
-     flat plaques that borrow the same palette and rarity ribbon and none of
-     the machinery — no perspective, no will-change, no per-card animation. */
-  #menuArchive{max-width:min(1180px,calc(94vw / var(--ui-scale,1)));width:100%;}
-  #menuArchive .menuH2{margin-bottom:4px;}
+     Three things drove the rebuild. It had no panel of its own, so it read as
+     loose furniture over the miasma rather than as part of the game. It drew
+     all fifty-two entries at once under twelve section headers, which pushed
+     the ledger bar off the top of a 1080p screen before the player had
+     scrolled anywhere. And every plaque sized itself to its own sentence, so
+     no two rows in a grid ever lined up.
+
+     The answers, in order: a bordered panel with a fixed height and exactly
+     ONE scrolling region inside it, so the title, the purse and the filters
+     can never scroll away; filters that cut fifty-two down to whatever is
+     being looked for, which is what actually removes the scrolling rather
+     than shrinking the type; and one uniform tile whose art slot is the same
+     size on every single card.
+
+     That last one is the load-bearing decision. Those icons are placeholders
+     for real painted art, so the tile is built around a fixed art window and
+     the text arranges itself underneath — never the other way round. Every
+     region of the card has a fixed height and its own visual container, so a
+     four-line relic and a one-line die are the same object with different
+     contents rather than two differently-shaped cards.
+
+     No ornamental frame. The boneFrame overhangs its box by 18px and is a
+     reveal; this is a workbench. The Veil and the Exchange go without it for
+     the same reason. */
+
+  /* The panel is the screen — .menuScreen's 760px cap is for a column of
+     buttons, not for a roster. */
+  #menuArchive{max-width:none;
+    width:min(1320px,calc(95vw / var(--ui-scale,1)));}
+  .arcPanel{position:relative;display:flex;flex-direction:column;width:100%;
+    text-align:left;overflow:hidden;
+    max-height:calc(92vh / var(--ui-scale,1));
+    background:linear-gradient(170deg,#1b1724,var(--panel) 45%,#100d16);
+    border:1px solid var(--line);
+    box-shadow:0 30px 90px rgba(0,0,0,.85), 0 0 0 1px rgba(176,77,255,.10) inset;
+    animation:modalIn .32s var(--ease-out);}
+  /* the same crimson-into-violet rule every modal in the game wears */
+  .arcPanel::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;z-index:3;
+    background:linear-gradient(90deg,transparent,var(--crimson),var(--neon-p),transparent);}
+
+  /* ---- the head: title, purse, career. Fixed; never scrolls away. ---- */
+  .arcTop{display:flex;align-items:flex-end;justify-content:space-between;gap:20px 28px;
+    flex-wrap:wrap;padding:18px 24px 14px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(176,77,255,.07),transparent 78%);}
+  .arcTitle{margin:0 0 3px;font-size:clamp(26px,2.6vw,34px);letter-spacing:5px;}
   .arcFlavor{font-family:var(--font-mono);color:var(--bone-dim);font-style:italic;
-    font-size:14px;margin-bottom:16px;letter-spacing:.4px;}
+    font-size:12.5px;letter-spacing:.4px;margin:0;}
 
-  /* the ledger bar — the same furniture as the Ossuary's, so the two screens
-     read as the same game keeping two sets of books */
-  #arcLedger{display:flex;align-items:center;justify-content:space-between;gap:18px;
-    flex-wrap:wrap;width:100%;margin-bottom:14px;padding:11px 18px;
-    background:linear-gradient(180deg,rgba(10,7,15,.85),rgba(6,4,10,.7));
-    border:1px solid var(--line);border-top-color:var(--line-hi);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.05), inset 0 -12px 24px rgba(0,0,0,.5);}
-  #arcMarrow{font-family:var(--font-mono);font-size:22px;font-weight:800;color:var(--gold);
+  #arcLedger{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    justify-content:flex-end;margin-left:auto;}
+  /* the purse gets a plate of its own — it is the number every other number on
+     this screen is measured against */
+  #arcMarrow{font-family:var(--font-mono);font-size:25px;font-weight:800;color:var(--gold);
     display:flex;align-items:center;gap:9px;white-space:nowrap;
+    padding:7px 15px;border-radius:8px;
+    background:linear-gradient(180deg,rgba(255,181,77,.12),rgba(255,181,77,.03));
+    border:1px solid rgba(255,181,77,.34);
     text-shadow:0 0 18px rgba(255,181,77,.5);}
-  #arcMarrow .ic{font-size:22px;}
-  #arcMarrow small{font-family:var(--font-ui);font-size:11.5px;font-weight:700;
-    letter-spacing:3px;color:var(--bone-faint);text-shadow:none;}
-  #arcLife{display:flex;gap:20px;flex-wrap:wrap;justify-content:flex-end;
-    font-family:var(--font-mono);font-size:13px;color:var(--bone-faint);}
-  #arcLife span{display:flex;align-items:center;gap:6px;}
-  #arcLife .ic{font-size:15px;color:var(--line-hi);}
-  #arcLife b{color:var(--bone);font-weight:800;}
+  #arcMarrow .ic{font-size:23px;}
+  #arcMarrow small{font-family:var(--font-ui);font-size:10.5px;font-weight:700;
+    letter-spacing:2.6px;color:var(--bone-faint);text-shadow:none;}
+  #arcLife{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  #arcLife span{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;
+    background:rgba(0,0,0,.34);border:1px solid var(--line);
+    font-family:var(--font-mono);font-size:11px;letter-spacing:.6px;color:var(--bone-faint);}
+  #arcLife .ic{font-size:13px;color:var(--line-hi);}
+  #arcLife b{color:var(--bone);font-weight:800;font-size:12.5px;}
 
-  /* the roster scrolls; the ledger and the buttons do not scroll away with it */
-  #arcRoster{width:100%;max-height:calc(60vh / var(--ui-scale,1));
-    overflow-y:auto;overflow-x:hidden;padding-right:6px;text-align:left;}
-  .arcGroup{font-family:var(--font-display);font-weight:400;font-size:23px;
-    letter-spacing:4px;color:var(--bone);margin:16px 0 2px;
-    display:flex;align-items:center;gap:12px;}
-  .arcGroup:first-child{margin-top:0;}
-  .arcGroup::after{content:'';flex:1;height:1px;
-    background:linear-gradient(90deg,var(--line-hi),transparent);}
-  /* how much of this half of the roster is paid for — the one number a
-     returning player looks for first */
-  .arcCount{order:1;font:800 12px var(--font-mono);font-style:normal;
-    letter-spacing:1px;color:var(--bone-faint);}
-  .arcTier{font-family:var(--font-ui);font-weight:700;font-size:11px;letter-spacing:3.4px;
-    color:var(--bone-faint);margin:14px 0 8px;}
-  .arcGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:10px;}
+  /* ---- tabs ---- */
+  #arcTabs{display:flex;gap:2px;padding:0 24px;border-bottom:1px solid var(--line);
+    background:rgba(0,0,0,.2);}
+  .arcTab{appearance:none;background:none;border:0;cursor:pointer;
+    font-family:var(--font-ui);font-weight:700;font-size:12.5px;letter-spacing:2.6px;
+    color:var(--bone-faint);padding:11px 18px 10px;margin-bottom:-1px;
+    border-bottom:2px solid transparent;display:flex;align-items:center;gap:8px;
+    transition:color .16s linear, border-color .16s linear;}
+  .arcTab .ic{font-size:15px;}
+  .arcTab:hover{color:var(--bone-dim);}
+  .arcTab.on{color:var(--bone);border-bottom-color:var(--gold);}
+  .arcTab.on .ic{color:var(--gold);}
+  .arcTab .tabN{font-family:var(--font-mono);font-size:11px;color:var(--bone-faint);
+    letter-spacing:.5px;}
+  .arcTab.on .tabN{color:var(--gold);}
 
-  .arcItem{position:relative;display:flex;gap:11px;align-items:flex-start;
-    padding:11px 12px 11px 13px;border-radius:9px;text-align:left;width:100%;
-    background:linear-gradient(168deg,#251f30,#181322 62%,#100c18);
+  /* ---- filters ----
+     Chips rather than dropdowns: every option is one click away and the counts
+     live on the control, so "how much of this do I own" is answered without
+     opening anything. This is the part that does the real work against
+     scrolling — the roster is unchanged, it is just no longer all on screen. */
+  #arcFilters{display:flex;flex-direction:column;gap:8px;padding:12px 24px;
+    border-bottom:1px solid var(--line);background:rgba(0,0,0,.24);}
+  #arcFilters.hidden{display:none;}
+  .arcFilterRow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  /* The chip groups must be flex containers themselves. Left as plain inline
+     spans they are one flex ITEM holding block-level buttons, so the chips
+     stack into a column and the filter bar grows to 290px — taller than the
+     rack it exists to shorten. */
+  #arcGroupChips, #arcStateChips{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .arcFilterLabel{font-family:var(--font-ui);font-weight:700;font-size:10px;
+    letter-spacing:2.4px;color:var(--bone-faint);margin-right:4px;min-width:52px;}
+  .arcChip{appearance:none;cursor:pointer;display:flex;align-items:center;gap:7px;
+    padding:6px 13px;border-radius:20px;
+    background:linear-gradient(180deg,#211c2c,#171320);
+    border:1px solid var(--line);
+    font-family:var(--font-ui);font-weight:700;font-size:11px;letter-spacing:1.6px;
+    color:var(--bone-dim);
+    transition:color .15s linear, border-color .15s linear, background .15s linear,
+               transform .15s var(--ease);}
+  .arcChip .ic{font-size:13px;color:var(--line-hi);}
+  .arcChip b{font-family:var(--font-mono);font-size:11px;font-weight:800;
+    color:var(--bone-faint);letter-spacing:.4px;}
+  .arcChip:hover{color:var(--bone);border-color:var(--line-hi);transform:translateY(-1px);}
+  .arcChip.on{color:var(--ink);background:linear-gradient(180deg,var(--gold-hi),var(--gold));
+    border-color:var(--gold-hi);box-shadow:0 0 16px rgba(255,181,77,.34);}
+  .arcChip.on .ic, .arcChip.on b{color:#4a2f08;}
+  .arcChip.empty{opacity:.4;}
+
+  #arcSearchWrap{display:flex;align-items:center;gap:8px;margin-left:auto;
+    padding:5px 8px 5px 11px;border-radius:20px;
+    background:#0a0810;border:1px solid var(--line);
+    transition:border-color .15s linear, box-shadow .15s linear;}
+  #arcSearchWrap:focus-within{border-color:var(--gold);
+    box-shadow:0 0 14px rgba(255,181,77,.22);}
+  #arcSearchWrap .ic{font-size:14px;color:var(--line-hi);flex:0 0 auto;}
+  #arcSearch{appearance:none;background:none;border:0;outline:none;
+    color:var(--bone);font:700 12px var(--font-mono);letter-spacing:1px;
+    width:clamp(120px,15vw,190px);padding:0;}
+  #arcSearch::placeholder{color:var(--bone-faint);letter-spacing:2px;font-weight:700;}
+  #arcSearchClear{appearance:none;background:none;border:0;cursor:pointer;padding:0 4px;
+    color:var(--bone-faint);font:800 15px var(--font-mono);line-height:1;
+    transition:color .15s linear;}
+  #arcSearchClear:hover{color:var(--crimson-hi);}
+  #arcSearchClear.hidden{display:none;}
+
+  /* ---- the one scrolling region ---- */
+  #arcBody{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;
+    padding:16px 24px 20px;}
+  /* There is no global .hidden rule in this file — only .overlay.hidden and
+     .menuScreen.hidden. Both panes need their own, or a "hidden" tab simply
+     renders underneath the visible one, which is exactly what happened.
+
+     ID selectors, and they have to be: both panes set their own display off an
+     id (#arcRoster is a grid, #arcOaths is a column), and a bare .arcPane.hidden
+     loses to those on specificity — so the class would be applied, read back
+     true from classList, and change nothing on screen. */
+  #arcRoster.hidden, #arcOaths.hidden{display:none;}
+
+  /* ---- the roster grid ----
+     One track size for every card, so the rack lines up whatever is filtered
+     into it. Full-width notices ride in the same grid on grid-column:1/-1
+     rather than needing a wrapper. */
+  #arcRoster{display:grid;gap:12px;align-content:start;
+    grid-template-columns:repeat(auto-fill,minmax(196px,1fr));}
+  .arcSpan{grid-column:1/-1;}
+
+  @keyframes arcCardIn{
+    from{opacity:0;transform:translateY(12px) scale(.96);}
+    to{opacity:1;transform:none;}}
+  /* Only ever on a rack that has just been BUILT — opening the screen,
+     switching tab, changing a filter. A toggle or a purchase re-renders the
+     same rack, and replaying fifty-two entrances on every click is the exact
+     blink the Ossuary's cards were fixed for. The delay is capped so the last
+     card in a full roster still arrives inside a third of a second. */
+  #arcRoster.fresh .arcCard{animation:arcCardIn .34s var(--ease-out) both;
+    animation-delay:calc(min(var(--i,0), 22) * 13ms);}
+
+  /* ---- the tile ----
+     Fixed heights on every region. The art window is the constant the whole
+     card is built around: it does not move or resize for a longer name, a
+     longer rule, or a different footer, because one day it holds a painting. */
+  .arcCard{position:relative;display:flex;flex-direction:column;
+    border-radius:10px;overflow:hidden;
+    background:linear-gradient(168deg,#241f30,#181322 62%,#100c18);
     border:1px solid var(--aRim,#3f3850);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.05), inset 0 -2px 0 rgba(0,0,0,.55),
                0 6px 16px rgba(0,0,0,.5);
-    transition:border-color .16s linear, transform .16s var(--ease), box-shadow .16s linear;}
-  /* the rarity ribbon, same read as the Ossuary's */
-  .arcItem::before{content:'';position:absolute;left:9px;right:9px;top:0;height:2px;
-    border-radius:2px;background:var(--aRim,#3f3850);opacity:.85;}
-  .arcItem .aIco{flex:0 0 auto;width:38px;height:38px;display:flex;align-items:center;
-    justify-content:center;border-radius:7px;
-    background:radial-gradient(115% 96% at 50% 6%,#241d33,#0a0710 76%);
-    box-shadow:inset 0 3px 9px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.16);}
-  .arcItem .aIco .ic{font-size:21px;color:var(--aKey,#a89ec0);}
-  .arcItem .aBody{flex:1;min-width:0;}
-  .arcItem .aName{font-family:var(--font-ui);font-weight:700;font-size:14.5px;
-    letter-spacing:1.2px;color:var(--bone);line-height:1.2;}
-  .arcItem .aDesc{font-family:var(--font-mono);font-size:11.5px;line-height:1.5;
-    color:var(--bone-dim);margin-top:4px;}
-  .arcItem .aFoot{display:flex;align-items:center;gap:6px;margin-top:8px;
-    font-family:var(--font-mono);font-weight:800;font-size:13px;letter-spacing:.4px;}
-  .arcItem .aFoot .ic{font-size:14px;}
+    transition:border-color .16s linear, transform .16s var(--ease),
+               box-shadow .16s linear;}
 
-  /* ---- the four states a plaque can be in ----
-     Owned, affordable, too expensive, and depth-locked. They must be tellable
-     apart at a glance and without relying on colour alone, so each also carries
-     its own word in the footer. */
-  .arcItem.tier1{--aRim:#4f4759;--aKey:#a89ec0;}
-  .arcItem.tier2{--aRim:#7d8aa3;--aKey:#b9c6dd;}
-  .arcItem.tier3{--aRim:var(--gold);--aKey:var(--gold-hi);}
-  .arcItem.tier4{--aRim:var(--crimson-hi);--aKey:#ff7fb0;}
+  /* header strip: rarity on the left, what KIND of thing it is on the right.
+     The kind matters most when the group filter is on ALL and dice, chalks and
+     relics are sitting in one rack together. */
+  .acTop{display:flex;align-items:center;justify-content:space-between;gap:6px;
+    height:24px;padding:0 10px;flex:0 0 auto;
+    background:linear-gradient(180deg,rgba(0,0,0,.45),transparent);
+    border-bottom:1px solid rgba(255,255,255,.045);}
+  .acTier{font-family:var(--font-ui);font-weight:700;font-size:8.5px;letter-spacing:2px;
+    color:var(--aKey,#a89ec0);opacity:.95;}
+  .acKind{font-size:12px;color:var(--line-hi);display:flex;}
+  .acKind .ic{font-size:12px;}
 
-  .arcItem.owned{background:linear-gradient(168deg,#1b2a20,#141d18 62%,#0d130f);}
-  .arcItem.owned .aFoot{color:var(--neon-g);}
-  .arcItem.owned .aName{color:#dcf3e4;}
+  /* the art window */
+  .acArt{position:relative;flex:0 0 auto;height:88px;margin:9px 9px 0;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    background:radial-gradient(122% 104% at 50% 2%,#251e35,#0a0710 80%);
+    box-shadow:inset 0 4px 14px rgba(0,0,0,.92), inset 0 1px 0 rgba(255,255,255,.14);}
+  .acArt::after{content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(70% 60% at 50% 108%,var(--aGlow,rgba(168,158,192,.28)),transparent 70%);}
+  .acArt .ic{font-size:42px;color:var(--aKey,#a89ec0);position:relative;z-index:1;
+    filter:drop-shadow(0 3px 10px rgba(0,0,0,.85));
+    transition:transform .2s var(--ease);}
 
-  /* buyable: the only state that lifts to the pointer, because it is the only
-     one that does anything when clicked */
-  .arcItem.buy{cursor:pointer;}
-  .arcItem.buy .aFoot{color:var(--gold);}
-  .arcItem.buy:hover{transform:translateY(-2px);
+  .acName{flex:0 0 auto;height:20px;margin:9px 11px 0;
+    font-family:var(--font-ui);font-weight:700;font-size:13px;letter-spacing:1px;
+    color:var(--bone);line-height:20px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  /* the rule the item plays by, in its own recessed box so it reads as data
+     rather than as more of the name. Four lines fits the longest one in the
+     game (93 characters) at this width. */
+  /* A FIXED height, not a minimum. Every region of this card is fixed, and this
+     is the only one whose content varies — leave it free to grow or shrink and
+     a one-line die sits 14px shorter than a four-line relic, which is exactly
+     the ragged rack the rebuild was for. Four lines at this size and leading is
+     75.6px inside the border, which fits the longest rule in the game (93
+     characters) with nothing clipped. */
+  .acDesc{flex:0 0 auto;height:76px;margin:6px 9px 0;padding:7px 9px;border-radius:6px;
+    background:rgba(0,0,0,.34);border:1px solid rgba(255,255,255,.04);
+    font-family:var(--font-mono);font-size:10.5px;
+    /* px, not a ratio: the box height is a whole number of these, so an exact
+       line-height is what stops a 1px sliver of the clamped-away line showing
+       under the last one. 4 x 15 + 14 padding + 2 border = 76. */
+    line-height:15px;
+    color:var(--bone-dim);
+    display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;
+    overflow:hidden;}
+  .acFoot{flex:0 0 auto;height:34px;margin:8px 9px 9px;padding:0 10px;border-radius:6px;
+    display:flex;align-items:center;gap:7px;
+    background:rgba(0,0,0,.34);border:1px solid rgba(255,255,255,.04);
+    font-family:var(--font-mono);font-weight:800;font-size:12px;letter-spacing:.4px;}
+  .acFoot .ic{font-size:14px;}
+
+  /* rarity, the same read as the Ossuary's */
+  .arcCard.tier1{--aRim:#4f4759;--aKey:#a89ec0;--aGlow:rgba(168,158,192,.26);}
+  .arcCard.tier2{--aRim:#7d8aa3;--aKey:#b9c6dd;--aGlow:rgba(185,198,221,.3);}
+  .arcCard.tier3{--aRim:var(--gold);--aKey:var(--gold-hi);--aGlow:rgba(255,181,77,.34);}
+  .arcCard.tier4{--aRim:var(--crimson-hi);--aKey:#ff7fb0;--aGlow:rgba(255,91,120,.34);}
+
+  /* ---- the states ----
+     Owned, buyable, unaffordable, depth-locked, and set aside. Tellable apart
+     without relying on colour alone: each carries its own word in the footer. */
+  .arcCard.owned{background:linear-gradient(168deg,#1c2b21,#141d18 62%,#0d130f);}
+  .arcCard.owned .acName{color:#dcf3e4;}
+
+  .arcCard.buy{cursor:pointer;}
+  .arcCard.buy .acFoot{color:var(--gold);border-color:rgba(255,181,77,.28);
+    background:rgba(255,181,77,.07);}
+  .arcCard.buy:hover{transform:translateY(-3px);border-color:var(--gold-hi);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.07), inset 0 -2px 0 rgba(0,0,0,.55),
-               0 12px 24px rgba(0,0,0,.6), 0 0 20px rgba(255,181,77,.25);}
+               0 14px 28px rgba(0,0,0,.6), 0 0 22px rgba(255,181,77,.28);}
+  .arcCard.buy:hover .acArt .ic{transform:scale(1.09);}
 
-  /* locked states stay fully legible — design §4 is explicit that a Marrow
+  /* locked entries stay fully legible — design §4 is explicit that a Marrow
      item is a shopping list entry, not a mystery. Dimmed, never hidden. */
-  .arcItem.locked{opacity:.62;}
-  .arcItem.locked .aFoot{color:var(--bone-faint);}
-  .arcItem.gated{opacity:.62;}
-  .arcItem.gated .aFoot{color:var(--neon-p);}
+  .arcCard.locked{opacity:.6;}
+  .arcCard.locked .acFoot{color:var(--bone-faint);}
+  .arcCard.gated{opacity:.6;}
+  .arcCard.gated .acFoot{color:var(--neon-p);border-color:rgba(176,77,255,.24);}
 
-  /* ---- set aside (design §11) ----
-     Deliberately NOT the locked treatment. Locked means "you have not earned
-     this"; set aside means "you own it and chose to leave it behind", and the
-     two must never be mistaken for each other. So this keeps FULL opacity —
-     the plaque does not recede the way a locked one does — and instead drains
-     the owned green out of it. What changes is colour and the switch, not
-     presence. */
-  .arcItem.owned.off{background:linear-gradient(168deg,#242030,#1a1622 62%,#110e18);}
-  .arcItem.owned.off .aName{color:var(--bone-dim);}
-  .arcItem.owned.off .aIco .ic{color:#6f6684;}
-  .arcItem.owned.off::before{opacity:.3;}
+  /* set aside (design §11): NOT the locked treatment. Locked means "you have
+     not earned this"; set aside means "you own it and left it behind". So this
+     keeps full opacity — it does not recede — and instead has the owned green
+     drained out of it. What changes is colour, not presence. */
+  .arcCard.owned.off{background:linear-gradient(168deg,#242030,#1a1622 62%,#110e18);}
+  .arcCard.owned.off .acName{color:var(--bone-dim);}
+  .arcCard.owned.off .acArt .ic{color:#6f6684;}
+  .arcCard.owned.off .acArt::after{opacity:.3;}
 
-  /* the loadout switch. Small, and the only control on this screen that is
-     free and reversible, so it says what it will do rather than what it costs */
+  /* a card that has just been paid for */
+  @keyframes arcBought{
+    0%{box-shadow:0 0 0 rgba(255,181,77,0), 0 6px 16px rgba(0,0,0,.5);
+       border-color:var(--gold-hi);}
+    20%{box-shadow:0 0 34px rgba(255,181,77,.85), inset 0 0 26px rgba(255,181,77,.4),
+        0 6px 16px rgba(0,0,0,.5);transform:scale(1.045);border-color:var(--gold-hi);}
+    100%{box-shadow:0 0 0 rgba(255,181,77,0), 0 6px 16px rgba(0,0,0,.5);transform:none;}}
+  .arcCard.justPaid{animation:arcBought .85s var(--ease-out);z-index:2;}
+
+  /* ---- the loadout switch (design §11) ----
+     The only control in the Archive that costs nothing and undoes itself, so
+     it says what it will do rather than what it costs. A real button inside
+     the card, not the whole card: reading a rack must never flip something. */
   .aSwitch{appearance:none;background:none;border:0;padding:0;cursor:pointer;
-    display:flex;align-items:center;gap:8px;font:800 12px var(--font-mono);
-    letter-spacing:.4px;color:var(--bone-faint);
+    display:flex;align-items:center;gap:8px;width:100%;
+    font:800 11px var(--font-mono);letter-spacing:.6px;color:var(--bone-faint);
     transition:color .16s linear;}
   .aSwitch .sTrack{position:relative;width:26px;height:13px;border-radius:7px;flex:0 0 auto;
     background:#16121f;border:1px solid #3d3550;
-    box-shadow:inset 0 1px 3px rgba(0,0,0,.8);transition:background .16s linear,
-      border-color .16s linear;}
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.8);
+    transition:background .16s linear, border-color .16s linear;}
   .aSwitch .sKnob{position:absolute;top:1px;left:1px;width:9px;height:9px;border-radius:50%;
     background:#6f6684;transition:transform .16s var(--ease), background .16s linear;}
   .aSwitch.on{color:var(--neon-g);}
@@ -1786,70 +1953,145 @@
   .aSwitch.on .sKnob{transform:translateX(13px);background:var(--neon-g);
     box-shadow:0 0 8px rgba(94,222,138,.7);}
   .aSwitch:hover{color:var(--bone);}
-  .aSwitch:hover .sTrack{border-color:var(--line-hi);}
   .aSwitch.on:hover{color:#9df3bb;}
   .aSwitch:focus-visible{outline:2px solid var(--gold);outline-offset:3px;}
 
-  /* how many of a group are set aside — only drawn when any are */
-  .arcAside{margin-left:9px;font:800 11px var(--font-mono);letter-spacing:1px;
-    color:#c9a05e;font-style:normal;}
-
-  /* the one case the toggles can talk a player into: an empty Ossuary */
-  .arcWarn{display:flex;align-items:center;gap:10px;margin-bottom:14px;
-    padding:10px 14px;border:1px solid #5c4a27;border-left-width:3px;
-    background:linear-gradient(180deg,rgba(46,35,14,.5),rgba(24,18,8,.4));
+  /* ---- notices ---- */
+  .arcWarn{display:flex;align-items:center;gap:10px;margin-bottom:4px;
+    padding:11px 15px;border:1px solid #5c4a27;border-left-width:3px;border-radius:6px;
+    background:linear-gradient(180deg,rgba(46,35,14,.55),rgba(24,18,8,.42));
     font-family:var(--font-mono);font-size:12px;line-height:1.5;color:#e2c489;}
   .arcWarn .ic{font-size:19px;color:#c9a05e;flex:0 0 auto;}
+  .arcEmpty{padding:52px 12px;text-align:center;color:var(--bone-faint);
+    font-family:var(--font-mono);font-size:13px;letter-spacing:1px;}
+  .arcEmpty .ic{display:block;margin:0 auto 12px;font-size:30px;color:var(--line);}
 
-  /* ---- the two tabs ----
-     Underlined rather than boxed: the ledger bar directly above is already a
-     hard-edged slab, and a second one would fence the roster in on both
-     sides. The active tab is the only one drawn in full bone. */
-  #arcTabs{display:flex;gap:4px;width:100%;margin-bottom:12px;
-    border-bottom:1px solid var(--line);}
-  .arcTab{appearance:none;background:none;border:0;cursor:pointer;
-    font-family:var(--font-ui);font-weight:700;font-size:12.5px;letter-spacing:2.6px;
-    color:var(--bone-faint);padding:9px 16px 8px;margin-bottom:-1px;
-    border-bottom:2px solid transparent;display:flex;align-items:center;gap:8px;
-    transition:color .16s linear, border-color .16s linear;}
-  .arcTab .ic{font-size:15px;}
-  .arcTab:hover{color:var(--bone-dim);}
-  .arcTab.on{color:var(--bone);border-bottom-color:var(--gold);}
-  .arcTab.on .ic{color:var(--gold);}
-
-  /* ---- the Oaths ----
-     Same plaque, one column instead of a grid: a ladder carries three lines of
-     state where a ware carries one, and four of them read better stacked than
-     squeezed into 232px cells. Their own rim colour, because an Oath has no
-     tier and must not borrow the roster's rarity language. */
-  #arcOaths{width:100%;max-height:calc(60vh / var(--ui-scale,1));
-    overflow-y:auto;overflow-x:hidden;padding-right:6px;text-align:left;}
-  .oathFlavor{margin:2px 0 14px;font-size:12.5px;}
-  .riteItem{--aRim:#6b5a86;--aKey:#c9b6e8;margin-bottom:10px;}
-  .riteItem .aName{display:flex;align-items:baseline;gap:10px;}
-  .rLvl{margin-left:auto;font:800 12px var(--font-mono);font-style:normal;
+  /* ================= THE OATHS =================
+     Four ladders, laid out as four columns rather than four wide bars with a
+     third of their width empty. Each is built on the same fixed art window as
+     a roster card, so the two tabs read as the same furniture. */
+  #arcOaths{display:flex;flex-direction:column;gap:14px;}
+  .oathIntro{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;}
+  .oathIntro h3{font-family:var(--font-display);font-weight:400;font-size:23px;
+    letter-spacing:4px;color:var(--bone);margin:0;}
+  .oathIntro .arcFlavor{margin:0;}
+  .oathIntro .oathCount{margin-left:auto;font:800 12px var(--font-mono);
     letter-spacing:1px;color:var(--bone-faint);}
-  .riteItem.owned .rLvl{color:var(--neon-g);}
+  .oathGrid{display:grid;gap:14px;align-items:stretch;
+    grid-template-columns:repeat(auto-fit,minmax(232px,1fr));}
 
-  /* the rungs. Same pip vocabulary as the re-roll counter in the sidebar —
-     which is, not by accident, the thing one of these ladders buys. */
-  .rPips{display:flex;gap:5px;margin-top:8px;}
-  .rPip{width:20px;height:5px;border-radius:3px;background:#241f30;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
-  .rPip.on{background:var(--aKey);box-shadow:0 0 8px rgba(201,182,232,.5);}
+  .oathCard{position:relative;display:flex;flex-direction:column;
+    border-radius:10px;overflow:hidden;
+    --aRim:#6b5a86;--aKey:#c9b6e8;--aGlow:rgba(201,182,232,.3);
+    background:linear-gradient(168deg,#241f30,#181322 62%,#100c18);
+    border:1px solid var(--aRim);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 6px 16px rgba(0,0,0,.5);
+    transition:border-color .16s linear, transform .16s var(--ease),
+               box-shadow .16s linear;}
+  /* There are only four of these and they are the biggest thing Marrow buys,
+     so they get room the roster's fifty-two cannot afford: a taller art
+     window, a name that can breathe, and the full four-line rule box. It also
+     narrows the height gap between the two tabs, so switching does not resize
+     the panel out from under the pointer. */
+  .oathCard .acArt{height:128px;margin:11px 11px 0;}
+  .oathCard .acArt .ic{font-size:56px;}
+  .oathCard .acName{height:auto;line-height:1.25;white-space:normal;
+    font-size:15.5px;letter-spacing:1.4px;text-align:center;margin:12px 12px 0;}
+  /* Two lines, not four: an Oath's rule is one short sentence — the longest is
+     46 characters — so the roster's four-line box would be mostly empty air on
+     all four of them. 2 x 15 + 16 = 46. */
+  .oathCard .acDesc{height:46px;-webkit-line-clamp:2;text-align:center;}
+
+  /* the rungs, filled with the same liquid the Soul Quota bar is filled with —
+     recoloured from blood to marrow, because this is a purse emptying into a
+     promise rather than a quota being met. Same channel, same swirl, same
+     transition, so the two read as one material. */
+  .oPips{display:flex;gap:5px;margin:10px 11px 0;}
+  .oPip{position:relative;flex:1 1 0;height:13px;border-radius:4px;overflow:hidden;
+    background:#050408;border:1px solid var(--line);
+    box-shadow:inset 0 2px 4px rgba(0,0,0,.7);}
+  .oPipFill{--fl-hi:255,181,77; --fl-mid:176,116,36; --fl-lo:92,56,12; --fl-clot:48,28,6;
+    position:absolute;inset:0;width:0;
+    background:
+      radial-gradient(50% 300% at 50% 35%, rgba(var(--fl-hi),.90), rgba(var(--fl-hi),0) 72%),
+      radial-gradient(46% 260% at 50% 70%, rgba(var(--fl-clot),.95), rgba(var(--fl-clot),0) 70%),
+      radial-gradient(48% 280% at 50% 60%, rgba(var(--fl-hi),.60), rgba(var(--fl-hi),0) 74%),
+      radial-gradient(44% 240% at 50% 30%, rgba(var(--fl-clot),.85), rgba(var(--fl-clot),0) 70%),
+      linear-gradient(180deg, rgb(var(--fl-mid)), rgb(var(--fl-lo)));
+    background-size:210px 100%, 170px 100%, 260px 100%, 130px 100%, 100% 100%;
+    background-repeat:repeat-x;
+    box-shadow:inset 0 3px 6px rgba(0,0,0,.5), inset 0 -4px 7px rgba(0,0,0,.6);
+    animation:bloodSwirl 6s linear infinite;
+    transition:width .5s var(--ease-out);}
+  .oPip.on .oPipFill{width:100%;}
   /* a rung still behind a descent key is drawn as an outline, so the two
      locked reasons — cannot afford, cannot yet reach — never look alike */
-  .rPip.gated{background:transparent;border:1px solid var(--neon-p);opacity:.5;}
-  .riteItem.owned .rPip.on{background:var(--neon-g);box-shadow:0 0 8px rgba(94,222,138,.45);}
+  .oPip.gated{border-color:var(--neon-p);border-style:dashed;opacity:.65;}
+  /* the rung that has just been sworn: it pours, and the channel surges */
+  @keyframes oathPour{from{width:0;}to{width:100%;}}
+  .oPip.pour .oPipFill{animation:bloodSwirl 6s linear infinite,
+                                 oathPour .55s var(--ease-out) both;}
+  .oPip.pour{animation:quotaSurge .8s var(--ease-out);}
 
-  .rNow{display:flex;align-items:center;gap:6px;margin-top:8px;
-    font-family:var(--font-mono);font-size:11.5px;color:var(--bone-dim);}
-  .rNow .ic{font-size:13px;color:var(--aKey);}
-  .rNone{font-style:italic;color:var(--bone-faint);}
-  .rStep{margin-left:8px;font:700 10.5px var(--font-ui);font-style:normal;
-    letter-spacing:2px;color:var(--bone-faint);}
+  .oathNow{display:flex;align-items:center;gap:6px;margin:9px 11px 0;
+    font-family:var(--font-mono);font-size:10.5px;line-height:1.4;color:var(--bone-dim);}
+  .oathNow .ic{font-size:13px;color:var(--aKey);flex:0 0 auto;}
+  .oathNone{font-style:italic;color:var(--bone-faint);}
+  .oathCard .acFoot{justify-content:center;}
+  .oathCard.buy{cursor:pointer;}
+  .oathCard.buy .acFoot{color:var(--gold);border-color:rgba(255,181,77,.28);
+    background:rgba(255,181,77,.07);}
+  .oathCard.buy:hover{transform:translateY(-3px);border-color:var(--gold-hi);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 14px 28px rgba(0,0,0,.6), 0 0 22px rgba(255,181,77,.28);}
+  .oathCard.buy:hover .acArt .ic{transform:scale(1.09);}
+  .oathCard.locked{opacity:.62;}
+  .oathCard.locked .acFoot{color:var(--bone-faint);}
+  .oathCard.gated{opacity:.62;}
+  .oathCard.gated .acFoot{color:var(--neon-p);border-color:rgba(176,77,255,.24);}
+  .oathCard.owned{border-color:var(--neon-g);
+    background:linear-gradient(168deg,#1c2b21,#141d18 62%,#0d130f);}
+  .oathCard.owned .acFoot{color:var(--neon-g);}
+  .oathCard.owned .acName{color:#dcf3e4;}
+  .oathCard.justPaid{animation:arcBought .85s var(--ease-out);z-index:2;}
   .rRung{font:700 11px var(--font-ui);letter-spacing:2.4px;color:var(--bone-faint);
     font-style:normal;}
+
+  /* ---- the panel's foot ---- */
+  .arcPanelFoot{margin:0;padding:14px 24px;border-top:1px solid var(--line);
+    background:rgba(0,0,0,.28);justify-content:flex-end;}
+
+  /* ---- short screens ----
+     A 1366x768 laptop has about 390px of scrolling region left once the head,
+     the tabs, the filters and the foot have taken their share, which is one
+     and a bit rows of a 285px tile. The panel still FITS — that was the actual
+     fault — but a rack you can only see a row and a half of is not much of a
+     rack, so everything that is furniture rather than content gives up height
+     and the tile itself comes down to three lines of rule and a smaller art
+     window. Nothing is removed except the flavour line, which is the one piece
+     of text on the screen that says nothing a player needs. */
+  @media (max-height: 880px){
+    .arcTop{padding:12px 20px 10px;}
+    .arcTitle{font-size:24px;letter-spacing:4px;margin-bottom:0;}
+    .arcTop .arcFlavor{display:none;}
+    #arcMarrow{font-size:21px;padding:5px 12px;}
+    #arcLife span{padding:4px 8px;}
+    #arcTabs{padding:0 20px;}
+    .arcTab{padding:9px 15px 8px;}
+    #arcFilters{padding:9px 20px;gap:6px;}
+    #arcBody{padding:12px 20px 14px;}
+    .arcPanelFoot{padding:10px 20px;}
+    #arcRoster{gap:10px;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));}
+    .acArt{height:70px;margin:8px 8px 0;}
+    .acArt .ic{font-size:34px;}
+    .acName{margin-top:7px;}
+    .acDesc{height:61px;-webkit-line-clamp:3;margin-top:5px;}
+    .acFoot{height:30px;margin:6px 8px 8px;}
+    .oathCard .acArt{height:96px;}
+    .oathCard .acArt .ic{font-size:46px;}
+    .oathCard .acDesc{height:46px;-webkit-line-clamp:2;}
+  }
 
   /* ---- the purchase confirmation ---- */
   /* same reasoning as the wipe dialog — see the note there */
@@ -2626,24 +2868,54 @@
        full — name, icon, description, price — because design §4 wants this to
        read as a shopping list, never as a mystery box. -->
   <div class="menuScreen hidden" id="menuArchive">
-    <h2 class="menuH2">THE ARCHIVE</h2>
-    <div class="arcFlavor">What the deep has already been paid for, and what it still wants.</div>
-    <div id="arcLedger">
-      <div id="arcMarrow"></div>
-      <div id="arcLife"></div>
-    </div>
-    <!-- Two tabs, per design §4. They share one ledger bar above them because
-         they spend one purse: the split is what the Marrow buys, not what it
-         is. THE OATHS rather than "the Rites" — see the note over RITES in the
-         script, where a rite already means a run. -->
-    <div id="arcTabs">
-      <button class="arcTab on" id="arcTabRoster"><i class="ic" data-ic="cards"></i>THE ROSTER</button>
-      <button class="arcTab" id="arcTabOaths"><i class="ic" data-ic="handFist"></i>THE OATHS</button>
-    </div>
-    <div id="arcRoster"></div>
-    <div id="arcOaths" class="hidden"></div>
-    <div class="menuBtnRow">
-      <button class="ghost" id="miArchiveBack"><i class="ic" data-ic="caretRight" style="transform:rotate(180deg);"></i>RETURN</button>
+    <div class="arcPanel">
+      <!-- head: what this is, what is in the purse, what the career has done.
+           Outside the scrolling region on purpose — the purse is the number
+           every price on this screen is read against, so it must never be the
+           thing that scrolled away. -->
+      <div class="arcTop">
+        <div>
+          <h2 class="menuH2 arcTitle">THE ARCHIVE</h2>
+          <div class="arcFlavor">What the deep has already been paid for, and what it still wants.</div>
+        </div>
+        <div id="arcLedger">
+          <div id="arcMarrow"></div>
+          <div id="arcLife"></div>
+        </div>
+      </div>
+      <!-- Two tabs, per design §4. They share one ledger bar above them because
+           they spend one purse: the split is what the Marrow buys, not what it
+           is. THE OATHS rather than "the Rites" — see the note over RITES in the
+           script, where a rite already means a run. -->
+      <div id="arcTabs">
+        <button class="arcTab on" id="arcTabRoster"><i class="ic" data-ic="cards"></i>THE ROSTER<span class="tabN" id="arcTabRosterN"></span></button>
+        <button class="arcTab" id="arcTabOaths"><i class="ic" data-ic="handFist"></i>THE OATHS<span class="tabN" id="arcTabOathsN"></span></button>
+      </div>
+      <!-- Filters. The roster is fifty-two entries and always will be; this is
+           what stops all of it being on screen at once, without shrinking any
+           of it. Rebuilt by renderArchive so the counts stay honest. -->
+      <div id="arcFilters">
+        <div class="arcFilterRow">
+          <span class="arcFilterLabel">SHOW</span>
+          <span id="arcGroupChips"></span>
+        </div>
+        <div class="arcFilterRow">
+          <span class="arcFilterLabel">STATE</span>
+          <span id="arcStateChips"></span>
+          <label id="arcSearchWrap">
+            <i class="ic" data-ic="eye"></i>
+            <input id="arcSearch" type="text" placeholder="SEARCH" autocomplete="off" spellcheck="false">
+            <button type="button" id="arcSearchClear" class="hidden" aria-label="clear search">&times;</button>
+          </label>
+        </div>
+      </div>
+      <div id="arcBody">
+        <div id="arcRoster" class="arcPane"></div>
+        <div id="arcOaths" class="arcPane hidden"></div>
+      </div>
+      <div class="menuBtnRow arcPanelFoot">
+        <button class="ghost" id="miArchiveBack"><i class="ic" data-ic="caretRight" style="transform:rotate(180deg);"></i>RETURN</button>
+      </div>
     </div>
   </div>
 </div>
@@ -9466,13 +9738,21 @@ function menuScreen(id){
 }
 
 //---- THE ARCHIVE -----------------------------------------------------
-// Rendered fresh every time it opens or a purchase lands. Fifty-two plaques
-// of static markup costs nothing next to keeping a diff of them in sync.
+// Rendered fresh whenever anything it shows could have changed. Fifty-two
+// tiles of static markup costs nothing next to keeping a diff of them in sync.
+//
+// What the screen has to solve, and where each answer lives:
+//   too much at once  -> the filters below, which cut the rack down rather
+//                        than shrinking what is in it
+//   nothing lines up  -> one uniform tile, built around a fixed art window
+//   it scrolled away  -> the panel owns its height and only #arcBody scrolls
 const ARC_TIER_LABEL = {1:'COMMON', 2:'UNCOMMON', 3:'RARE', 4:'CURSED'};
+const ARC_KIND_ICON  = {die:'cube', chalk:'paintBrush', relic:'crownSimple'};
+const ARC_KIND_LABEL = {die:'THE BONES', chalk:'THE CHALKS', relic:'THE RELICS'};
 
-// The four states, resolved in one place so the plaque, the click handler and
+// The five states, resolved in one place so the tile, the click handler and
 // the confirm dialog can never disagree about what an entry is.
-//   owned  — already paid for, or free from a fresh save
+//   owned  — already paid for, or free from a fresh save (may also be `off`)
 //   gated  — design §9's depth key not yet cut, whatever the purse holds
 //   buy    — affordable and unlocked
 //   locked — known, priced, and simply not affordable yet
@@ -9481,13 +9761,12 @@ function arcState(e){
   if(!depthGateMet(e.tier)) return 'gated';
   return Meta.data.marrow >= e.price ? 'buy' : 'locked';
 }
-// An owned plaque's footer is the loadout switch (design §11) — the only
-// control in the Archive that costs nothing and undoes itself. It is a real
-// button rather than the whole plaque, so that reading a 52-entry grid can
-// never switch something off by accident, and so it can carry aria-pressed.
-//
-// Nothing that is not owned gets one: there is no state to keep for a thing
-// the player has not got yet.
+
+// An owned tile's footer is the loadout switch (design §11) — the only control
+// in the Archive that costs nothing and undoes itself. A real button rather
+// than the whole tile, so that reading a rack can never switch something off
+// by accident, and so it can carry aria-pressed. Nothing unowned gets one:
+// there is no loadout state to keep for a thing the player has not got.
 function arcFoot(e, state){
   if(state === 'owned'){
     return '<button type="button" class="aSwitch' + (e.off ? '' : ' on') + '"' +
@@ -9499,7 +9778,53 @@ function arcFoot(e, state){
   if(state === 'gated')  return icon('stairs') + 'REACH DESCENT ' + depthGateFor(e.tier);
   return icon('bone') + e.price + (state === 'locked' ? ' — NOT ENOUGH' : '');
 }
-function renderArchive(){
+
+//---- what the screen is currently showing ----
+// Held here rather than read back off the DOM, so a re-render after a purchase
+// or a toggle cannot drop the player back to a view they had filtered away.
+let arcTab    = 'roster';     // roster | oaths
+let arcGroup  = 'all';        // all | die | chalk | relic
+let arcFilter = 'all';        // all | owned | buy | locked | off
+let arcQuery  = '';
+// Set for exactly one render after a purchase, so the tile that was just paid
+// for can flash and an Oath's new rung can pour. Cleared as it is consumed —
+// the flash belongs to the transaction, not to the state it left behind.
+let arcJustPaid = null;       // {kind, id} | {kind:'rite', key, level}
+
+// Kinds sort in the order the roster builds them; tiers ascend inside a kind.
+// Sorting here rather than in section headers is what let the headers go: the
+// rack is still dice-then-chalks-then-relics, cheapest tier first, but it is
+// one continuous grid that any filter can cut without leaving empty headings.
+const ARC_KIND_RANK = {die:0, chalk:1, relic:2};
+function arcSorted(rows){
+  return rows.map((e, i) => ({e, i})).sort((a, b) =>
+    (ARC_KIND_RANK[a.e.kind] - ARC_KIND_RANK[b.e.kind]) ||
+    (a.e.tier - b.e.tier) || (a.i - b.i)).map(x => x.e);
+}
+function arcMatches(e){
+  if(arcGroup !== 'all' && e.kind !== arcGroup) return false;
+  const st = arcState(e);
+  if(arcFilter === 'owned'  && st !== 'owned') return false;
+  if(arcFilter === 'buy'    && st !== 'buy') return false;
+  if(arcFilter === 'locked' && st !== 'locked' && st !== 'gated') return false;
+  if(arcFilter === 'off'    && !e.off) return false;
+  if(arcQuery){
+    const q = arcQuery.toLowerCase();
+    if(!e.name.toLowerCase().includes(q) && !e.desc.toLowerCase().includes(q)) return false;
+  }
+  return true;
+}
+function arcChip(attr, value, current, label, count, total){
+  const on = value === current;
+  const num = total === undefined ? (count === undefined ? '' : count) : count + '/' + total;
+  return '<button type="button" class="arcChip' + (on ? ' on' : '') +
+           (count === 0 && !on ? ' empty' : '') + '"' +
+           ' data-' + attr + '="' + value + '" aria-pressed="' + on + '">' + label +
+           (num === '' ? '' : '<b>' + num + '</b>') + '</button>';
+}
+
+function renderArchive(opts){
+  const fresh = !opts || opts.fresh !== false;   // a rebuilt rack, not a touched one
   const m = Meta.data;
   $('arcMarrow').innerHTML =
     icon('bone') + m.marrow.toLocaleString() + '<small>MARROW</small>';
@@ -9510,67 +9835,84 @@ function renderArchive(){
     '<span>' + icon('sealCheck') + 'TRIALS <b>' + m.lifetime.trialsCleared.toLocaleString() + '</b></span>';
 
   const roster = archiveRoster();
+  const owned  = roster.filter(e => e.owned);
+  $('arcTabRosterN').textContent = owned.length + '/' + roster.length;
+  $('arcTabOathsN').textContent =
+    RITES.reduce((a, r) => a + riteLevel(r.key), 0) + '/' +
+    RITES.reduce((a, r) => a + RITE_MAX[r.key], 0);
+
+  // ---- the filter chips, counted off the live roster ----
+  let g = arcChip('group', 'all', arcGroup, 'ALL', owned.length, roster.length);
+  for(const k of ['die','chalk','relic']){
+    const mine = roster.filter(e => e.kind === k);
+    g += arcChip('group', k, arcGroup, ARC_KIND_LABEL[k],
+                 mine.filter(e => e.owned).length, mine.length);
+  }
+  $('arcGroupChips').innerHTML = g;
+
+  // State counts respect the group filter, because that is the question being
+  // asked: "of what I am looking at, how much can I buy right now".
+  const inGroup = roster.filter(e => arcGroup === 'all' || e.kind === arcGroup);
+  const nBuy    = inGroup.filter(e => arcState(e) === 'buy').length;
+  const nLocked = inGroup.filter(e => { const s = arcState(e); return s === 'locked' || s === 'gated'; }).length;
+  const nOff    = inGroup.filter(e => e.off).length;
+  $('arcStateChips').innerHTML =
+    arcChip('filter', 'all', arcFilter, 'EVERYTHING') +
+    arcChip('filter', 'owned', arcFilter, 'IN THE POOL', inGroup.filter(e => e.owned).length) +
+    arcChip('filter', 'buy', arcFilter, 'CAN AFFORD', nBuy) +
+    arcChip('filter', 'locked', arcFilter, 'NOT YET', nLocked) +
+    arcChip('filter', 'off', arcFilter, 'SET ASIDE', nOff);
+  $('arcSearchClear').classList.toggle('hidden', !arcQuery);
+
+  // ---- the rack ----
+  const shown = arcSorted(roster.filter(arcMatches));
   let h = '';
   // Setting everything aside is allowed — design §11 exists to let a player
-  // impose their own constraints, and refusing the extreme end of that would
-  // be the system second-guessing the point of itself. But an Ossuary with
-  // nothing to lay out is a screen that does nothing when it opens, so it is
-  // said out loud here rather than discovered at the first shop.
+  // impose their own constraints, and refusing the far end of that would be
+  // the system second-guessing its own point. But an Ossuary with nothing to
+  // lay out is a screen that does nothing when it opens, so it is said here
+  // rather than discovered at the first shop of a run already begun.
   if(!runShopPool().length)
-    h += '<div class="arcWarn">' + icon('warningOctagon') +
+    h += '<div class="arcWarn arcSpan">' + icon('warningOctagon') +
          'Everything is set aside. The Ossuary will have nothing to lay out, ' +
          'and the next rite will be run on its opening bones alone.</div>';
-  for(const group of [{kind:'die',   label:'THE BONES'},
-                      {kind:'chalk', label:'THE CHALKS'},
-                      {kind:'relic', label:'THE RELICS'}]){
-    const mine = roster.filter(e => e.kind === group.kind);
-    const owned = mine.filter(e => e.owned).length;
-    // How many of this group are set aside, shown only when any are. A player
-    // mid-loadout wants that number more than they want the owned count, and a
-    // player who has never touched a switch should never have to read it.
-    const aside = mine.filter(e => e.owned && e.off).length;
-    h += '<div class="arcGroup">' + group.label +
-         '<em class="arcCount">' + owned + '/' + mine.length +
-         (aside ? '<b class="arcAside">' + aside + ' SET ASIDE</b>' : '') +
-         '</em></div>';
-    for(const tier of [1,2,3,4]){
-      const rows = mine.filter(e => e.tier === tier);
-      if(!rows.length) continue;
-      const gate = depthGateFor(tier);
-      h += '<div class="arcTier">' + ARC_TIER_LABEL[tier] +
-           (gate ? ' &nbsp;·&nbsp; needs descent ' + gate : '') + '</div>';
-      h += '<div class="arcGrid">';
-      for(const e of rows){
-        const state = arcState(e);
-        // `off` rides alongside `owned` rather than replacing it. Set aside is
-        // a state of a thing you HAVE; locked is a thing you have not earned.
-        // Collapsing them into one dimmed look would say the wrong thing.
-        h += '<div class="arcItem tier' + e.tier + ' ' + state + (e.off ? ' off' : '') + '"' +
-               ' data-kind="' + e.kind + '" data-id="' + e.id + '">' +
-               '<div class="aIco">' + icon(e.icon) + '</div>' +
-               '<div class="aBody">' +
-                 '<div class="aName">' + e.name + '</div>' +
-                 '<div class="aDesc">' + e.desc + '</div>' +
-                 '<div class="aFoot">' + arcFoot(e, state) + '</div>' +
-               '</div>' +
-             '</div>';
-      }
-      h += '</div>';
-    }
-  }
+  if(!shown.length)
+    h += '<div class="arcEmpty arcSpan">' + icon('eye') +
+         (arcQuery ? 'Nothing in the Archive answers to that name.'
+                   : 'Nothing here yet under that reading.') + '</div>';
+  shown.forEach((e, i)=>{
+    const state = arcState(e);
+    // `off` rides alongside `owned` rather than replacing it. Set aside is a
+    // state of a thing you HAVE; locked is a thing you have not earned.
+    const paid = arcJustPaid && arcJustPaid.kind === e.kind && arcJustPaid.id === e.id;
+    h += '<div class="arcCard tier' + e.tier + ' ' + state + (e.off ? ' off' : '') +
+           (paid ? ' justPaid' : '') + '" style="--i:' + i + '"' +
+           ' data-kind="' + e.kind + '" data-id="' + e.id + '">' +
+           '<div class="acTop">' +
+             '<span class="acTier">' + ARC_TIER_LABEL[e.tier] + '</span>' +
+             '<span class="acKind">' + icon(ARC_KIND_ICON[e.kind]) + '</span>' +
+           '</div>' +
+           '<div class="acArt">' + icon(e.icon) + '</div>' +
+           '<div class="acName" title="' + e.name + '">' + e.name + '</div>' +
+           '<div class="acDesc">' + e.desc + '</div>' +
+           '<div class="acFoot">' + arcFoot(e, state) + '</div>' +
+         '</div>';
+  });
   $('arcRoster').innerHTML = h;
-  renderOaths();
+  $('arcRoster').classList.toggle('fresh', fresh);
+
+  renderOaths(fresh);
+  arcJustPaid = null;
 }
 
 // ---- THE OATHS ----
-// A ladder is not a plaque: it is never simply owned or not owned, so the row
-// has to answer three questions at once — how far up am I, what does the next
-// rung cost, and what is it going to do. The pips carry the first (the same
-// vocabulary as the re-roll pips in the sidebar, which is exactly what one of
-// these ladders buys), the footer carries the second, and the line above it
-// states the total standing effect rather than the per-level one, because
-// "+2 re-rolls on every cast" is the thing a player actually wants to read
-// back. The per-level line stays underneath the name as the rule.
+// A ladder is not a tile: it is never simply owned or not owned, so the card
+// answers three questions at once — how far up am I, what does the next rung
+// cost, and what is it doing for me now. The rungs carry the first as pips
+// filled with the same liquid the Soul Quota bar is filled with, recoloured
+// from blood to marrow; the footer carries the second; the line above it
+// states the total standing effect, because "+2 re-rolls on every cast" is
+// what a player actually wants read back, not "+1 per level".
 function oathState(key){
   const next = riteNextLevel(key);
   if(!next) return 'owned';                     // topped out
@@ -9583,61 +9925,87 @@ function oathFoot(key, state){
   if(state === 'gated') return icon('stairs') + 'REACH DESCENT ' + riteDepthGate(key, next);
   return icon('bone') + ritePrice(key, next) +
          (state === 'locked' ? ' — NOT ENOUGH' : '') +
-         '<em class="rStep">FOR RUNG ' + next + '</em>';
+         '<em class="rStep">RUNG ' + next + '</em>';
 }
-function renderOaths(){
+function renderOaths(fresh){
   const sworn = RITES.filter(r => riteLevel(r.key) > 0).length;
-  let h = '<div class="arcGroup">' + ARC_OATH_LABEL +
-          '<em class="arcCount">' + sworn + '/' + RITES.length + '</em></div>' +
-          '<div class="arcFlavor oathFlavor">Bought once and kept for good. ' +
-          'Every rite after begins under them.</div>';
-  for(const r of RITES){
+  let h = '<div class="oathIntro">' +
+            '<h3>' + ARC_OATH_LABEL + '</h3>' +
+            '<div class="arcFlavor">Bought once and kept for good. ' +
+            'Every rite after begins under them.</div>' +
+            '<em class="oathCount">' + sworn + '/' + RITES.length + ' SWORN</em>' +
+          '</div><div class="oathGrid">';
+  RITES.forEach((r, idx)=>{
     const lvl = riteLevel(r.key), max = RITE_MAX[r.key], state = oathState(r.key);
+    const paid = arcJustPaid && arcJustPaid.kind === 'rite' && arcJustPaid.key === r.key;
     let pips = '';
     for(let i = 1; i <= max; i++){
-      // A rung that is paid for, one that is merely reachable, and one still
-      // behind a descent key are three different things and read as three.
-      const cls = i <= lvl ? 'on' : (riteDepthGate(r.key, i) ? 'gated' : '');
-      pips += '<i class="rPip ' + cls + '"></i>';
+      // A rung paid for, one merely reachable, and one still behind a descent
+      // key are three different things and read as three.
+      const on = i <= lvl;
+      const cls = (on ? ' on' : (riteDepthGate(r.key, i) ? ' gated' : '')) +
+                  (paid && arcJustPaid.level === i ? ' pour' : '');
+      pips += '<span class="oPip' + cls + '"><span class="oPipFill"></span></span>';
     }
-    h += '<div class="arcItem riteItem ' + state + '" data-rite="' + r.key + '">' +
-           '<div class="aIco">' + icon(r.icon) + '</div>' +
-           '<div class="aBody">' +
-             '<div class="aName">' + r.name +
-               '<em class="rLvl">' + lvl + ' / ' + max + '</em></div>' +
-             '<div class="aDesc">' + r.per + '</div>' +
-             '<div class="rPips">' + pips + '</div>' +
-             '<div class="rNow">' +
-               (lvl ? icon('sparkle') + r.now(lvl) : '<span class="rNone">not yet sworn</span>') +
-             '</div>' +
-             '<div class="aFoot">' + oathFoot(r.key, state) + '</div>' +
+    h += '<div class="oathCard ' + state + (paid ? ' justPaid' : '') +
+           '" style="--i:' + idx + '" data-rite="' + r.key + '">' +
+           '<div class="acTop">' +
+             '<span class="acTier">' + (lvl ? 'RUNG ' + lvl + ' OF ' + max : 'UNSWORN') + '</span>' +
+             '<span class="acKind">' + icon('handFist') + '</span>' +
            '</div>' +
+           '<div class="acArt">' + icon(r.icon) + '</div>' +
+           '<div class="acName">' + r.name + '</div>' +
+           '<div class="acDesc">' + r.per + '</div>' +
+           '<div class="oPips">' + pips + '</div>' +
+           '<div class="oathNow">' +
+             (lvl ? icon('sparkle') + r.now(lvl)
+                  : '<span class="oathNone">not yet sworn</span>') +
+           '</div>' +
+           '<div class="acFoot">' + oathFoot(r.key, state) + '</div>' +
          '</div>';
-  }
-  $('arcOaths').innerHTML = h;
+  });
+  $('arcOaths').innerHTML = h + '</div>';
 }
-// Which half of the Archive is showing. Held here rather than read back off the
-// DOM so that a re-render — which happens after every purchase — cannot drop
-// the player back onto the other tab mid-shop.
-let arcTab = 'roster';
+
+// Which half of the Archive is showing. The filters belong to the roster, so
+// they leave with it rather than sitting dead above the Oaths.
 function arcShowTab(which){
   arcTab = which;
   $('arcRoster').classList.toggle('hidden', which !== 'roster');
   $('arcOaths').classList.toggle('hidden', which !== 'oaths');
+  $('arcFilters').classList.toggle('hidden', which !== 'roster');
   $('arcTabRoster').classList.toggle('on', which === 'roster');
   $('arcTabOaths').classList.toggle('on', which === 'oaths');
+  $('arcBody').scrollTop = 0;
 }
-$('arcTabRoster').onclick = ()=>{ sfx('click'); arcShowTab('roster'); };
-$('arcTabOaths').onclick  = ()=>{ sfx('click'); arcShowTab('oaths'); };
+$('arcTabRoster').onclick = ()=>{ sfx('click'); arcShowTab('roster'); renderArchive(); };
+$('arcTabOaths').onclick  = ()=>{ sfx('click'); arcShowTab('oaths');  renderArchive(); };
+
+// Filter chips. Delegated, because renderArchive rebuilds them on every pass.
+$('arcGroupChips').onclick = ev=>{
+  const c = ev.target.closest('.arcChip'); if(!c) return;
+  arcGroup = c.dataset.group; sfx('click'); renderArchive();
+};
+$('arcStateChips').onclick = ev=>{
+  const c = ev.target.closest('.arcChip'); if(!c) return;
+  arcFilter = c.dataset.filter; sfx('click'); renderArchive();
+};
+$('arcSearch').addEventListener('input', ()=>{
+  arcQuery = $('arcSearch').value.trim();
+  renderArchive();
+});
+$('arcSearchClear').onclick = ()=>{
+  $('arcSearch').value = ''; arcQuery = ''; sfx('click'); renderArchive();
+};
 
 function openArchive(){
-  renderArchive();
   arcShowTab(arcTab);
+  renderArchive();
   menuScreen('menuArchive');
 }
 
 // The pending purchase. Held here rather than on the button so a stale click
-// on a re-rendered plaque cannot pay for something else.
+// on a re-rendered tile cannot pay for something else.
 let arcPending = null;
 function askArchiveBuy(kind, id){
   const e = archiveRoster().find(x => x.kind === kind && x.id === id);
@@ -9675,32 +10043,34 @@ function closeArchiveBuy(){ arcPending = null; hide('arcConfirmOverlay'); }
 
 $('arcRoster').addEventListener('mouseenter', e=>{
   if(!e.target.closest) return;
-  if(e.target.closest('.arcItem.buy') || e.target.closest('.aSwitch')) sfx('hover');
+  if(e.target.closest('.arcCard.buy') || e.target.closest('.aSwitch')) sfx('hover');
 }, true);
 $('arcRoster').onclick = ev=>{
-  // The loadout switch first: it lives inside an owned plaque, which is never
+  // The loadout switch first: it lives inside an owned tile, which is never
   // buyable, so the two paths can never both want the same click.
   const sw = ev.target.closest('.aSwitch');
   if(sw){
-    const owner = sw.closest('.arcItem');
+    const owner = sw.closest('.arcCard');
     if(!owner) return;
     const wasOff = owner.classList.contains('off');
     if(!toggleItem(owner.dataset.kind, owner.dataset.id)) return;
     // Borrowed from the altar: socketing is a thing joining, snatching is a
     // thing being taken back off. Same two gestures, so they sound the same.
     sfx(wasOff ? 'socket' : 'snatch');
-    renderArchive();
+    // Not a rebuilt rack — one tile changed, and replaying fifty-two entrance
+    // animations on every switch is the blink the Ossuary was fixed for.
+    renderArchive({fresh:false});
     return;
   }
-  const el = ev.target.closest('.arcItem');
+  const el = ev.target.closest('.arcCard');
   if(!el || !el.classList.contains('buy')) return;
   askArchiveBuy(el.dataset.kind, el.dataset.id);
 };
 $('arcOaths').addEventListener('mouseenter', e=>{
-  if(e.target.closest && e.target.closest('.riteItem.buy')) sfx('hover');
+  if(e.target.closest && e.target.closest('.oathCard.buy')) sfx('hover');
 }, true);
 $('arcOaths').onclick = ev=>{
-  const el = ev.target.closest('.riteItem');
+  const el = ev.target.closest('.oathCard');
   if(!el || !el.classList.contains('buy')) return;
   askOathBuy(el.dataset.rite);
 };
@@ -9743,13 +10113,19 @@ $('btnArcConfirm').onclick = ()=>{
   // else. Both read what they are about to buy BEFORE buying it, because the
   // purchase is what makes the description stale.
   if(arcPending.kind === 'rite'){
-    const r = RITE_BY_KEY[arcPending.key];
-    const rung = riteNextLevel(arcPending.key);
-    if(!buyRite(arcPending.key)){ closeArchiveBuy(); return; }
+    // Read everything off arcPending BEFORE closing: closeArchiveBuy() nulls
+    // it, and the flash below needs to know what was just paid for.
+    const key = arcPending.key;
+    const r = RITE_BY_KEY[key];
+    const rung = riteNextLevel(key);
+    if(!buyRite(key)){ closeArchiveBuy(); return; }
     closeArchiveBuy();
     sfx('socket');
     toast(r.name.toUpperCase() + ' SWORN — RUNG ' + rung, r.icon);
-    renderArchive();
+    // The rung that was just paid for pours rather than simply being full on
+    // the next paint. Consumed by the render it triggers.
+    arcJustPaid = {kind:'rite', key, level:rung};
+    renderArchive({fresh:false});
     return;
   }
   const e = archiveRoster().find(x => x.kind === arcPending.kind && x.id === arcPending.id);
@@ -9757,7 +10133,8 @@ $('btnArcConfirm').onclick = ()=>{
   closeArchiveBuy();
   sfx('socket');
   toast(e.name.toUpperCase() + ' JOINS THE POOL', e.icon);
-  renderArchive();
+  arcJustPaid = {kind:e.kind, id:e.id};
+  renderArchive({fresh:false});
 };
 function openMenu(){
   menuMode = true;

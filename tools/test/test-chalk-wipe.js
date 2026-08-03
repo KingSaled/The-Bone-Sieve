@@ -49,7 +49,7 @@ const G = run(window, document,
   { getItem:k => (k in store ? store[k] : null), setItem:(k,v)=>{ store[k]=String(v); } },
   t => toasts.push(t));
 const $ = id => document.getElementById(id);
-const plaque = (kind,id) => $('arcRoster').querySelector('.arcItem[data-kind="'+kind+'"][data-id="'+id+'"]');
+const plaque = (kind,id) => $('arcRoster').querySelector('.arcCard[data-kind="'+kind+'"][data-id="'+id+'"]');
 const click = el => el.dispatchEvent(new window.MouseEvent('click',{bubbles:true}));
 const stateOf = (k,i) => ['owned','gated','buy','locked'].filter(s=>plaque(k,i).className.split(' ').includes(s))[0];
 
@@ -110,16 +110,17 @@ console.log('\n3. the deepchalk boon is withheld while no chalk is owned');
 
 console.log('\n4. the Archive lists chalks, gated like everything else');
 G.openArchive();
-eq('52 plaques now', $('arcRoster').querySelectorAll('.arcItem').length, 52);
-eq('a chalks group exists', /THE CHALKS/.test($('arcRoster').innerHTML), true);
-eq('chalks start 0/4', /0\/4/.test($('arcRoster').innerHTML), true);
+eq('52 tiles now', $('arcRoster').querySelectorAll('.arcCard').length, 52);
+// the group is a filter chip rather than a section header now
+eq('a chalks filter exists', /THE CHALKS/.test($('arcGroupChips').innerHTML), true);
+eq('chalks start 0/4', /0\/4/.test($('arcGroupChips').innerHTML), true);
 eq('row chalk locked', stateOf('chalk','chalk_row'), 'locked');
 eq('cross chalk depth-gated (tier 3)', stateOf('chalk','chalk_cross'), 'gated');
 eq('deepen depth-gated (tier 4)', stateOf('chalk','chalk_deepen'), 'gated');
 eq('deepen names descent 25',
-   /REACH DESCENT 25/.test(plaque('chalk','chalk_deepen').querySelector('.aFoot').textContent), true);
+   /REACH DESCENT 25/.test(plaque('chalk','chalk_deepen').querySelector('.acFoot').textContent), true);
 eq('row chalk shows its marrow price',
-   /36/.test(plaque('chalk','chalk_row').querySelector('.aFoot').textContent), true);
+   /36/.test(plaque('chalk','chalk_row').querySelector('.acFoot').textContent), true);
 
 console.log('\n5. buying a chalk, and it reaching a run');
 G.Meta.data.marrow = 500; G.renderArchive();

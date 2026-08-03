@@ -18,3 +18,7 @@ package-lock.json
 # never the source of truth, and committing them would let a stale copy pass
 # while the real file was broken.
 tools/test/build/
+
+# Screenshots from tools/test/shoot.js — regenerated on demand, and large.
+# Anything worth keeping goes in docs/screenshots/ deliberately.
+tools/test/shots/
