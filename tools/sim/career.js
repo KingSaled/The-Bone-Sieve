@@ -69,7 +69,8 @@ function boot(){
       offeringMult, refreshPreview, computeConduits, clearBoard, chooseSlot,
       activeDice, openTileCount, boardDice, dieAt, addChalk, addDecree,
       isTrialLevel, pickTrial, hasRelic, hasTrial, boonAlms, pick,
-      itemDisabled, isSealed, STORY_FIXTURE_OFF:()=>{ STORY_FIXTURE = false; }};
+      itemDisabled, toggleItem, isSealed,
+      STORY_FIXTURE_OFF:()=>{ STORY_FIXTURE = false; }};
   `;
   const G = new Function('localStorage', preamble + SIM + tail)({
     getItem: k => (k in store ? store[k] : null),
@@ -122,8 +123,8 @@ const BUYING = {
   thrifty: {
     label: 'thrifty',
     // takes the cheapest thing on the counter it can pay for, every time
-    choose(G, offers, shards){
-      const can = offers.filter(o => affordable(G, o, shards));
+    choose(G, offers, shards, prof){
+      const can = offers.filter(o => affordable(G, o, shards, prof));
       if(!can.length) return null;
       return can.sort((a,b)=>a.price-b.price)[0];
     },
@@ -133,8 +134,8 @@ const BUYING = {
     // reaches for the dearest thing it can pay for, on the game's own reading
     // that price encodes power — and holds its shards otherwise rather than
     // spending them on filler
-    choose(G, offers, shards){
-      const can = offers.filter(o => affordable(G, o, shards));
+    choose(G, offers, shards, prof){
+      const can = offers.filter(o => affordable(G, o, shards, prof));
       if(!can.length) return null;
       return can.sort((a,b)=>(b.tier-a.tier) || (b.price-a.price))[0];
     },
@@ -158,15 +159,43 @@ const SPEND = {
     return (c.length ? c : opts).slice().sort((a,b)=>a.cost-b.cost)[0]; } },
 };
 
-function affordable(G, o, shards){
+// ---------------------------------------------------------------- the Exchange
+// A full altar or a full cup is not a closed door: the Ossuary sells anyway and
+// the price includes naming what you leave behind. A player who never uses it
+// is stuck with whatever five relics they happened to buy first, which would
+// make any late-game strategy look worse than it is.
+function relicTier(G, id){ return (G.RELICS[id] && G.RELICS[id].tier) || 1; }
+function worstRelicHeld(G){
+  const S = G.S();
+  if(!S.relics.length) return null;
+  return S.relics.slice().sort((a,b)=>relicTier(G,a)-relicTier(G,b))[0];
+}
+function dieTier(G, type){
+  const w = G.DIE_WARES.find(x=>x.die === type);
+  return w ? w.tier : 1;
+}
+function worstDieHeld(G){
+  const S = G.S();
+  if(!S.dicePool.length) return null;
+  return S.dicePool.slice().sort((a,b)=>dieTier(G,a.type)-dieTier(G,b.type))[0];
+}
+
+function affordable(G, o, shards, prof){
   if(o.sold || shards < o.price) return false;
   const S = G.S();
-  // the Exchange lets a full altar or cup buy anyway, at the price of giving
-  // something up; a simulated player simply declines rather than modelling a
-  // choice the data would not be able to interpret
-  if(o.kind === 'die'   && S.dicePool.length >= G.maxPool()) return false;
-  if(o.kind === 'relic' && G.altarFull()) return false;
   if(o.kind === 'relic' && S.relics.includes(o.relic)) return false;
+  const ex = prof && prof.exchange;
+  if(o.kind === 'die' && S.dicePool.length >= G.maxPool()){
+    if(!ex) return false;
+    const w = worstDieHeld(G);
+    // only trade up: giving a good bone for a worse one is not a purchase
+    if(!w || dieTier(G, w.type) >= (o.tier || 1)) return false;
+  }
+  if(o.kind === 'relic' && G.altarFull()){
+    if(!ex) return false;
+    const w = worstRelicHeld(G);
+    if(!w || relicTier(G, w) >= (o.tier || 1)) return false;
+  }
   return true;
 }
 
@@ -327,12 +356,25 @@ function shop(G, prof, tally){
                         poolTiers:tally.poolTiers});
   // buy until nothing on the counter is worth or within reach
   for(let guard = 0; guard < 8; guard++){
-    const it = prof.buy.choose(G, S.offers, S.shards);
+    const it = prof.buy.choose(G, S.offers, S.shards, prof);
     if(!it) break;
     S.shards -= it.price;
     it.sold = true;
-    if(it.kind === 'die') S.dicePool.push(G.makeDie(it.die));
-    else if(it.kind === 'relic') S.relics.push(it.relic);
+    if(it.kind === 'die'){
+      // the Exchange: a full cup gives up its poorest bone to take a better one
+      if(S.dicePool.length >= G.maxPool()){
+        const w = worstDieHeld(G);
+        if(w) S.dicePool = S.dicePool.filter(d => d.id !== w.id);
+      }
+      S.dicePool.push(G.makeDie(it.die));
+    }
+    else if(it.kind === 'relic'){
+      if(G.altarFull()){
+        const w = worstRelicHeld(G);
+        if(w) S.relics = S.relics.filter(r => r !== w);
+      }
+      S.relics.push(it.relic);
+    }
     else if(it.kind === 'chalk'){
       if(it.axis === 'cross'){ G.addChalk('row'); G.addChalk('col'); }
       else if(it.axis === 'deepen'){ if(S.chalks.length) S.chalks[0].mult += 2; }
@@ -441,6 +483,53 @@ function rosterDone(G){
 function oathsDone(G){ return G.RITES.every(r => G.riteNextLevel(r.key) === 0); }
 function archiveDone(G){ return rosterDone(G) && oathsDone(G); }
 
+// ---------------------------------------------------------------- the loadout
+// Design §11's toggles are the other half of the Archive, and a rational player
+// would absolutely use them: the counter draws from what is SWITCHED ON, so
+// switching the cheap tiers off makes every ware it lays out a good one. This
+// is the lever that could sidestep the tier-4 famine without touching
+// tierWeight() at all, so it gets measured rather than assumed.
+//
+// Two things stop this being a free win, and the rule has to respect both:
+//
+//   1. A pool that is too thin starves the counter. rollOffers() wants four
+//      wares and stops when the bag runs dry, so purging down to three owned
+//      tier-3s means a three-ware shop for the rest of the career.
+//   2. Cheap wares are what an early purse can actually afford. Purging tier 1
+//      and 2 at descent 3 with 14 shards leaves a counter full of things that
+//      cannot be bought.
+//
+// So the rule is staged, and it only ever fires between runs:
+//   · purge tier 1 in a category once it holds `t1at` tier-3+ items
+//   · purge tier 2 as well once it holds `t2at`
+//   · never purge if it would take the whole run pool under FLOOR wares
+const POOL_FLOOR = 12;
+function applyLoadout(G, prof){
+  if(!prof.loadout) return;
+  const roster = G.archiveRoster().filter(e => !G.isSealed(e));
+  const owned = roster.filter(e => e.owned);
+  // decide the intended off-set, then check what it would leave behind
+  const want = new Set();
+  for(const kind of ['die','chalk','relic']){
+    const mine = owned.filter(e => e.kind === kind);
+    const high = mine.filter(e => e.tier >= 3).length;
+    if(high >= prof.loadout.t1at)
+      for(const e of mine) if(e.tier === 1) want.add(e.kind + ':' + e.id);
+    if(high >= prof.loadout.t2at)
+      for(const e of mine) if(e.tier === 2) want.add(e.kind + ':' + e.id);
+  }
+  // a counter with nothing on it is worse than a counter full of commons
+  if(owned.length - want.size < POOL_FLOOR){
+    // back the tier-2 purge out first, it is the bigger cut
+    for(const e of owned) if(e.tier === 2) want.delete(e.kind + ':' + e.id);
+  }
+  for(const e of owned){
+    const key = e.kind + ':' + e.id;
+    const off = G.itemDisabled(e.kind, e.id);
+    if(want.has(key) !== off) G.toggleItem(e.kind, e.id);
+  }
+}
+
 // What the run pool actually holds, by tier — the honest denominator for
 // "is the counter showing me a fair sample of what I have unlocked?"
 function poolTierMix(G){
@@ -461,6 +550,7 @@ function career(prof){
     const r = playRun(G, prof, t);
     const before = order.length;
     spend(G, prof, order);
+    applyLoadout(G, prof);        // between runs only, per §11
     runs.push({n, level:r.level, blood:r.blood, best:r.best,
                marrow:r.award.total, pb:r.award.pb,
                purse:G.Meta.data.marrow, bought:order.length - before,
@@ -491,10 +581,31 @@ const lo = a => a.reduce((m,x)=>x<m?x:m,  Infinity);
 const p90 = a => { const s=a.slice().sort((x,y)=>x-y); return s[Math.floor(s.length*0.9)]; };
 
 const PROFILES = [];
-for(const s of ['novice','veteran'])
-  for(const b of ['thrifty','greedy'])
-    for(const m of ['breadth','oaths','content'])
-      PROFILES.push({name:s+'/'+b+'/'+m, skill:SKILL[s], buy:BUYING[b], spend:SPEND[m]});
+if(argv.includes('--focus')){
+  // One base — the best strategy the first sweep found — with the two levers
+  // added one at a time, so whatever moves can be attributed to the lever that
+  // moved it rather than to the pair of them together.
+  const strong = {skill:SKILL.veteran, buy:BUYING.greedy, spend:SPEND.breadth};
+  // the profile that STALLED in the first sweep, which is the one the question
+  // is really about: does the toggle rescue a cautious player, or only sharpen
+  // a player who was already doing well?
+  const weak = {skill:SKILL.novice, buy:BUYING.thrifty, spend:SPEND.breadth};
+  PROFILES.push(
+    {...strong, name:'STRONG base (no exchange, no toggles)'},
+    {...strong, name:'STRONG + exchange only',            exchange:true},
+    {...strong, name:'STRONG + toggles only (t1@1,t2@3)', loadout:{t1at:1, t2at:3}},
+    {...strong, name:'STRONG + exchange + toggles',       exchange:true, loadout:{t1at:1, t2at:3}},
+    {...strong, name:'STRONG + both, late purge (t1@2,t2@5)', exchange:true, loadout:{t1at:2, t2at:5}},
+    {...weak,   name:'WEAK base (the profile that stalled)'},
+    {...weak,   name:'WEAK + toggles only (t1@1,t2@3)',   loadout:{t1at:1, t2at:3}},
+    {...weak,   name:'WEAK + exchange + toggles',         exchange:true, loadout:{t1at:1, t2at:3}},
+  );
+} else {
+  for(const s of ['novice','veteran'])
+    for(const b of ['thrifty','greedy'])
+      for(const m of ['breadth','oaths','content'])
+        PROFILES.push({name:s+'/'+b+'/'+m, skill:SKILL[s], buy:BUYING[b], spend:SPEND[m]});
+}
 
 console.log('THE BONE SIEVE — career simulation');
 console.log(CAREERS + ' careers per profile, run cap ' + RUN_CAP + '\n');
@@ -556,7 +667,8 @@ for(const r of rows){
 }
 
 console.log('\n\n=== MARROW OVER A CAREER (mean per run, by run number) ===');
-for(const r of rows.filter(x=>/veteran/.test(x.prof))){
+for(const r of (rows.filter(x=>/veteran/.test(x.prof)).length
+                ? rows.filter(x=>/veteran/.test(x.prof)) : rows)){
   const bands = [];
   for(let b = 0; b < 6; b++){
     const v = r.careers.flatMap(c => c.runs.slice(b*5, b*5+5).map(x=>x.marrow));
@@ -568,7 +680,7 @@ for(const r of rows.filter(x=>/veteran/.test(x.prof))){
 console.log('\n\n=== tierWeight() SKEW ===');
 console.log('what the counter LAID OUT vs what was IN the pool it drew from');
 console.log('(a fair draw would put the two lines on top of each other)\n');
-for(const r of rows.filter(x=>/veteran\/greedy/.test(x.prof))){
+for(const r of rows){
   const off = [0,0,0,0,0], pool = [0,0,0,0,0];
   for(const o of r.careers.flatMap(c=>c.tally.offered)){
     off[o.tier]++;
@@ -585,8 +697,9 @@ for(const r of rows.filter(x=>/veteran\/greedy/.test(x.prof))){
 console.log('\n   the same thing by DEPTH, for veteran/greedy/breadth');
 console.log('   (tierWeight ramps t3 and t4 in with the descent, so this is where');
 console.log('    the deep content is supposed to start showing up)\n');
-{
-  const r = rows.find(x=>x.prof === 'veteran/greedy/breadth');
+if(rows.length){
+  const r = rows.find(x=>/breadth|toggles only/.test(x.prof)) || rows[0];
+  console.log('   [' + r.prof + ']');
   const bands = [[1,4],[5,9],[10,14],[15,19],[20,24],[25,99]];
   for(const [a,b] of bands){
     const o = r.careers.flatMap(c=>c.tally.offered).filter(x=>x.level>=a && x.level<=b);
