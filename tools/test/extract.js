@@ -65,6 +65,35 @@ fs.writeFileSync(out('boons.js'),
 fs.writeFileSync(out('body.html'),
   html.slice(html.indexOf('<body'), html.indexOf('<script>')) + '</body>');
 
+// The whole model, for the career simulator: every content table, the ledger,
+// the run state, the scoring engine and the placement code — everything except
+// drawing. The simulator drives THESE functions rather than reimplementing
+// them, which is the only way the numbers it produces are about the game that
+// ships rather than about a second model of it.
+fs.writeFileSync(out('sim.js'), [
+  // constants, dice, relics, trials, decrees, shop pool, boons, the ledger
+  L.slice(at(/^\/\/ 3\. CONSTANTS & PALETTE/) - 1, at(/^\/\/ 10\. GAME STATE/) - 1).join('\n'),
+  // run state + the scoring engine
+  L.slice(at(/^\/\/ 10\. GAME STATE/) - 1, at(/^\/\/ 11b\. ADAPTIVE QUALITY/) - 1).join('\n'),
+  // where a cast bone lands
+  L.slice(at(/^\/\/ 20\. DICE PLACEMENT/) - 1, at(/^\/\/ 21\. GAME FLOW/) - 1).join('\n'),
+  // stragglers that live among the drawing code but are pure model
+  fn(/^function clearBoard\(\)\{/),
+  fn(/^function pickTrial\(\)\{/),
+  fn(/^function tileBlocked\(gx, gy\)\{/),
+  fn(/^function litSegments\(\)\{/),
+  fn(/^function boonTierBias\(level\)\{/),
+  'const BOON_TIER_NAME = {1:"a",2:"b",3:"c",4:"d"};',
+  'let scoringIds = new Set();',
+  fn(/^function computeScoringIds\(\)\{/),
+  fn(/^function addChalk\(axis, temporary\)\{/),
+  // the counter and the trial reward
+  fn(/^function rollOffers\(\)\{/),
+  fn(/^function rollBoons\(\)\{/),
+  fn(/^function quotaFor\(l\)\{/),
+  fn(/^function addDecree\(\)\{/),
+].join('\n\n'));
+
 // The stylesheet, so a suite can ask jsdom what a class actually DOES rather
 // than only whether it was applied. This exists because it was possible to
 // hide a pane with a class no rule matched: `.hidden` is declared only as
