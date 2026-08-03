@@ -2174,6 +2174,54 @@
   .arcCard.owned.off .acArt .ic{color:#6f6684;}
   .arcCard.owned.off .acArt::after{opacity:.3;}
 
+  /* ---- sealed (design §12) ----
+     The third kind of not-yours, and it has to be unmistakable against the
+     other two. Locked and gated both DIM: they recede to 60% and keep their
+     name, art, rule and price, because they are a shopping list and the whole
+     point is that you can plan for them.
+
+     This one does the opposite. It sits at FULL opacity — it is not a faded
+     version of anything, it is present and deliberate — and withholds instead:
+     no rarity colour (a tier would leak how good it is), no art, no name, no
+     rule, no price, and a hatch laid over the whole card so it reads as
+     something covered rather than something dark. Violet, which this game
+     already uses for the unknown and the marked, and never gold, which is the
+     colour of things that have a price.
+
+     A player must never look at this and think "I could save up for that". */
+  .arcCard.sealed{--aRim:#4a3f63; --aKey:#8a7cb0; --aGlow:rgba(176,77,255,.22);
+    background:linear-gradient(168deg,#1c1728,#161120 62%,#0d0a14);
+    cursor:default;}
+  .arcCard.sealed::after{content:'';position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(-45deg,
+      rgba(176,77,255,.055) 0 5px, transparent 5px 11px);}
+  .arcCard.sealed .acTop{border-bottom-color:rgba(176,77,255,.12);}
+  .arcCard.sealed .acTier{color:#7a6c9e;letter-spacing:2.4px;}
+  .arcCard.sealed .acKind{color:#4d4368;}
+  .arcCard.sealed .acArt{background:radial-gradient(122% 104% at 50% 2%,#211a30,#09070e 80%);}
+  .arcCard.sealed .acArt::after{opacity:.55;}
+  /* the silhouette: the game's own hand, so it belongs to the crypt rather
+     than looking like a missing-asset glyph */
+  .acSeal{font-family:var(--font-display);font-weight:400;font-size:46px;
+    line-height:1;color:#6f6390;opacity:.85;position:relative;z-index:1;
+    transform:translateY(-2px);
+    text-shadow:0 0 22px rgba(176,77,255,.45);
+    animation:breathe 7s ease-in-out infinite;}
+  .arcCard.sealed .acName{color:#8a7cb0;letter-spacing:4px;}
+  /* redacted bars where the rule would be: the SHAPE of a description with
+     none of its content, which is what "it exists, you may not read it" looks
+     like. Empty space would have read as an unfinished card. */
+  .sealBars{display:flex;flex-direction:column;justify-content:center;gap:7px;
+    padding:9px 11px;}
+  .sealBars i{display:block;height:5px;border-radius:3px;
+    background:linear-gradient(90deg,rgba(176,77,255,.20),rgba(176,77,255,.07));}
+  .sealBars i:nth-child(1){width:86%;}
+  .sealBars i:nth-child(2){width:96%;}
+  .sealBars i:nth-child(3){width:54%;}
+  .arcCard.sealed .acFoot{justify-content:center;color:#8a7cb0;
+    letter-spacing:3.4px;font-size:11px;
+    border-color:rgba(176,77,255,.2);background:rgba(176,77,255,.05);}
+
   /* a card that has just been paid for */
   @keyframes arcBought{
     0%{box-shadow:0 0 0 rgba(255,181,77,0), 0 6px 16px rgba(0,0,0,.5);
@@ -5436,8 +5484,57 @@ function archiveRoster(){
       tier:r.tier, price:marrowPrice(r.price),
       owned:Meta.data.unlockedRelics.includes(id)}));
   }
+  for(const s of storyPlaceholders()) out.push(s);
   return out;
 }
+
+//---- story-gated entries (design §12) — SCAFFOLD ONLY ------------------
+//  ┌──────────────────────────────────────────────────────────────────┐
+//  │  This is a SHAPE, not a feature. Everything below draws the slot  │
+//  │  a story-gated thing will one day sit in. NOTHING fires one.      │
+//  │                                                                   │
+//  │  Deliberately NOT built here, and each needs its own content      │
+//  │  pass before it can be:                                           │
+//  │    · §12A death-generated dice — a death past depth 15 authoring  │
+//  │      a die with generated remains-flavour. Needs the hand-written │
+//  │      descriptor pool that design's "Still Open" list is waiting   │
+//  │      on, plus death-tracking that does not exist.                 │
+//  │    · §12B the two story-completion items — hand-authored, and     │
+//  │      there is no narrative for them to be the reward for yet.     │
+//  │    · anything that WRITES storyBeatsFired or storyComplete. Both  │
+//  │      fields have been on the ledger since phase 1 and both are    │
+//  │      still only ever read back as defaults.                       │
+//  │                                                                   │
+//  │  What IS here: one render state, and one fake row to prove it     │
+//  │  draws. When the content pass starts, it replaces                 │
+//  │  storyPlaceholders() and touches nothing else on this screen.     │
+//  └──────────────────────────────────────────────────────────────────┘
+//======================================================================
+
+// TEMPORARY — REMOVE BEFORE RELEASE.
+// A single fake row so the sealed state can be seen and tested while there is
+// no real data to drive it. It is a `let` rather than a `const` on purpose:
+// the tests flip it to prove the roster is clean without it, and a `const`
+// would read as something intended to stay.
+let STORY_FIXTURE = true;
+
+// A sealed row carries almost nothing, and that is the point — design §12 wants
+// its EXISTENCE revealed and its identity withheld. No name, no icon, no
+// description, no price: anything more is a thing the player could start
+// planning around. `kind` survives because the grid groups by it and because
+// "there is a die you have not met" is part of what the slot is saying.
+function storyPlaceholders(){
+  if(!STORY_FIXTURE) return [];
+  return [{
+    kind:'die', id:'__story_fixture__', sealed:true,
+    // never read while sealed; present so nothing downstream has to guard
+    name:'', icon:'', desc:'', tier:0, price:0, owned:false, off:false,
+  }];
+}
+// Sealed rows are outside the economy entirely: they cannot be bought, cannot
+// be set aside, and must not appear in any count of what a player owns or
+// could own. Everything that counts the roster asks this first.
+function isSealed(e){ return !!e && e.sealed === true; }
 
 // The one place a purchase happens. Returns true only if the ledger actually
 // changed, so the caller never has to re-derive whether it worked.
@@ -10126,7 +10223,9 @@ const ARC_KIND_LABEL = {die:'THE BONES', chalk:'THE CHALKS', relic:'THE RELICS'}
 //   gated  — design §9's depth key not yet cut, whatever the purse holds
 //   buy    — affordable and unlocked
 //   locked — known, priced, and simply not affordable yet
+//   sealed — design §12: it exists, and that is all the player is told
 function arcState(e){
+  if(isSealed(e)) return 'sealed';
   if(e.owned) return 'owned';
   if(!depthGateMet(e.tier)) return 'gated';
   return Meta.data.marrow >= e.price ? 'buy' : 'locked';
@@ -10138,6 +10237,10 @@ function arcState(e){
 // by accident, and so it can carry aria-pressed. Nothing unowned gets one:
 // there is no loadout state to keep for a thing the player has not got.
 function arcFoot(e, state){
+  // No icon here, and no number. Every other footer on this screen leads with
+  // a glyph and most of them lead with a price; a bare word is the fastest way
+  // to read "this is not a transaction you are being offered".
+  if(state === 'sealed') return 'SEALED';
   if(state === 'owned'){
     return '<button type="button" class="aSwitch' + (e.off ? '' : ' on') + '"' +
              ' aria-pressed="' + (e.off ? 'false' : 'true') + '">' +
@@ -10165,14 +10268,27 @@ let arcJustPaid = null;       // {kind, id} | {kind:'rite', key, level}
 // Sorting here rather than in section headers is what let the headers go: the
 // rack is still dice-then-chalks-then-relics, cheapest tier first, but it is
 // one continuous grid that any filter can cut without leaving empty headings.
+// Sealed rows sort to the end of their own kind, whatever tier they claim: an
+// unknown thing belongs after every known one, not interleaved by a number the
+// player cannot see.
 const ARC_KIND_RANK = {die:0, chalk:1, relic:2};
 function arcSorted(rows){
   return rows.map((e, i) => ({e, i})).sort((a, b) =>
     (ARC_KIND_RANK[a.e.kind] - ARC_KIND_RANK[b.e.kind]) ||
+    ((isSealed(a.e) ? 1 : 0) - (isSealed(b.e) ? 1 : 0)) ||
     (a.e.tier - b.e.tier) || (a.i - b.i)).map(x => x.e);
 }
 function arcMatches(e){
   if(arcGroup !== 'all' && e.kind !== arcGroup) return false;
+  // A sealed row answers none of the state questions — it is not owned, not
+  // affordable, not locked behind a price, and cannot be set aside. It shows
+  // under ALL and under its own kind, and nowhere else. Putting it under
+  // LOCKED in particular would be the exact confusion design §12 forbids:
+  // "locked" on this screen means "you could save up for this".
+  if(isSealed(e)){
+    if(arcFilter !== 'all') return false;
+    return !arcQuery;                       // it has no name to be found by
+  }
   const st = arcState(e);
   if(arcFilter === 'owned'  && st !== 'owned') return false;
   if(arcFilter === 'buy'    && st !== 'buy') return false;
@@ -10202,10 +10318,15 @@ const ARC_STATE_OPTS = [
   {v:'locked', label:'LOCKED'},
   {v:'off',    label:'SET ASIDE'},
 ];
+// Counts are about the ECONOMY, so sealed rows are excluded from every one of
+// them. A denominator that included something unbuyable would make "7/38" a
+// number a player can never close, and the whole point of the count is that it
+// is a target.
 function arcOptCount(axis, v, roster){
-  const inGroup = roster.filter(e => arcGroup === 'all' || e.kind === arcGroup);
+  const real = roster.filter(e => !isSealed(e));
+  const inGroup = real.filter(e => arcGroup === 'all' || e.kind === arcGroup);
   if(axis === 'group'){
-    const mine = v === 'all' ? roster : roster.filter(e => e.kind === v);
+    const mine = v === 'all' ? real : real.filter(e => e.kind === v);
     return mine.filter(e => e.owned).length + '/' + mine.length;
   }
   if(v === 'all')    return String(inGroup.length);
@@ -10240,8 +10361,11 @@ function renderArchive(opts){
     '<span>' + icon('sealCheck') + 'TRIALS <b>' + m.lifetime.trialsCleared.toLocaleString() + '</b></span>';
 
   const roster = archiveRoster();
-  const owned  = roster.filter(e => e.owned);
-  $('arcTabRosterN').textContent = owned.length + '/' + roster.length;
+  // Sealed rows are not part of any count — see arcOptCount. The tab reports
+  // what a career can actually close.
+  const real   = roster.filter(e => !isSealed(e));
+  $('arcTabRosterN').textContent =
+    real.filter(e => e.owned).length + '/' + real.length;
   $('arcTabOathsN').textContent =
     RITES.reduce((a, r) => a + riteLevel(r.key), 0) + '/' +
     RITES.reduce((a, r) => a + RITE_MAX[r.key], 0);
@@ -10257,9 +10381,10 @@ function renderArchive(opts){
 
   // ---- the rack ----
   const shown = arcSorted(roster.filter(arcMatches));
-  $('arcShowing').innerHTML = shown.length === roster.length
-    ? 'showing <b>all ' + roster.length + '</b>'
-    : 'showing <b>' + shown.length + '</b> of ' + roster.length;
+  const shownReal = shown.filter(e => !isSealed(e)).length;
+  $('arcShowing').innerHTML = shownReal === real.length
+    ? 'showing <b>all ' + real.length + '</b>'
+    : 'showing <b>' + shownReal + '</b> of ' + real.length;
   let h = '';
   // Setting everything aside is allowed — design §11 exists to let a player
   // impose their own constraints, and refusing the far end of that would be
@@ -10276,6 +10401,24 @@ function renderArchive(opts){
                    : 'Nothing here yet under that reading.') + '</div>';
   shown.forEach((e, i)=>{
     const state = arcState(e);
+    // A sealed row is built from nothing the roster holds — no name, no icon,
+    // no rule, no price (design §12). The redacted bars where the rule would
+    // go are the point: the shape of a description is visible, its content is
+    // not, so the slot reads as WITHHELD rather than as empty or as broken.
+    if(state === 'sealed'){
+      h += '<div class="arcCard sealed" style="--i:' + i + '"' +
+             ' data-kind="' + e.kind + '" data-id="' + e.id + '" aria-hidden="true">' +
+             '<div class="acTop">' +
+               '<span class="acTier">UNKNOWN</span>' +
+               '<span class="acKind">' + icon(ARC_KIND_ICON[e.kind]) + '</span>' +
+             '</div>' +
+             '<div class="acArt"><span class="acSeal">?</span></div>' +
+             '<div class="acName">???</div>' +
+             '<div class="acDesc sealBars"><i></i><i></i><i></i></div>' +
+             '<div class="acFoot">' + arcFoot(e, state) + '</div>' +
+           '</div>';
+      return;
+    }
     // `off` rides alongside `owned` rather than replacing it. Set aside is a
     // state of a thing you HAVE; locked is a thing you have not earned.
     const paid = arcJustPaid && arcJustPaid.kind === e.kind && arcJustPaid.id === e.id;

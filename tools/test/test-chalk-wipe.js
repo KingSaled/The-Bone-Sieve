@@ -110,7 +110,8 @@ console.log('\n3. the deepchalk boon is withheld while no chalk is owned');
 
 console.log('\n4. the Archive lists chalks, gated like everything else');
 G.openArchive();
-eq('52 tiles now', $('arcRoster').querySelectorAll('.arcCard').length, 52);
+eq('52 tiles now',
+   $('arcRoster').querySelectorAll('.arcCard:not(.sealed)').length, 52);
 // the group is a filter option rather than a section header now
 eq('a chalks filter exists', /CHALKS/.test($('arcGroupList').innerHTML), true);
 eq('chalks start 0/4', /0\/4/.test($('arcGroupList').innerHTML), true);

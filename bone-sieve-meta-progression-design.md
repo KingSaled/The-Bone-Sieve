@@ -740,14 +740,50 @@ gating filter that already needs to exist for Marrow items doesn't need
 a second code path to *apply* the unlock, only a second path to *grant*
 it.
 
-> UPDATE: not built yet, and deliberately not scheduled until narrative
-> content exists — this needs its own content pass (hand-authored
-> remains-flavor text pool for §12A, the two actual story items for
-> §12B) before there's anything to scaffold against. The save fields
-> (`storyBeatsFired`, `storyComplete`) are already reserved per §7. The
-> `???` render path in the Archive grid does not exist yet either — planned
-> as its own small scaffold-only phase (schema + render path, no content)
-> once the functional build (Rites, loadout toggles) is done.
+> UPDATE (Phase 6): the SCAFFOLD is built. The shape exists; nothing
+> fires one. Specifically what landed, and what deliberately did not:
+>
+> **Built.** A third Archive state, `sealed`, and one render path for it.
+> It shows a `?` silhouette in the art window, `???` for a name, `UNKNOWN`
+> where the rarity would be, three redacted bars where the rule would be,
+> and `SEALED` in place of a price. No name, no icon, no description, no
+> number anywhere on the card.
+>
+> **It is deliberately not a dimmer `locked`.** Locked and depth-gated
+> entries recede to 60% opacity and keep everything — they are a shopping
+> list and planning for them is the point. A sealed slot sits at *full*
+> opacity and withholds instead, with no tier colour (a rarity would leak
+> how good it is), a violet hatch laid over the whole card, and never any
+> gold, which on this screen is the colour of things that have a price.
+> §12 asks that the two never be confused; this is how.
+>
+> **Sealed rows are outside the economy.** They are excluded from every
+> count — the tab total, the group counts, the "showing N of M" readout —
+> because a denominator including something unbuyable is a target a player
+> can never close. They appear under EVERYTHING and under their own kind,
+> and under no state filter at all: putting one under LOCKED would be
+> exactly the confusion above. They have no name, so search never finds
+> them. They sort to the end of their kind.
+>
+> **The save fields needed nothing.** `storyBeatsFired` and
+> `storyComplete` have been reserved since Phase 1, default correctly and
+> hydrate safely (`metaIdList` / `metaBool`). No migration, and nothing
+> still writes them.
+>
+> **NOT built, and each needs its own content pass first:** §12A's
+> death-generated dice (which need the hand-authored remains-descriptor
+> pool this doc's "Still Open" list is waiting on, plus death-tracking
+> that does not exist), §12B's two hand-authored story items (there is no
+> narrative for them to be the reward for), and anything that writes
+> either story flag.
+>
+> **There is one temporary fixture.** A single fake sealed row,
+> `STORY_FIXTURE`, so the state can be seen and tested while no real data
+> drives it. It is marked REMOVE BEFORE RELEASE in the source and is a
+> `let` rather than a `const` on purpose — the tests flip it off to prove
+> the roster is clean without it, so it cannot quietly become
+> load-bearing. When the content pass starts it replaces
+> `storyPlaceholders()` and touches nothing else on the screen.
 
 ---
 

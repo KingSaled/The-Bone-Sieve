@@ -46,7 +46,8 @@ const preamble = `
 const run = new Function('window','document','localStorage',
   preamble + econ + '\n' + arcui + `
   return {Meta, renderArchive, openArchive, arcShowTab, archiveRoster, buyUnlock,
-          toggleItem, RITES, setS: v => { S = v; }};
+          toggleItem, isSealed, storyPlaceholders, RITES, setS: v => { S = v; },
+          setFixture: v => { STORY_FIXTURE = v; }};
 `);
 
 const store = {};
@@ -54,7 +55,12 @@ const G = run(window, document,
   { getItem:k => (k in store ? store[k] : null), setItem:(k,v)=>{ store[k]=String(v); } });
 
 const $ = id => document.getElementById(id);
-const cards = () => [...$('arcRoster').querySelectorAll('.arcCard')];
+// Roster content only. Design 12's story-gated slots are in the same grid but
+// are not roster content — they have no price and can never be bought — so
+// every count in this suite is of what a career can actually close. Section 15
+// is where the sealed slots themselves are checked.
+const cards = () => [...$('arcRoster').querySelectorAll('.arcCard:not(.sealed)')];
+const sealed = () => [...$('arcRoster').querySelectorAll('.arcCard.sealed')];
 const ids = () => cards().map(c => c.dataset.id);
 const click = el => el.dispatchEvent(new window.MouseEvent('click', {bubbles:true}));
 const shown = el => window.getComputedStyle(el).display !== 'none';
@@ -266,6 +272,85 @@ console.log('\n14. the Oaths sit in a row, not in four wide bars');
        .every(c => c.querySelectorAll('.oPip').length > 0), true);
   eq('sixteen rungs across the four', $('arcOaths').querySelectorAll('.oPip').length, 16);
   click($('arcTabRoster'));
+}
+
+console.log('\n15. story-gated slots (design 12) — scaffold only');
+// Phase 6 builds the SHAPE of a story-gated entry and nothing that fires one.
+// The fixture is a single fake row; these hold down that it draws as its own
+// thing and that it stays out of the economy.
+{
+  // an empty purse, so there are real `locked` tiles to contrast against —
+  // earlier sections leave enough Marrow that everything reachable reads `buy`
+  click($('arcTabRoster'));
+  G.Meta.data.marrow = 0;
+  G.renderArchive();
+  eq('the fixture is on the rack', sealed().length, 1);
+  const s = sealed()[0];
+
+  // it must not be mistakeable for something you could save up for
+  eq('no name', s.querySelector('.acName').textContent, '???');
+  eq('no rarity', s.querySelector('.acTier').textContent, 'UNKNOWN');
+  eq('no art', s.querySelector('.acArt .ic'), null);
+  eq('a silhouette instead', !!s.querySelector('.acArt .acSeal'), true);
+  eq('no readable rule, just its shape',
+     [s.querySelector('.acDesc').textContent.trim(),
+      s.querySelectorAll('.acDesc.sealBars i').length], ['', 3]);
+  eq('no price anywhere on it', /\d/.test(s.querySelector('.acFoot').textContent), false);
+  eq('and it says what it is', s.querySelector('.acFoot').textContent.trim(), 'SEALED');
+  eq('nothing to toggle', s.querySelector('.aSwitch'), null);
+
+  // and it is a DIFFERENT state, not another shade of locked
+  eq('not locked', s.classList.contains('locked'), false);
+  eq('not gated', s.classList.contains('gated'), false);
+  eq('not owned', s.classList.contains('owned'), false);
+  eq('not buyable', s.classList.contains('buy'), false);
+  // locked recedes; sealed does not — it withholds at full strength
+  eq('locked is dimmed', window.getComputedStyle(
+     $('arcRoster').querySelector('.arcCard.locked')).opacity, '0.6');
+  eq('sealed is not', window.getComputedStyle(s).opacity, '1');
+
+  console.log('\n16. a sealed slot is outside the economy');
+  eq('it is not counted in the roster total',
+     $('arcTabRosterN').textContent, '8/52');
+  eq('nor in the group counts', /1\/11/.test($('arcGroupList').innerHTML), true);
+  eq('nor in "showing"', /all 52/.test($('arcShowing').textContent), true);
+  // it shows under ALL and under its own kind, and under no state filter
+  pick('arcGroupBtn','arcGroupList','die');
+  eq('it appears under its own kind', sealed().length, 1);
+  pick('arcStateBtn','arcStateList','locked');
+  eq('but never under LOCKED', sealed().length, 0);
+  pick('arcStateBtn','arcStateList','owned');
+  eq('nor OWNED', sealed().length, 0);
+  pick('arcStateBtn','arcStateList','all');
+  click($('btnArcClearFilters'));
+  search('???');
+  eq('and it cannot be searched for', sealed().length, 0);
+  click($('arcSearchClear'));
+
+  console.log('\n17. the roster is clean without the fixture');
+  // the fixture is temporary; proving the render path survives its removal is
+  // what stops it becoming load-bearing
+  G.setFixture(false);
+  G.renderArchive();
+  eq('no sealed slots at all', sealed().length, 0);
+  eq('the roster is untouched', cards().length, 52);
+  eq('and storyPlaceholders returns nothing', G.storyPlaceholders(), []);
+  G.setFixture(true);
+  G.renderArchive();
+  eq('and it comes back when switched on', sealed().length, 1);
+}
+
+console.log('\n18. nothing writes the story flags yet');
+// Phase 6 is scaffold: the fields have been reserved since phase 1 and are
+// still only ever read back as their defaults.
+eq('the ledger reserves both', [G.Meta.data.storyBeatsFired, G.Meta.data.storyComplete],
+   [[], false]);
+{
+  const before = JSON.stringify(G.Meta.data.storyBeatsFired) + G.Meta.data.storyComplete;
+  G.renderArchive();
+  G.openArchive();
+  eq('and drawing the Archive does not touch them',
+     JSON.stringify(G.Meta.data.storyBeatsFired) + G.Meta.data.storyComplete, before);
 }
 
 console.log('\n' + (fail ? 'FAILED ' + fail + ' / ' : 'ALL PASS — ') + (pass + fail) + ' assertions');

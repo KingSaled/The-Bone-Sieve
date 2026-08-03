@@ -86,7 +86,10 @@ eq('career survives a reload', (()=>{ G.Meta.load(); return G.Meta.data.marrow; 
 console.log('\n4. §10 pricing');
 eq('multiplier applied', G.marrowPrice(9), 9 * G.MARROW_PRICE_MULT);
 {
-  const r = G.archiveRoster();
+  // Story-gated rows (design §12) sit in the same roster but outside the
+  // economy entirely — no price, never buyable — so every count here is of
+  // what a career can actually close.
+  const r = G.archiveRoster().filter(e => !e.sealed);
   eq('roster covers every die, chalk and relic', r.length, 11 + 4 + 37);
   eq('bone reads as owned', r.find(e=>e.id==='bone').owned, true);
   eq('runt is the cheapest locked thing',

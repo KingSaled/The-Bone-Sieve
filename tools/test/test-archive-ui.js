@@ -65,7 +65,10 @@ console.log('\n1. the screen opens and renders the full roster');
 G.openArchive();
 eq('archive screen is the visible one', $('menuArchive').classList.contains('hidden'), false);
 eq('home screen hidden', $('menuHome').classList.contains('hidden'), true);
-eq('52 plaques rendered', $('arcRoster').querySelectorAll('.arcCard').length, 52);
+// `:not(.sealed)` skips design 12's story-gated slots, which are not roster
+// content and carry no price — see test-archive-view.js for those.
+eq('52 plaques rendered',
+   $('arcRoster').querySelectorAll('.arcCard:not(.sealed)').length, 52);
 eq('marrow readout present', /MARROW/.test($('arcMarrow').innerHTML), true);
 eq('marrow starts at 0', /^0/.test($('arcMarrow').textContent), true);
 eq('lifetime stats shown', ['RITES','DEEPEST','BEST OFFERING','TRIALS']
