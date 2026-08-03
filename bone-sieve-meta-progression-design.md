@@ -1,8 +1,12 @@
-# THE BONE SIEVE — Meta-Progression Design (draft v1)
+# THE BONE SIEVE — Meta-Progression Design (v2, updated mid-build)
 
-Paper design only. Nothing here has touched the code. Goal: give players a
-reason to return between runs without disturbing the single-run balance
-you've already tuned through beta.
+Original paper design below, preserved as written except where noted.
+**Everything in a `> UPDATE:` blockquote reflects a decision made or a
+change actually implemented during the build** — treat those as
+overriding the paragraph they follow. This doc is now a living record of
+build status, not just the original pitch.
+
+Current branch: `meta-progression`. Nothing here has touched `main`.
 
 ---
 
@@ -23,6 +27,13 @@ in-run economy you've tuned stays untouched.
 *(Working name "Marrow" — fits the bone/blood aesthetic and won't be
 confused with "shards." Open to other names — Ash, Reliquary Points, etc.)*
 
+> UPDATE: Marrow is live. Implemented as `Meta`, a persistent store
+> mirroring the same load/save pattern already used for view prefs,
+> persisted to `localStorage['boneSieveMeta']`. Marrow is awarded in
+> `gameOver()` using the finalized §5 formula, and shown as a payout
+> band on the death screen with its components broken out (depth/blood/
+> offering/PB bonus) — see §5 update.
+
 **Two unlock trigger types, not one.** Everything above describes the
 default path (Marrow-purchase). A second, separate path exists for
 narrative content — see §12 for the full spec. In short: some Archive
@@ -39,6 +50,16 @@ You have 11 dice and 34 relics already built and balanced. Rather than
 building new content, meta-progression's first job is **controlling when
 the player meets each piece of content you already have.**
 
+> UPDATE: the actual relic count is **37**, not 34 (§9's own breakdown of
+> 7+17+9+4 always summed to 37 — this headline number was just stale).
+> Doesn't affect anything already built since starters are derived by
+> tier, not counted by hand, but §10 pricing should work from 37.
+
+> UPDATE: chalks are also gated now, which this section originally didn't
+> call for. See the new §2b below — this was a build-time addition after
+> a real balance problem surfaced in playtesting, not part of the
+> original plan.
+
 ### Dice (11 total)
 - **Always unlocked:** `bone` (already the sole starting die — no change).
 - **Locked at game start, unlocked via Marrow:**
@@ -50,6 +71,15 @@ the player meets each piece of content you already have.**
 A locked die simply isn't in `DIE_WARES`'s active pool, so it can't appear
 in the shop or as a boon reward until unlocked. No gameplay code changes —
 just a filter on pool-building.
+
+> UPDATE: implemented exactly as described. `freshState()` snapshots a
+> run's shop pool from the ledger's unlock lists once at run start (not a
+> live per-draw filter) — so a mid-run unlock never reaches the run
+> already in progress, only the next one. Confirmed the boon table draws
+> from nothing but itself (`BOONS`, all stat modifiers) — the original
+> "can't appear in the shop or as a boon reward" phrasing above was
+> already stale by the time this was built; boons never granted dice or
+> relics directly, so there was nothing to gate there.
 
 ### Relics (34 total)
 Same idea, but relics are the deeper long-tail, so I'd stagger them harder
@@ -64,6 +94,50 @@ than dice:
   (Crown of Teeth) become explicit **long-term goals** — "beat 10 runs to
   afford this."
 
+> UPDATE: went with exactly the 7 named tier-1 relics from §9, not 8–10 —
+> see §9 update for why the count landed there. Derived by filtering
+> `tier === 1`, so it won't drift if the relic table grows later.
+
+### 2b. Chalks — added mid-build, not in the original plan
+
+> UPDATE: playtesting after the Archive first shipped found a fresh save
+> — bone die + 7 starter relics only, everything else correctly locked —
+> could still push to descent 20+, because chalks were still fully
+> available and unbounded chalk-stacking (specifically repeated use of
+> the line-deepening chalk) was strong enough on its own to trivialize
+> the gate. The gating system was correctly withholding relic power but
+> leaving an ungated escape valve standing.
+>
+> Fix, now live: all chalks (row, column, cross, deepen) are gated into
+> the Archive exactly like dice and relics, as a third grid group. The
+> line-deepening chalk (`Deepen the Sigil`) was additionally moved from
+> tier 2 to **tier 4** — it's the one ware in the game with no real power
+> ceiling (repeatable multiplier-on-a-multiplier against the same line),
+> so tier 2 pricing and tier 2 availability were both wrong for what it
+> actually does. Tier 4 means it's also now gated behind lifetime descent
+> 25, same as top-tier relics — see §9 update.
+>
+> Side effect confirmed by data: this also fixed the underlying
+> `tierWeight()` distortion for fresh saves specifically, since chalks
+> were absorbing all the tier-2/3 shop weight that had nowhere else to
+> go in a thin, all-tier-1 pool. A fresh save's shop is now flat at ~13%
+> bone die / 87% relic across all depths, versus 23%→66% chalk share
+> before the fix. **The same distortion for partially-unlocked saves is
+> still open** — flagged as a follow-up, not solved by this fix, since a
+> player who's behind on tier-2/3 relics relative to their depth will
+> still see some version of this.
+>
+> One knock-on caught during the fix: a `deepchalk`-related boon existed
+> that would have been a guaranteed-dead pick on any fresh save (boons are
+> a forced one-of-three at a Trial, not declinable, so a dead card there
+> silently costs a third of the reward). That boon now only appears when
+> a line can actually exist that descent — one already scrawled, a chalk
+> ware still purchasable, or a specific relic that draws a free line every
+> level. Confirmed separately: `Corpse Lamp` (a relic that boosts chalk
+> multiplier) has the same "could be dead weight" shape but was left
+> alone, since it's a purchase made with full visible information, not a
+> forced pick.
+
 ### Trials & Decrees (15 + 5)
 **Recommend leaving these ungated for now.** They're already gated *in-run*
 by level (`min:5/10/15`), which does real balance work (harsher trials
@@ -71,9 +145,11 @@ only show up once a run has proven itself). Meta-gating them too adds a
 second axis of complexity for not much payoff. Revisit later if you want a
 "Trial Fragments" unlock track as a phase-2 feature.
 
+> UPDATE: unchanged, as planned. No build work has touched this.
+
 ---
 
-## 3. Small Permanent Power (the "light touch" tier)
+## 3. Small Permanent Power (the "light touch" tier) — RESTRUCTURED
 
 Kept deliberately minor — these should feel like quality-of-life, not
 power creep that trivializes your tuned difficulty curve. Each is a
@@ -90,15 +166,49 @@ Rule of thumb: none of these should let a player skip a system (e.g.
 never "start with a relic already equipped" — that undermines the
 shop-choice loop that's core to the run).
 
+> UPDATE — this section is being rebuilt before implementation, not built
+> as originally written. Review of the starting numbers (12 dice, 5 relic
+> slots, 2 rerolls) made clear that even one extra die or reroll is a
+> meaningful power shift, not the "light touch" this section assumed —
+> going from 2 rerolls to 3 is a 50% increase in the single most limited
+> resource in the shop loop. "One-time purchase" undersold what these
+> actually do.
+>
+> Finalized structure, about to be built as **Phase 4**:
+> - Each of the four upgrades becomes a **tiered ladder**, bought as a
+>   strict progression (no skipping levels even with enough Marrow),
+>   price escalating per level.
+> - **Extra starting die** and **extra starting reroll**: capped at **3
+>   levels** each. These directly affect run power and compound with
+>   everything else a player unlocks, so they're capped tight.
+> - **Cheaper reroll cost** and **extra starting shards**: capped at **5
+>   levels** each. These are economy smoothing, not power, so they can go
+>   deeper as a long-term Marrow sink without the same risk — this also
+>   keeps the game's endless-mode design from handicapping a player who's
+>   unlocked everything and is pushing for max depth.
+> - The **last two levels of every ladder** are additionally gated behind
+>   lifetime descent 15 and 25 (same thresholds as §9's depth-gates), so a
+>   player can't dump all their early Marrow into maxing these out before
+>   engaging with the rest of the Archive.
+> - Each level stacks additively with the levels below it (reroll level 2
+>   = +2 total, not +2 instead of +1).
+>
+> The "+1 altar slot" idea and its shrine-relic conflict were not
+> revisited — still an open idea, not scheduled.
+
 ---
 
 ## 4. The Hub Screen
 
 New menu screen, reachable from the main menu (you already have
 `openMenu()` / `menuScreen()` — this slots in as another screen, not a
-new subsystem). Name: **"The Archive."** (Not "The Reliquary" — that name is
-already taken by the tier-3 relic granting +2 altar slots, and two different
-things under one name would be unreadable in the Grimoire and the Ossuary.)
+new subsystem). Working name: ~~"The Archive."~~
+
+> UPDATE: name locked in during build, not just a working name anymore.
+> **The Archive** is final — the original doc actually proposed "The
+> Reliquary" here before this section was revised; that name collided
+> with the existing tier-3 shrine relic and was changed early, before any
+> code referenced it. No further renaming is planned.
 
 Two tabs:
 1. **Unlocks** — grid of locked/unlocked dice and relics, grouped by tier,
@@ -107,6 +217,35 @@ Two tabs:
    locked item spends Marrow and unlocks it permanently.
 2. **Rites** *(permanent power)* — the short list from §3, same
    buy-once-with-Marrow pattern.
+
+> UPDATE: Unlocks tab is live — 48 entries (dice + relics + chalks, after
+> the §2b addition), grouped by tier, each showing icon/name/description
+> and one of four states: owned, a Marrow price, unaffordable, or
+> depth-gated with the requirement shown instead of a price. Purchases
+> require a confirm step (hold / cost / what's left) before spending —
+> added deliberately, since this is permanent spend, not a run-scoped
+> shop pick. A ledger bar shows current Marrow plus lifetime stats
+> (rites run, deepest descent, best offering, trials cleared), and each
+> half of the roster shows an owned count.
+>
+> Current layout is intentionally plain — flat plaques, not the shop's
+> 3D-tilting/compositor-layered ware cards — because the shop's treatment
+> assumes only 4–5 cards on screen at once and the Archive shows up to 48.
+> **A full visual redesign is planned but deliberately deferred** until
+> Rites, loadout toggles, and the story `???` scaffold are all functionally
+> in place — redesigning now would mean redesigning twice, once for the
+> current content and again once three more content types land on the
+> same screen.
+>
+> Rites tab does not exist yet — see §3 update, about to be built as
+> Phase 4.
+>
+> A related feature landed alongside this, not originally scoped in this
+> doc: a **save-wipe option** ("Scour the Archive") in the settings menu,
+> for clean repeat playtesting. Confirm-gated (not the same arm-then-
+> confirm pattern as abandoning a run, since a double-click could
+> satisfy that by accident for something this permanent), shows exactly
+> what's at stake before wiping, explicitly states it cannot be undone.
 
 **Display rule, confirmed:** every Marrow-gated item in the Unlocks tab
 shows fully — name, icon, description, price — same as if already owned,
@@ -118,9 +257,15 @@ purchase step involved. A locked Marrow item and a locked story item
 should look visibly different in the grid so a player never mistakes one
 for something they could save up for.
 
+> UPDATE: the Marrow-gated display rule is implemented as described. The
+> story-gated `???` rendering path does not exist yet — reserved for
+> whenever the story scaffold phase happens (see §12).
+
 A small header shows current Marrow total and maybe lifetime stats (total
 runs, deepest descent, best single offering) — you already track
 `S.stats` per-run, so lifetime aggregation is a light addition.
+
+> UPDATE: implemented as the ledger bar described above.
 
 ---
 
@@ -193,6 +338,16 @@ shard runs snowballing the meta-economy) — total blood already factors
 in above, compressed and capped, which captures "did the player have a
 strong economy" without letting an outlier run dominate.
 
+> UPDATE: implemented exactly as specified, and it reproduces the
+> calibration table above almost exactly in practice (a real 300K-blood,
+> level-25-ish run returned 149 rather than 150 — the doc's "150" rounds
+> 54.77 up, the actual floor() gives 54; everything else matches).
+> Awarded in `gameOver()`, with the breakdown (depth/blood/offering/PB)
+> shown on the death screen as its own payout band rather than folded
+> into the existing per-run stat grid — the existing stats are a record
+> of what the run lost, Marrow earned is the one forward-looking number
+> on that screen, so it's visually separated.
+
 ---
 
 ## 6. Pacing Target
@@ -204,6 +359,13 @@ mixed success. That's a guess based on typical roguelite unlock curves
 (Hades/Slay the Spire/Balatro all sit in a similar range) — your actual
 number depends on how much Marrow a "bad" run vs. a "good" run yields, so
 this needs real numbers once implemented.
+
+> UPDATE: current placeholder pricing (shard price × 3, including the
+> newly-gated chalks) puts the full 48-item roster at 2,535 total Marrow.
+> Against §5's real numbers, that's roughly 23–29 runs at a realistic
+> 80–100 Marrow/run average — just outside the 15–25 target, close enough
+> that this is a small tuning pass once real playtest data exists, not a
+> structural problem. Flagged, not yet acted on.
 
 ---
 
@@ -245,6 +407,28 @@ actual save file on disk (and eventually Steam Cloud) — worth keeping in
 mind so the save shape stays simple/serializable, but not something to
 solve today.
 
+> UPDATE: implemented as `Meta.data`, matching this shape closely with
+> two additions beyond what this doc specified:
+> - `version` + a `migrateMeta()` pass-through stub. The reasoning: the
+>   point of nailing the shape down up front was to make migration
+>   *unlikely*, not to make it *impossible to recover from* — cheap
+>   insurance against having to discard a returning player's save months
+>   from now if the shape does need to change.
+> - `disabledDice` / `disabledRelics` — needed for §11's loadout toggles,
+>   which are persistent player choices but were missing from this
+>   doc's save shape entirely. Stored as an off-list (exceptions) rather
+>   than a flag per item, since "on" is the common state and a sparse
+>   exceptions list can't drift out of sync with the content tables as
+>   new content is added.
+> - `unlockedChalks` / `disabledChalks` were added alongside the §2b
+>   chalk-gating work, following the same pattern as dice/relics.
+>
+> Unlock ids are validated for shape on load, deliberately **not**
+> validated against the live `DIE_TYPES`/`RELICS` tables — §12A's
+> death-generated dice mean a legitimate unlocked id may reference
+> something no static table in the file has heard of yet. Strict
+> validation would silently delete content a player actually earned.
+
 ---
 
 ## 8. What This Deliberately Does NOT Change
@@ -255,6 +439,10 @@ solve today.
   other than the small opt-in Rites in §3.
 - No new content is created — this is purely a gate + reward layer over
   what already exists.
+
+> UPDATE: still true. The §2b chalk-gating fix and the §3 Rites
+> restructure both changed *how permanent power is gated/priced*, not
+> the underlying run mechanics themselves — no in-run system was altered.
 
 ---
 
@@ -316,6 +504,21 @@ This means the "endless descent" isn't just flavor — reaching level 15
 and level 25 become concrete, visible goals with a payoff attached, which
 is exactly the hook you described wanting.
 
+> UPDATE: implemented exactly as written, and then reused for two things
+> this doc didn't originally cover: `Deepen the Sigil` (§2b) inherited
+> the tier-4/descent-25 gate once it moved to tier 4, and the last two
+> levels of each Phase 4 Rites ladder (§3 update) use these same 15/25
+> thresholds rather than inventing new ones — keeping "prove you can
+> survive this far" as one consistent gating language across the whole
+> Archive, not a special case per system.
+>
+> Confirmed via a real playtest that this gate matters: before the §2b
+> chalk fix, a fresh save with only starter relics reached descent 20+
+> through chalk-stacking alone, which would have let a player buy
+> tier-3-gated content (descent 15 met) well before actually earning it
+> through relic/die power. The chalk fix addressed the root cause; the
+> depth-gate was doing its job correctly the whole time.
+
 ---
 
 ## 10. Pricing Curve
@@ -329,6 +532,12 @@ and across tiers automatically mirror the balance you've already done.
 Exact multiplier needs real Marrow-earn-rate data once built (placeholder
 only) — but the *shape* of the curve is already solved by data you have.
 
+> UPDATE: implemented as shard price × 3, marked in code as an explicit
+> placeholder pending real data (see §6 update — currently landing just
+> outside the pacing target, small tuning pass expected later, not a
+> rework). Chalks, once gated in §2b, were folded into this same formula
+> rather than getting separate pricing logic.
+
 ---
 
 ## 11. Loadout Toggles ("keep my build pure")
@@ -341,6 +550,11 @@ mechanism as the lock filter. This lets a player who's unlocked
 everything still choose to run, say, "no wild dice" or "no shard relics"
 for a tighter build focus or a self-imposed challenge — costs nothing to
 build since it's the same filter the unlock system already needs.
+
+> UPDATE: not built yet. The save fields (`disabledDice`/`disabledRelics`,
+> and `disabledChalks` after §2b) already exist and are honored by the
+> run-pool filter — but nothing in the UI writes to them yet. This is
+> the next phase after Phase 4 (Rites).
 
 ---
 
@@ -377,6 +591,15 @@ gating filter that already needs to exist for Marrow items doesn't need
 a second code path to *apply* the unlock, only a second path to *grant*
 it.
 
+> UPDATE: not built yet, and deliberately not scheduled until narrative
+> content exists — this needs its own content pass (hand-authored
+> remains-flavor text pool for §12A, the two actual story items for
+> §12B) before there's anything to scaffold against. The save fields
+> (`storyBeatsFired`, `storyComplete`) are already reserved per §7. The
+> `???` render path in the Archive grid does not exist yet either — planned
+> as its own small scaffold-only phase (schema + render path, no content)
+> once the functional build (Rites, loadout toggles) is done.
+
 ---
 
 ## Still Open
@@ -393,3 +616,24 @@ it.
 - Exact generation logic for death-flavor dice text (§12A) — a hand-
   authored pool of remains-descriptors to mix and match, most likely;
   needs its own small content pass whenever narrative work starts.
+
+> UPDATE — still open, current state:
+> - §10 pricing: landing at ~23–29 runs to fully unlock, vs. the ~15–25
+>   target — close, expected to need a small multiplier tune once real
+>   Marrow-earn data exists across more players, not before.
+> - Depth-gate thresholds (15/25): unchanged, no evidence yet suggesting
+>   they're wrong — the chalk-stacking incident actually validated the
+>   *mechanism*, the bug was elsewhere (ungated chalks), not the numbers.
+> - §12A generation logic: still fully unscheduled, correctly untouched.
+> - **New, not in the original open-items list:** `tierWeight()` doesn't
+>   normalize against the *live* (partially-unlocked) shop pool, only the
+>   absolute tier curve. Fully solved for fresh saves as a side effect of
+>   §2b's chalk gate, but will resurface in milder form for any
+>   partially-unlocked save whose owned relics skew tier-1-heavy relative
+>   to their depth. Needs its own balance pass with real data — flagged,
+>   not fixed.
+> - **New:** a UI collision where the tier-3+ rarity rim and the
+>   "selected" card outline used the same gold color, found during
+>   playtesting and fixed (selection now uses violet) — noted here only
+>   because it's the kind of thing worth checking again once the Archive
+>   redesign (§4) happens, in case the new visual language reintroduces it.
