@@ -182,7 +182,9 @@ eq('chalks back to none', G.Meta.data.unlockedChalks, []);
 eq('relics back to the seven tier-1',
    G.Meta.data.unlockedRelics, ['dust','candle','hook','nail','obol','censer','ember']);
 eq('story flags cleared', [G.Meta.data.storyBeatsFired, G.Meta.data.storyComplete], [[], false]);
-eq('rites cleared', Object.values(G.Meta.data.rites).every(v=>v===false), true);
+eq('rite ladders back to level 0',
+   [G.Meta.data.rites.extraDie, G.Meta.data.rites.extraReroll,
+    G.Meta.data.rites.cheapReroll, G.Meta.data.rites.extraShards], [0, 0, 0, 0]);
 eq('announced', toasts.pop(), 'THE ARCHIVE IS SCOURED');
 eq('the wipe is on disk, not just in memory', JSON.parse(store['boneSieveMeta']).marrow, 0);
 eq('run pool is a fresh save\'s again', G.runShopPool().length, 8);

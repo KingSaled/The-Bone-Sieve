@@ -1655,13 +1655,13 @@
     100%{transform:translateY(18px) scale(.93);opacity:0;filter:grayscale(1) brightness(.5);}}
 
   /* ================= THE ARCHIVE =================
-     The career screen: every bone and relic in the game, what it costs in
-     Marrow, and what has already been paid for.
+     The career screen: every bone, chalk and relic in the game, what it costs
+     in Marrow, and what has already been paid for.
 
      Deliberately NOT built on .card. The Ossuary's wares are 3D-tilting slabs
      with promoted layers and a drifting nebula behind the glass, and the note
      on .cInner says out loud why that is affordable: there are only ever four
-     or five on screen. The Archive puts FORTY-EIGHT up at once. So these are
+     or five on screen. The Archive puts FIFTY-TWO up at once. So these are
      flat plaques that borrow the same palette and rarity ribbon and none of
      the machinery — no perspective, no will-change, no per-card animation. */
   #menuArchive{max-width:min(1180px,calc(94vw / var(--ui-scale,1)));width:100%;}
@@ -4178,14 +4178,16 @@ for(const b of BOONS) BOON_BY_ID[b.id] = b;
 //  │                                                                  │
 //  │  WHAT IS LIVE SO FAR:                                            │
 //  │    · the ledger itself — load, save, repair, persist  (phase 1)  │
-//  │    · unlockedDice / unlockedRelics gate what a run may draw,     │
-//  │      through runShopPool() at the foot of this section (phase 2) │
+//  │    · unlockedDice / unlockedRelics / unlockedChalks gate what a  │
+//  │      run may draw, through runShopPool() below         (phase 2) │
+//  │    · Marrow is earned at every run end by closeOutRun(), and     │
+//  │      spent through buyUnlock() from The Archive        (phase 3) │
 //  │                                                                  │
-//  │  NOTHING GRANTS ANYTHING YET. `marrow` is never awarded and no   │
-//  │  unlock is ever purchased, so a fresh save is permanently held   │
-//  │  at the starting set. That is deliberate, not an oversight —     │
-//  │  earning and spending are a later phase, and until then this     │
-//  │  ledger only ever WITHHOLDS.                                     │
+//  │  STILL WITHHELD: the Rites of §3 are declared here and clamped   │
+//  │  on load, but nothing sells a level and nothing reads one yet —  │
+//  │  that is phase 4. The story fields of §12 are reserved and       │
+//  │  untouched, and the loadout toggles of §11 are honoured by the   │
+//  │  pool filter but have no UI writing to them.                     │
 //  └──────────────────────────────────────────────────────────────────┘
 //======================================================================
 
@@ -4198,7 +4200,11 @@ const META_KEY = 'boneSieveMeta';
 // Bumped only when the shape changes in a way a stored ledger cannot be read
 // straight through. Every load runs migrateMeta() on the way in, so an old or
 // damaged ledger is REPAIRED rather than discarded — see the note there.
-const META_VERSION = 1;
+//
+// v2: the four Rites stopped being buy-once booleans and became tiered ladders
+// (design §3's restructure). That is a change of TYPE on a field a player may
+// already have paid for, which is exactly the case this number exists for.
+const META_VERSION = 2;
 
 // Sanity ceilings for anything read back off disk. localStorage is a text file
 // the player can edit, so every number that comes out of it is untrusted input,
@@ -4221,6 +4227,27 @@ const META_START_DICE = ['bone'];
 function metaStartRelics(){
   return Object.keys(RELICS).filter(id => RELICS[id].tier === 1);
 }
+
+// How deep each Rite ladder goes (design §3, restructured). The ladders are
+// bought a step at a time and the levels stack — reroll level 2 is +2 in total,
+// not +2 instead of +1 — so the level IS the purchase history and a cap is the
+// only thing standing between the ledger and an unbounded power sink.
+//
+// Two caps, for two different kinds of thing. An extra starting die or reroll
+// is run POWER, compounding with every unlock a player owns, so those stop at
+// 3. A cheaper reroll or a few more opening shards is economy SMOOTHING, which
+// is why they can run to 5 without the same risk: they give the endless mode
+// somewhere to keep spending Marrow once the Archive is bought out.
+//
+// Levels only. What a level costs and what it does are Phase 4's business —
+// this table exists here because hydration cannot clamp what it cannot measure,
+// and everything read off disk is untrusted input.
+const RITE_MAX = {
+  extraDie:    3,
+  extraReroll: 3,
+  cheapReroll: 5,
+  extraShards: 5,
+};
 
 function freshMeta(){
   return {
@@ -4257,17 +4284,23 @@ function freshMeta(){
     disabledRelics: [],
     disabledChalks: [],
 
-    // ---- small permanent power (design §3) ----------------------------
-    // Buy-once flags, never counters: §3 is explicit that none of these stack.
-    // `extraAltar` is reserved but undecided — §3 files it under "possibly,
-    // much later", gated expensive so it does not undercut the `shrine` relic.
-    // A reserved `false` costs nothing; discovering we want it after players
-    // have ledgers costs a migration.
+    // ---- small permanent power (design §3, restructured) ----------------
+    // LADDER LEVELS, not flags. These began as buy-once booleans, on §3's
+    // original reading that one more die or one more reroll was a light touch.
+    // Against the real starting numbers — 12 dice, 5 altar slots, 2 rerolls —
+    // it plainly is not: a second reroll is a 50% increase in the scarcest
+    // resource in the shop loop. So each is a ladder bought a step at a time,
+    // levels stacking, capped by RITE_MAX above.
+    //
+    // `extraAltar` is the exception and stays a flag, because it is still an
+    // idea rather than a plan — §3 files it under "possibly, much later",
+    // gated expensive so it does not undercut the `shrine` relic, and the
+    // restructure did not revisit it. A reserved `false` costs nothing.
     rites: {
-      extraDie:     false,
-      extraReroll:  false,
-      cheapReroll:  false,
-      extraShards:  false,
+      extraDie:     0,
+      extraReroll:  0,
+      cheapReroll:  0,
+      extraShards:  0,
       extraAltar:   false,
     },
 
@@ -4332,8 +4365,25 @@ function metaIdList(v, fallback){
 // acceptable to wipe everyone's career — by then it would be, and it isn't.
 function migrateMeta(raw){
   if(!raw || typeof raw !== 'object') return null;
-  // const v = metaInt(raw.version, 0, 999);
-  // if(v < 2){ ...fold the v1 field into its v2 home...; }
+  // An unversioned ledger predates the stamp and is treated as v1 — v1 is the
+  // first shape ever written, so there is nothing older to mistake it for.
+  const v = metaInt(raw.version, 0, 999);
+
+  // v1 -> v2: the four Rites were buy-once booleans; design §3's restructure
+  // makes them ladder levels. A ledger that bought one paid for exactly one
+  // step, so `true` is level 1 and `false` is level 0.
+  //
+  // Worth being honest about: hydration would land on the same two numbers by
+  // itself, since metaInt() runs its input through Number() and JavaScript
+  // scores `true` as 1. This is written out anyway because that would be right
+  // by coincidence rather than by intent, and a coincidence is not something
+  // the next shape change can safely be built on top of. If a later ladder
+  // ever wants `true` to mean something other than level 1, this is the line
+  // that changes, and it is already here to be changed.
+  if(v < 2 && raw.rites && typeof raw.rites === 'object')
+    for(const k in RITE_MAX)
+      if(typeof raw.rites[k] === 'boolean') raw.rites[k] = raw.rites[k] ? 1 : 0;
+
   return raw;
 }
 
@@ -4362,8 +4412,12 @@ function hydrateMeta(raw){
   for(const id of META_START_DICE)   if(!d.unlockedDice.includes(id))   d.unlockedDice.push(id);
   for(const id of metaStartRelics()) if(!d.unlockedRelics.includes(id)) d.unlockedRelics.push(id);
 
-  if(raw.rites && typeof raw.rites === 'object')
-    for(const k in d.rites) d.rites[k] = metaBool(raw.rites[k], d.rites[k]);
+  // The ladders are levels, clamped to their caps; `extraAltar` is the one
+  // Rite still stored as a flag, so it is the one read as a boolean.
+  if(raw.rites && typeof raw.rites === 'object'){
+    for(const k in RITE_MAX) d.rites[k] = metaInt(raw.rites[k], d.rites[k], RITE_MAX[k]);
+    d.rites.extraAltar = metaBool(raw.rites.extraAltar, d.rites.extraAltar);
+  }
 
   if(raw.lifetime && typeof raw.lifetime === 'object')
     for(const k in d.lifetime) d.lifetime[k] = metaInt(raw.lifetime[k], d.lifetime[k], META_MAX_STAT);
@@ -4380,8 +4434,10 @@ function hydrateMeta(raw){
 // Same shape as View below — a live object, a load() and a save() — so this
 // reads as one more thing the game remembers rather than a subsystem. Callers
 // mutate Meta.data and call Meta.save(), exactly as View.font is set and then
-// View.save() is called. Deliberately no grant/spend/unlock helpers yet: those
-// are meta-progression RULES, and this phase is only the place they will live.
+// View.save() is called. It stays deliberately dumb: it stores, repairs and
+// persists, and knows nothing about what a Marrow is worth. The RULES —
+// earning, pricing, depth gates, buying — live further down this section, so
+// that a change to what a Rite costs never reaches the thing holding a career.
 const Meta = {
   data: freshMeta(),
 
@@ -4537,11 +4593,16 @@ function closeOutRun(){
 // inside and across tiers automatically mirror balance work already done.
 //
 // Why 3, so a future tuning pass has the arithmetic rather than a bare number:
-// every locked item's shard price totals 769 (144 in dice, 625 in relics), so
-// x3 puts the full roster at 2,307 Marrow. Design §5's own calibration table
-// has a strong run paying ~150, a modest one ~49 and a rough one ~19; a player
-// improving across a career averages somewhere near 80-100 with PB spikes,
-// which clears the roster in roughly 23-29 runs. Design §6 asks for 15-25.
+// every locked item's shard price totals 845 (144 in dice, 76 in chalks, 625
+// in relics), so x3 puts the full roster at 2,535 Marrow. Design §5's own
+// calibration table has a strong run paying ~150, a modest one ~49 and a rough
+// one ~19; a player improving across a career averages somewhere near 80-100
+// with PB spikes, which clears the roster in roughly 25-32 runs. Design §6
+// asks for 15-25, so this is the number that is expected to come down.
+//
+// The chalk column is why: gating them in the §2b balance pass added 76 shards
+// of content to a roster that had been costed at 769, and the pacing estimate
+// was not recomputed at the time.
 // It also keeps the early hook: the cheapest locked die (Runt, 5 shards) costs
 // 15 Marrow, inside the reach of a single bad first run.
 const MARROW_PRICE_MULT = 3;
@@ -9090,7 +9151,7 @@ function menuScreen(id){
 }
 
 //---- THE ARCHIVE -----------------------------------------------------
-// Rendered fresh every time it opens or a purchase lands. Forty-eight plaques
+// Rendered fresh every time it opens or a purchase lands. Fifty-two plaques
 // of static markup costs nothing next to keeping a diff of them in sync.
 const ARC_TIER_LABEL = {1:'COMMON', 2:'UNCOMMON', 3:'RARE', 4:'CURSED'};
 

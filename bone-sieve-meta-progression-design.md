@@ -195,6 +195,17 @@ shop-choice loop that's core to the run).
 >
 > The "+1 altar slot" idea and its shrine-relic conflict were not
 > revisited — still an open idea, not scheduled.
+>
+> SCHEMA LANDED AHEAD OF THE BUILD: the save side of this restructure is
+> now live, separately from Phase 4 itself. `rites` was four booleans; it
+> is now four integer ladder levels plus `extraAltar`, which stays a
+> reserved boolean since this section never revisited it. Caps live in a
+> new `RITE_MAX` table (3 / 3 / 5 / 5, per the four bullets above) and are
+> applied on load, so a hand-edited save cannot claim level 99. `save`
+> version bumped to 2 with a real `migrateMeta()` step: a v1 ledger's
+> `true` becomes level 1 and `false` becomes level 0, so a career that
+> already bought a Rite keeps it. What a level *costs* and what it *does*
+> are still Phase 4 — nothing sells a level and nothing reads one yet.
 
 ---
 
@@ -218,7 +229,7 @@ Two tabs:
 2. **Rites** *(permanent power)* — the short list from §3, same
    buy-once-with-Marrow pattern.
 
-> UPDATE: Unlocks tab is live — 48 entries (dice + relics + chalks, after
+> UPDATE: Unlocks tab is live — 52 entries (11 dice + 4 chalks + 37 relics, after
 > the §2b addition), grouped by tier, each showing icon/name/description
 > and one of four states: owned, a Marrow price, unaffordable, or
 > depth-gated with the requirement shown instead of a price. Purchases
@@ -230,7 +241,7 @@ Two tabs:
 >
 > Current layout is intentionally plain — flat plaques, not the shop's
 > 3D-tilting/compositor-layered ware cards — because the shop's treatment
-> assumes only 4–5 cards on screen at once and the Archive shows up to 48.
+> assumes only 4–5 cards on screen at once and the Archive shows up to 52.
 > **A full visual redesign is planned but deliberately deferred** until
 > Rites, loadout toggles, and the story `???` scaffold are all functionally
 > in place — redesigning now would mean redesigning twice, once for the
@@ -361,11 +372,19 @@ number depends on how much Marrow a "bad" run vs. a "good" run yields, so
 this needs real numbers once implemented.
 
 > UPDATE: current placeholder pricing (shard price × 3, including the
-> newly-gated chalks) puts the full 48-item roster at 2,535 total Marrow.
-> Against §5's real numbers, that's roughly 23–29 runs at a realistic
-> 80–100 Marrow/run average — just outside the 15–25 target, close enough
-> that this is a small tuning pass once real playtest data exists, not a
-> structural problem. Flagged, not yet acted on.
+> newly-gated chalks) puts the full **52-item** roster — 11 dice, 4 chalks,
+> 37 relics, of which 44 are locked on a fresh save — at **2,535** total
+> Marrow (845 shards: 144 dice, 76 chalks, 625 relics).
+>
+> Against §5's real numbers, that's roughly **25–32 runs** at a realistic
+> 80–100 Marrow/run average, versus the 15–25 target. Still a tuning pass
+> rather than a structural problem, but a slightly wider gap than first
+> recorded here: this block originally read "48-item" and "23–29 runs",
+> both of which were computed before §2b gated the chalks and neither of
+> which was recomputed when it did. 48 was dice + relics only, and the
+> 23–29 figure came from the pre-chalk total of 769 shards / 2,307 Marrow.
+> Corrected in the doc and in the code comment at `MARROW_PRICE_MULT`.
+> Flagged, not yet acted on.
 
 ---
 
@@ -422,6 +441,12 @@ solve today.
 >   new content is added.
 > - `unlockedChalks` / `disabledChalks` were added alongside the §2b
 >   chalk-gating work, following the same pattern as dice/relics.
+>
+> `migrateMeta()` is no longer a stub — see §3's update. The insurance
+> paid for itself on the very first shape change: `rites` went from
+> booleans to ladder levels, which is a change of *type* on a field a
+> player may already have spent Marrow on, and is exactly the case the
+> version field was reserved for. Save version is now 2.
 >
 > Unlock ids are validated for shape on load, deliberately **not**
 > validated against the live `DIE_TYPES`/`RELICS` tables — §12A's
