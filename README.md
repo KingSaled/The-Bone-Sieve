@@ -2,10 +2,10 @@
 
 # THE BONE SIEVE
 
-**An occult gambling roguelite. Six knuckles of a dead saint, a grid of hungry stone feed it.**
+**An occult wager. Six bones, a grid of hungry stone, and a quota that never stops climbing.**
 
 [![Play](https://img.shields.io/badge/play-in%20your%20browser-d61f3c?style=for-the-badge)](#play-it)
-[![Version](https://img.shields.io/badge/version-v1.0.0%20beta.8-b04dff?style=for-the-badge)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v1.0.0%20beta.10-b04dff?style=for-the-badge)](CHANGELOG.md)
 [![No build](https://img.shields.io/badge/build-none%20required-46ff8e?style=for-the-badge)](#running-it-locally)
 
 <img src="docs/screenshots/menu.png" alt="The Bone Sieve title screen" width="100%">
@@ -33,6 +33,29 @@ and the sieve owes you a **Boon**. Past the tenth it also carves a **Decree**
 into the rite: permanent, and it never lifts.
 
 <img src="docs/screenshots/board.png" alt="A cast mid-run, three conduits burning" width="100%">
+
+---
+
+## What outlives the rite
+
+Every run ends the same way, and every run pays. **Marrow** is earned on how
+deep you got above all else, and going one descent further than you ever have
+is the largest single payment in the game.
+
+It is spent in **The Archive**, between runs. Every bone, chalk and relic in the
+game is listed there with its price, including the ones you have not bought —
+it is meant to read as a list of what to want, not a mystery box. Buying one
+puts it into the pool the Ossuary draws from for every run after.
+
+Alongside the roster are the **Oaths**: four permanent ladders, climbed a rung
+at a time — an extra bone in the cup, an extra re-roll on every cast, cheaper
+wares, a fuller opening purse. And anything you own can be **set aside** and
+brought back for nothing, so a run can be played on the build you meant rather
+than on whatever the counter felt like offering.
+
+The fifteenth and twenty-fifth descents are keys as well as depths: the rarest
+bones and the cursed relics cannot be bought at any price until you have been
+that deep at least once.
 
 ---
 
