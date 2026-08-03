@@ -53,6 +53,13 @@ console.log('\n1. one close button for the whole game');
      closers.every(id => !!$(id).querySelector('.xG') && !$(id).querySelector('.ic')), true);
   eq('and it is a capital X',
      [...new Set(closers.map(id => $(id).querySelector('.xG').textContent))], ['X']);
+  // A display face puts its ink where it likes inside the line box, so the
+  // glyph needs a measured nudge. It has to be a TRANSFORM: a margin on a
+  // centred flex item only moves the box by half of what it asks for.
+  const nudge = rules().filter(r => r.selectorText === '.xClose .xG');
+  eq('the optical nudge is a transform, not a margin',
+     nudge.length === 1 && /translateY/.test(nudge[0].style.transform || '') &&
+     !nudge[0].style.marginTop, true);
 }
 
 console.log('\n1b. nothing small enough to miss moves under the pointer');
@@ -120,6 +127,15 @@ eq('nothing but the inscription is on them',
    [...document.querySelectorAll('#menuHome .menuItem .ic')].length, 0);
 eq('and they are cut stone, not a rounded rectangle',
    rules().some(r => r.selectorText === '.menuItem' && /polygon/.test(r.style.clipPath || '')), true);
+// The rim is the element and the stone is an inset layer on top of it, so the
+// 1px edge turns the chamfered corners. An inset box-shadow ring is a
+// rectangle and gets sliced off by the very clip that made the corners.
+eq('the stone rides on an inset layer that shares the bevel',
+   rules().some(r => r.selectorText === '.menuItem::before' &&
+     /polygon/.test(r.style.clipPath || '')), true);
+eq('so the slab carries no rectangular inset ring',
+   rules().some(r => r.selectorText === '.menuItem' &&
+     /inset 0 0 0 1px/.test(r.style.boxShadow || '')), false);
 // they used to clear the carved-stone material with !important
 {
   const stripped = rules().filter(r => r.selectorText === '.menuItem' &&

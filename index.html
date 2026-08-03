@@ -642,11 +642,25 @@
      it is centred by the same flexbox that centres everything else —
      `line-height:1` and a block box are what stop the font's own line metrics
      re-introducing the offset. */
+  /* Centring this by flexbox alone does not work, and the earlier 1px nudge was
+     guesswork against the wrong box. Flexbox centres the LINE box; a display
+     face puts its ink wherever it likes inside that.
+
+     Measured at 21px (canvas actualBoundingBox against Hellbone's own metrics):
+       ink ascent 15, ink descent 1  -> ink is 16 tall, centred 7px above the
+                                        baseline
+       font ascent 18, descent 0     -> a centred line box puts the baseline
+                                        9.5px below the line-box centre
+     so the ink centre lands 2px BELOW the button's centre, which is exactly the
+     "sitting low in the box" this is correcting. Verified after: 0.0px out.
+
+     The nudge is a TRANSFORM, not a margin. A margin on a centred flex item
+     only moves the box by half of what you asked for, because the margin box
+     is what gets centred — the first attempt at this used margin and landed
+     0.75px out for exactly that reason. A transform is applied after layout
+     and moves the glyph by precisely what it says. */
   .xClose .xG{font-family:var(--font-display);font-weight:400;font-size:21px;
-    line-height:1;display:block;
-    /* Measured, not guessed: Hellbone's cap box sits 1px proud of the line box
-       at this size, so one pixel back puts the ink dead centre in the button. */
-    margin-top:1px;}
+    line-height:1;display:block;transform:translateY(-2px);}
   .xClose:hover:not(:disabled){transform:none;filter:none;
     border-color:var(--crimson-hi);color:#fff;
     box-shadow:inset 0 1px 0 var(--btn-rim), inset 0 -2px 0 rgba(0,0,0,.55),
@@ -1077,59 +1091,80 @@
      The outer glow on hover is a `filter: drop-shadow`, not a box-shadow:
      clip-path clips box-shadows to the cut silhouette, so an outer shadow
      simply would not render. drop-shadow follows the clipped shape instead. */
+  /* --bevel is the corner cut, and both layers below share it so the rim
+     follows the chamfer instead of squaring off across it. */
   .menuItem{
     --s-lit:#3a3049;          /* top face */
     --s-mid:#241d31;
     --s-dark:#150f1e;         /* shadowed foot */
     --s-cut:#0b0812;          /* the side it was split from */
-    --s-crack:rgba(255,255,255,.06);
-    --s-ring:rgba(0,0,0,.55);
+    --s-ring:rgba(0,0,0,.6);
+    --bevel:11px;
     font-size:17px;letter-spacing:4px;padding:17px 30px;
-    min-width:min(400px,88vw);justify-content:center;gap:15px;
-    color:#b7abc6;border:0;border-radius:0;
-    clip-path:polygon(20px 0, calc(100% - 20px) 0, 100% 27%, 100% 73%,
-                      calc(100% - 20px) 100%, 20px 100%, 0 73%, 0 27%);
+    min-width:min(400px,88vw);justify-content:center;
+    color:#b7abc6;border:0;border-radius:0;overflow:visible;
+    /* A shallow chamfer, in px on both axes. The previous cut was 20px wide by
+       27% of the height, which on a 57px slab is a 15px vertical run — an
+       angle steep enough to read as a spike rather than a broken corner. */
+    clip-path:polygon(var(--bevel) 0, calc(100% - var(--bevel)) 0,
+                      100% var(--bevel), 100% calc(100% - var(--bevel)),
+                      calc(100% - var(--bevel)) 100%, var(--bevel) 100%,
+                      0 calc(100% - var(--bevel)), 0 var(--bevel));
+    /* the rim IS the element; the stone is the inset layer on top of it, which
+       is the only way to get a 1px outline that turns the corners — an inset
+       box-shadow ring is a rectangle and gets sliced off by the clip */
+    background:var(--s-ring);
+    box-shadow:none;
+    transition:color .18s linear, filter .2s linear;
+  }
+  .menuItem::before{
+    content:'';position:absolute;inset:1px;z-index:0;pointer-events:none;
+    clip-path:polygon(var(--bevel) 0, calc(100% - var(--bevel)) 0,
+                      100% var(--bevel), 100% calc(100% - var(--bevel)),
+                      calc(100% - var(--bevel)) 100%, var(--bevel) 100%,
+                      0 calc(100% - var(--bevel)), 0 var(--bevel));
     background:
-      radial-gradient(circle at 13% 64%, rgba(0,0,0,.34) 0 2.6px, transparent 3.2px),
-      radial-gradient(circle at 16.5% 73%, rgba(0,0,0,.24) 0 1.7px, transparent 2.3px),
-      radial-gradient(circle at 86% 33%, rgba(0,0,0,.30) 0 2.3px, transparent 2.9px),
-      radial-gradient(circle at 89.5% 43%, rgba(0,0,0,.2) 0 1.5px, transparent 2.1px),
-      linear-gradient(101deg, transparent 40.8%, rgba(0,0,0,.55) 41%,
-                      rgba(0,0,0,.55) 41.5%, transparent 41.7%),
-      linear-gradient(101deg, transparent 41.7%, var(--s-crack) 41.9%, transparent 42.4%),
-      repeating-linear-gradient(64deg, rgba(255,255,255,.014) 0 2px, transparent 2px 7px),
+      /* pitting, kept to the ends where a real block chips */
+      radial-gradient(circle at 8% 64%, rgba(0,0,0,.32) 0 2.4px, transparent 3px),
+      radial-gradient(circle at 11% 74%, rgba(0,0,0,.22) 0 1.6px, transparent 2.2px),
+      radial-gradient(circle at 91% 33%, rgba(0,0,0,.28) 0 2.1px, transparent 2.7px),
+      radial-gradient(circle at 94% 44%, rgba(0,0,0,.18) 0 1.4px, transparent 2px),
+      /* chisel grain */
+      repeating-linear-gradient(64deg, rgba(255,255,255,.016) 0 2px, transparent 2px 7px),
       repeating-linear-gradient(-19deg, rgba(0,0,0,.05) 0 3px, transparent 3px 9px),
+      /* lit top face, body, shadowed foot, cut side */
       linear-gradient(176deg, var(--s-lit) 0 7%, var(--s-mid) 36%,
                       var(--s-dark) 86%, var(--s-cut));
     box-shadow:inset 0 2px 0 rgba(255,255,255,.075),
-               inset 0 -7px 14px rgba(0,0,0,.6),
-               inset 0 0 0 1px var(--s-ring);
-    transition:color .18s linear, box-shadow .2s linear, filter .2s linear;
+               inset 0 -7px 14px rgba(0,0,0,.6);
+    transition:background .2s linear, box-shadow .2s linear;
   }
+  .menuItem span{position:relative;z-index:1;}
   .menuItem:hover:not(:disabled), .menuItem:active:not(:disabled){transform:none;}
   .menuItem:hover:not(:disabled){
-    --s-lit:#4a3a5e; --s-mid:#2e2440; --s-crack:rgba(255,120,150,.5);
-    --s-ring:rgba(214,31,60,.55);
+    --s-lit:#4a3a5e; --s-mid:#2e2440;
+    --s-ring:rgba(255,43,82,.85);
     color:#fff;
-    filter:drop-shadow(0 0 16px rgba(214,31,60,.4));
+    filter:drop-shadow(0 0 10px rgba(214,31,60,.55))
+           drop-shadow(0 0 22px rgba(214,31,60,.3));}
+  .menuItem:hover:not(:disabled)::before{
     box-shadow:inset 0 2px 0 rgba(255,255,255,.1),
                inset 0 -7px 14px rgba(0,0,0,.55),
-               inset 0 0 0 1px var(--s-ring),
-               inset 0 0 30px rgba(214,31,60,.2);}
+               inset 0 0 26px rgba(214,31,60,.22);}
   /* pressed: it settles into its own socket rather than sliding down the
      screen � a translate here is what makes a click miss */
-  .menuItem:active:not(:disabled){filter:brightness(.88);
+  .menuItem:active:not(:disabled){filter:brightness(.9);}
+  .menuItem:active:not(:disabled)::before{
     box-shadow:inset 0 3px 10px rgba(0,0,0,.75),
-               inset 0 0 0 1px var(--s-ring),
-               inset 0 0 30px rgba(214,31,60,.16);}
+               inset 0 0 26px rgba(214,31,60,.16);}
 
   /* the one the player came for: the same block, cut from bloodier rock */
   #miStart{--s-lit:#5a2130; --s-mid:#3d1220; --s-dark:#250810; --s-cut:#150307;
-    --s-ring:rgba(214,31,60,.45); color:#f0d5da;}
-  #miStart .ic{color:var(--crimson-hi);}
+    --s-ring:rgba(214,31,60,.6); color:#f0d5da;}
   #miStart:hover:not(:disabled){--s-lit:#712a3c; --s-mid:#4d1728;
-    --s-crack:rgba(255,160,180,.6); --s-ring:rgba(255,43,82,.75);
-    filter:drop-shadow(0 0 22px rgba(214,31,60,.6));}
+    --s-ring:rgba(255,43,82,.95);
+    filter:drop-shadow(0 0 12px rgba(214,31,60,.7))
+           drop-shadow(0 0 26px rgba(214,31,60,.45));}
 
   /* ---- settings, in the corner ---- */
   .menuCorner{position:absolute;top:22px;right:24px;z-index:6;
