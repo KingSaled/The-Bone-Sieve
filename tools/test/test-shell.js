@@ -27,7 +27,7 @@ const rules = () => [...window.document.styleSheets[0].cssRules];
 
 console.log('\n1. one close button for the whole game');
 {
-  const closers = ['btnLogClose','btnGrimClose','btnVeilX'];
+  const closers = ['btnLogClose','btnGrimClose','btnVeilX','btnArcX','btnRulesX'];
   eq('the changelog, the Grimoire and the Veil all have one',
      closers.every(id => !!$(id)), true);
   eq('and they all wear the same class',
@@ -44,6 +44,54 @@ console.log('\n1. one close button for the whole game');
   const hasNone = rules().filter(r => r.selectorText === '.xClose:hover:not(:disabled)');
   eq('and it explicitly cancels the base button lift',
      hasNone.length === 1 && hasNone[0].style.transform === 'none', true);
+  // the full-panel screens have one too now
+  eq('the Archive has one', !!$('btnArcX'), true);
+  eq('and How To Play', !!$('btnRulesX'), true);
+  // drawn in the game's own hand, not the icon set: the Phosphor glyph sat
+  // visibly high and left inside the button whatever the button did
+  eq('all five use the Hellbone glyph, not the icon',
+     closers.every(id => !!$(id).querySelector('.xG') && !$(id).querySelector('.ic')), true);
+  eq('and it is a capital X',
+     [...new Set(closers.map(id => $(id).querySelector('.xG').textContent))], ['X']);
+}
+
+console.log('\n1b. nothing small enough to miss moves under the pointer');
+// the switch is a <button>, so it inherited the base lift on hover AND the 3px
+// drop on :active — which is why a click on it sometimes produced no event at
+// all: the control moved out from under the press before the mouseup
+{
+  const wanted = ['.aSwitch','.arcTab','#arcSearchClear','#btnArcClearFilters','.menuItem'];
+  for(const sel of wanted){
+    const cancels = rules().filter(r => r.selectorText &&
+      r.selectorText.includes(sel) && /:active/.test(r.selectorText) &&
+      r.style.transform === 'none');
+    eq(sel + ' cancels the press-drop', cancels.length > 0, true);
+  }
+  // The knob is exempt and must stay exempt: sliding across its track is the
+  // switch's whole job, and it is inside the control rather than the control.
+  const lifts = rules().filter(r => r.selectorText &&
+    /\.aSwitch|\.arcTab|#arcSearchClear|#btnArcClearFilters/.test(r.selectorText) &&
+    !/\.sKnob/.test(r.selectorText) &&
+    /translate/.test(r.style.transform || ''));
+  eq('and none of the controls themselves translates', lifts.map(r => r.selectorText), []);
+  eq('the knob still slides, though',
+     rules().some(r => r.selectorText === '.aSwitch.on .sKnob' &&
+       /translateX/.test(r.style.transform || '')), true);
+}
+
+console.log('\n1c. no visible scrollbars, anywhere');
+{
+  const bars = rules().filter(r => r.selectorText && /::-webkit-scrollbar/.test(r.selectorText));
+  eq('the scrollbar is drawn at zero width',
+     bars.some(r => r.style.width === '0px' || r.style.display === 'none'), true);
+  eq('no themed track or thumb survives',
+     bars.filter(r => /track|thumb/.test(r.selectorText)).map(r => r.selectorText), []);
+  eq('and Firefox is told the same thing',
+     rules().some(r => r.selectorText === '*' && r.style.getPropertyValue('scrollbar-width') === 'none'), true);
+  // scrolling itself must be untouched
+  eq('the Archive body still scrolls',
+     window.getComputedStyle($('arcBody')).overflowY, 'auto');
+  eq('so does the Veil', window.getComputedStyle($('veilBody')).overflowY, 'auto');
 }
 
 console.log('\n2. the ornamental frame is off the workbenches');
@@ -66,6 +114,12 @@ eq('the rules item says what it is',
    $('miRules').querySelector('span').textContent, 'HOW TO PLAY');
 eq('the nav buttons are real buttons, not floating text',
    [...document.querySelectorAll('#menuHome .menuItem')].every(b => b.tagName === 'BUTTON'), true);
+// the label is the only thing in the slab, so "centred" means centred — an
+// icon pinned to one edge with nothing answering it is what read as lopsided
+eq('nothing but the inscription is on them',
+   [...document.querySelectorAll('#menuHome .menuItem .ic')].length, 0);
+eq('and they are cut stone, not a rounded rectangle',
+   rules().some(r => r.selectorText === '.menuItem' && /polygon/.test(r.style.clipPath || '')), true);
 // they used to clear the carved-stone material with !important
 {
   const stripped = rules().filter(r => r.selectorText === '.menuItem' &&

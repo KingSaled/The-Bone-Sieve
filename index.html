@@ -110,10 +110,14 @@
   .ic{width:1em;height:1em;display:inline-block;flex:0 0 auto;
       fill:currentColor;vertical-align:-0.14em;}
 
-  ::-webkit-scrollbar{width:8px;height:8px;}
-  ::-webkit-scrollbar-track{background:var(--ink);}
-  ::-webkit-scrollbar-thumb{background:var(--line);border:1px solid var(--panel3);}
-  ::-webkit-scrollbar-thumb:hover{background:var(--line-hi);}
+  /* No visible scrollbars anywhere — the scrolling itself is untouched.
+     A themed scrollbar is still a grey rail down the edge of a crypt panel,
+     and it was fighting every border and corner control it sat beside: the
+     Veil's close button ended up half over one. Every scrolling region in this
+     game is an obvious one (a roster, a rules page, a settings panel), so the
+     affordance is not carrying any weight worth the visual cost. */
+  *{scrollbar-width:none;-ms-overflow-style:none;}
+  ::-webkit-scrollbar{width:0;height:0;display:none;}
 
   /* ================= KEYFRAMES ================= */
   @keyframes bump{0%{transform:scale(1);}28%{transform:scale(1.32);}100%{transform:scale(1);}}
@@ -616,7 +620,7 @@
      a glow and nothing else — the specificity of `.xClose:hover:not(:disabled)`
      is what beats `button:hover:not(:disabled)`'s translate. */
   .xClose{--btn-edge:#1a0207; --btn-rim:rgba(255,180,190,.16);
-    width:38px;height:38px;padding:0;flex:0 0 auto;
+    width:32px;height:32px;padding:0;flex:0 0 auto;
     display:flex;align-items:center;justify-content:center;
     border-radius:9px;border:1px solid var(--crimson);color:#ffd2da;
     background:
@@ -631,7 +635,18 @@
     box-shadow:inset 0 1px 0 var(--btn-rim), inset 0 -2px 0 rgba(0,0,0,.55),
                0 4px 0 var(--btn-edge), 0 8px 18px rgba(0,0,0,.55);
     transition:box-shadow .18s linear, border-color .18s linear, color .18s linear;}
-  .xClose .ic{font-size:17px;}
+  /* The game's own hand, not the Phosphor glyph. That icon is an SVG on a
+     square viewBox whose drawn stroke does not fill it evenly, so it sat
+     visibly high and left inside the button however the button was centred.
+     A capital X in Hellbone is drawn on the baseline like any other letter, so
+     it is centred by the same flexbox that centres everything else —
+     `line-height:1` and a block box are what stop the font's own line metrics
+     re-introducing the offset. */
+  .xClose .xG{font-family:var(--font-display);font-weight:400;font-size:21px;
+    line-height:1;display:block;
+    /* Measured, not guessed: Hellbone's cap box sits 1px proud of the line box
+       at this size, so one pixel back puts the ink dead centre in the button. */
+    margin-top:1px;}
   .xClose:hover:not(:disabled){transform:none;filter:none;
     border-color:var(--crimson-hi);color:#fff;
     box-shadow:inset 0 1px 0 var(--btn-rim), inset 0 -2px 0 rgba(0,0,0,.55),
@@ -1036,31 +1051,85 @@
      and shadow all cleared with !important — which left floating text that did
      not read as pressable. The base `button` rule already draws carved stone
      with a chisel grain and a cut edge, so the fix is to stop refusing it. */
-  .menuNav{display:flex;flex-direction:column;gap:10px;margin:30px 0 26px;}
+  .menuNav{display:flex;flex-direction:column;gap:12px;margin:30px 0 26px;}
+
+  /* ---- HEWN STONE ----
+     The previous pass got these onto the button material and stopped there,
+     which left four slate-grey slabs. The base material is a rounded block
+     with a chisel grain; stone that has been CUT is a different thing � it has
+     broken corners, a lit top face, a shadowed foot, pitting, and a fracture
+     running through it.
+
+     Built entirely in gradients, no image:
+       � clip-path knocks the four corners off, so the silhouette is a split
+         block rather than a rounded rectangle
+       � one steep linear-gradient does the whole depth read � lit face at the
+         top, body, then a dark foot and the cut side beneath it
+       � four small radial-gradients are pits in the surface
+       � two offset diagonals are one fracture: a dark crack with a lit lip
+         along its upper side, which is what makes it read as split rather
+         than drawn on
+       � the grain from the base rule stays underneath all of it
+
+     Darker and colder than the base button, and tinted toward violet, so it
+     belongs to this game rather than to a generic UI kit.
+
+     The outer glow on hover is a `filter: drop-shadow`, not a box-shadow:
+     clip-path clips box-shadows to the cut silhouette, so an outer shadow
+     simply would not render. drop-shadow follows the clipped shape instead. */
   .menuItem{
-    font-size:17px;letter-spacing:4px;padding:14px 26px;
-    min-width:min(400px,88vw);justify-content:flex-start;gap:14px;
-    color:var(--bone-dim);
-    transition:color .18s linear, border-color .18s linear, box-shadow .18s linear,
-               transform .16s var(--ease), filter .18s linear;
+    --s-lit:#3a3049;          /* top face */
+    --s-mid:#241d31;
+    --s-dark:#150f1e;         /* shadowed foot */
+    --s-cut:#0b0812;          /* the side it was split from */
+    --s-crack:rgba(255,255,255,.06);
+    --s-ring:rgba(0,0,0,.55);
+    font-size:17px;letter-spacing:4px;padding:17px 30px;
+    min-width:min(400px,88vw);justify-content:center;gap:15px;
+    color:#b7abc6;border:0;border-radius:0;
+    clip-path:polygon(20px 0, calc(100% - 20px) 0, 100% 27%, 100% 73%,
+                      calc(100% - 20px) 100%, 20px 100%, 0 73%, 0 27%);
+    background:
+      radial-gradient(circle at 13% 64%, rgba(0,0,0,.34) 0 2.6px, transparent 3.2px),
+      radial-gradient(circle at 16.5% 73%, rgba(0,0,0,.24) 0 1.7px, transparent 2.3px),
+      radial-gradient(circle at 86% 33%, rgba(0,0,0,.30) 0 2.3px, transparent 2.9px),
+      radial-gradient(circle at 89.5% 43%, rgba(0,0,0,.2) 0 1.5px, transparent 2.1px),
+      linear-gradient(101deg, transparent 40.8%, rgba(0,0,0,.55) 41%,
+                      rgba(0,0,0,.55) 41.5%, transparent 41.7%),
+      linear-gradient(101deg, transparent 41.7%, var(--s-crack) 41.9%, transparent 42.4%),
+      repeating-linear-gradient(64deg, rgba(255,255,255,.014) 0 2px, transparent 2px 7px),
+      repeating-linear-gradient(-19deg, rgba(0,0,0,.05) 0 3px, transparent 3px 9px),
+      linear-gradient(176deg, var(--s-lit) 0 7%, var(--s-mid) 36%,
+                      var(--s-dark) 86%, var(--s-cut));
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.075),
+               inset 0 -7px 14px rgba(0,0,0,.6),
+               inset 0 0 0 1px var(--s-ring);
+    transition:color .18s linear, box-shadow .2s linear, filter .2s linear;
   }
-  .menuItem .ic{font-size:19px;color:var(--line-hi);flex:0 0 auto;
-    transition:color .18s linear, filter .18s linear;}
-  /* the crack of light down the cut edge, lit on hover */
-  .menuItem::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
-    background:linear-gradient(180deg,transparent,var(--crimson),transparent);
-    opacity:0;transition:opacity .2s linear;}
-  .menuItem:hover:not(:disabled){color:#fff;border-color:var(--crimson);
-    box-shadow:inset 0 1px 0 var(--btn-rim), inset 0 -2px 0 rgba(0,0,0,.55),
-               0 8px 0 var(--btn-edge), 0 14px 28px rgba(0,0,0,.6),
-               0 0 26px rgba(214,31,60,.3);}
-  .menuItem:hover::before{opacity:1;}
-  .menuItem:hover .ic{color:var(--crimson-hi);
-    filter:drop-shadow(0 0 9px rgba(255,43,82,.75));}
-  /* the first item is the one the player came for */
-  #miStart{--btn-a:#4a1420;--btn-b:#360d18;--btn-c:#22060e;--btn-edge:#120307;
-    --btn-rim:rgba(255,180,190,.14);border-color:var(--crimson-dk);color:#f0d5da;}
+  .menuItem:hover:not(:disabled), .menuItem:active:not(:disabled){transform:none;}
+  .menuItem:hover:not(:disabled){
+    --s-lit:#4a3a5e; --s-mid:#2e2440; --s-crack:rgba(255,120,150,.5);
+    --s-ring:rgba(214,31,60,.55);
+    color:#fff;
+    filter:drop-shadow(0 0 16px rgba(214,31,60,.4));
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.1),
+               inset 0 -7px 14px rgba(0,0,0,.55),
+               inset 0 0 0 1px var(--s-ring),
+               inset 0 0 30px rgba(214,31,60,.2);}
+  /* pressed: it settles into its own socket rather than sliding down the
+     screen � a translate here is what makes a click miss */
+  .menuItem:active:not(:disabled){filter:brightness(.88);
+    box-shadow:inset 0 3px 10px rgba(0,0,0,.75),
+               inset 0 0 0 1px var(--s-ring),
+               inset 0 0 30px rgba(214,31,60,.16);}
+
+  /* the one the player came for: the same block, cut from bloodier rock */
+  #miStart{--s-lit:#5a2130; --s-mid:#3d1220; --s-dark:#250810; --s-cut:#150307;
+    --s-ring:rgba(214,31,60,.45); color:#f0d5da;}
   #miStart .ic{color:var(--crimson-hi);}
+  #miStart:hover:not(:disabled){--s-lit:#712a3c; --s-mid:#4d1728;
+    --s-crack:rgba(255,160,180,.6); --s-ring:rgba(255,43,82,.75);
+    filter:drop-shadow(0 0 22px rgba(214,31,60,.6));}
 
   /* ---- settings, in the corner ---- */
   .menuCorner{position:absolute;top:22px;right:24px;z-index:6;
@@ -1827,8 +1896,10 @@
     background:linear-gradient(90deg,transparent,var(--crimson),var(--neon-p),transparent);}
 
   /* ---- the head: title, purse, career. Fixed; never scrolls away. ---- */
+  /* the right padding is clearance for the corner close button — the lifetime
+     chips are right-aligned and ran straight under it otherwise */
   .arcTop{display:flex;align-items:flex-end;justify-content:space-between;gap:20px 28px;
-    flex-wrap:wrap;padding:18px 24px 14px;border-bottom:1px solid var(--line);
+    flex-wrap:wrap;padding:18px 52px 14px 24px;border-bottom:1px solid var(--line);
     background:linear-gradient(180deg,rgba(176,77,255,.07),transparent 78%);}
   .arcTitle{margin:0 0 3px;font-size:clamp(26px,2.6vw,34px);letter-spacing:5px;}
   .arcFlavor{font-family:var(--font-mono);color:var(--bone-dim);font-style:italic;
@@ -1838,9 +1909,9 @@
     justify-content:flex-end;margin-left:auto;}
   /* the purse gets a plate of its own — it is the number every other number on
      this screen is measured against */
-  #arcMarrow{font-family:var(--font-mono);font-size:25px;font-weight:800;color:var(--gold);
-    display:flex;align-items:center;gap:9px;white-space:nowrap;
-    padding:7px 15px;border-radius:8px;
+  #arcMarrow{font-family:var(--font-mono);font-size:23px;font-weight:800;color:var(--gold);
+    display:flex;align-items:center;gap:8px;white-space:nowrap;
+    padding:6px 13px;border-radius:8px;
     background:linear-gradient(180deg,rgba(255,181,77,.12),rgba(255,181,77,.03));
     border:1px solid rgba(255,181,77,.34);
     text-shadow:0 0 18px rgba(255,181,77,.5);}
@@ -1848,11 +1919,12 @@
   #arcMarrow small{font-family:var(--font-ui);font-size:10.5px;font-weight:700;
     letter-spacing:2.6px;color:var(--bone-faint);text-shadow:none;}
   #arcLife{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
-  #arcLife span{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;
+  #arcLife span{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:6px;
+    white-space:nowrap;
     background:rgba(0,0,0,.34);border:1px solid var(--line);
-    font-family:var(--font-mono);font-size:11px;letter-spacing:.6px;color:var(--bone-faint);}
-  #arcLife .ic{font-size:13px;color:var(--line-hi);}
-  #arcLife b{color:var(--bone);font-weight:800;font-size:12.5px;}
+    font-family:var(--font-mono);font-size:10.5px;letter-spacing:.4px;color:var(--bone-faint);}
+  #arcLife .ic{font-size:12px;color:var(--line-hi);}
+  #arcLife b{color:var(--bone);font-weight:800;font-size:12px;}
 
   /* ---- tabs ---- */
   #arcTabs{display:flex;gap:2px;padding:0 24px;border-bottom:1px solid var(--line);
@@ -2094,9 +2166,28 @@
   .aSwitch.on .sTrack{background:#16301f;border-color:var(--neon-g);}
   .aSwitch.on .sKnob{transform:translateX(13px);background:var(--neon-g);
     box-shadow:0 0 8px rgba(94,222,138,.7);}
+  /* The switch is a <button>, so it was inheriting the base button's lift on
+     hover AND its 3px drop on :active. That drop is why a click sometimes did
+     nothing: pressing moved the control down out from under the cursor, so the
+     mouseup landed somewhere else and no click event was ever produced. It
+     holds still now and answers with light.
+     `:not(:disabled)` is here only to out-specify the base rule. */
+  .aSwitch:hover:not(:disabled), .aSwitch:active:not(:disabled){transform:none;}
   .aSwitch:hover{color:var(--bone);}
+  .aSwitch:hover .sTrack{border-color:var(--line-hi);
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.8), 0 0 10px rgba(255,255,255,.10);}
   .aSwitch.on:hover{color:#9df3bb;}
+  .aSwitch.on:hover .sTrack{border-color:#7bffb4;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.8), 0 0 14px rgba(94,222,138,.55);}
   .aSwitch:focus-visible{outline:2px solid var(--gold);outline-offset:3px;}
+
+  /* Same cancellation for every other small control on this screen. The lift
+     is right for a slab you press; it is wrong for a tab, a chip or a clear
+     button that has to stay under the pointer. */
+  .arcTab:hover:not(:disabled), .arcTab:active:not(:disabled),
+  #arcSearchClear:hover:not(:disabled), #arcSearchClear:active:not(:disabled),
+  #btnArcClearFilters:hover:not(:disabled), #btnArcClearFilters:active:not(:disabled){
+    transform:none;}
 
   /* ---- notices ---- */
   .arcWarn{display:flex;align-items:center;gap:10px;margin-bottom:4px;
@@ -2214,7 +2305,7 @@
      window. Nothing is removed except the flavour line, which is the one piece
      of text on the screen that says nothing a player needs. */
   @media (max-height: 880px){
-    .arcTop{padding:12px 20px 10px;}
+    .arcTop{padding:12px 58px 10px 20px;}
     .arcTitle{font-size:24px;letter-spacing:4px;margin-bottom:0;}
     .arcTop .arcFlavor{display:none;}
     #arcMarrow{font-size:21px;padding:5px 12px;}
@@ -2745,7 +2836,7 @@
 <!-- ============ CHANGELOG ============ -->
 <div class="overlay hidden" id="logOverlay" style="z-index:64;">
   <div class="modal" style="max-width:660px;width:min(660px,94vw);text-align:left;">
-    <button id="btnLogClose" class="xClose corner" aria-label="close"><i class="ic" data-ic="x"></i></button>
+    <button id="btnLogClose" class="xClose corner" aria-label="close"><span class="xG">X</span></button>
     <div style="text-align:center;">
       <div id="logVer"></div>
       <h2 id="logTitle">THE RECORD</h2>
@@ -2762,7 +2853,7 @@
 <!-- ============ THE VEIL (audio + visual mixer) ============ -->
 <div class="overlay hidden" id="settingsOverlay" style="z-index:66;">
   <div class="modal veilModal">
-    <button id="btnVeilX" class="xClose corner" aria-label="close"><i class="ic" data-ic="x"></i></button>
+    <button id="btnVeilX" class="xClose corner" aria-label="close"><span class="xG">X</span></button>
     <div id="veilBody">
       <h2>THE VEIL</h2>
       <div class="flavor">What you hear, and how thickly the dark gathers.</div>
@@ -2867,7 +2958,7 @@
 <div id="grimoire">
   <div id="grimHead">
     <h3><i class="ic" data-ic="bookOpenText"></i>GRIMOIRE</h3>
-    <button id="btnGrimClose" class="xClose" aria-label="close"><i class="ic" data-ic="x"></i></button>
+    <button id="btnGrimClose" class="xClose" aria-label="close"><span class="xG">X</span></button>
   </div>
   <div id="grimTabs">
     <div class="gtab on" data-tab="hands">CONDUITS</div>
@@ -2968,10 +3059,16 @@
       <span class="mbEdge"></span>
     </div>
     <nav class="menuNav">
-      <button class="menuItem" id="miStart"><i class="ic" data-ic="pentagram"></i><span>BEGIN THE RITE</span></button>
-      <button class="menuItem" id="miArchive"><i class="ic" data-ic="cards"></i><span>THE ARCHIVE</span></button>
-      <button class="menuItem" id="miRules"><i class="ic" data-ic="bookOpenText"></i><span>HOW TO PLAY</span></button>
-      <button class="menuItem" id="miLog"><i class="ic" data-ic="sealCheck"></i><span>CHANGELOG</span></button>
+      <!-- No icons on these. The label was already centred to within a
+           hundredth of a pixel, but an icon pinned to the left edge with
+           nothing answering it on the right made the slab read lopsided, and
+           centring icon-and-label as a group instead put the four icons at
+           four different x positions down the stack. A cut plaque with one
+           centred inscription is both the honest fix and the better object. -->
+      <button class="menuItem" id="miStart"><span>BEGIN THE RITE</span></button>
+      <button class="menuItem" id="miArchive"><span>THE ARCHIVE</span></button>
+      <button class="menuItem" id="miRules"><span>HOW TO PLAY</span></button>
+      <button class="menuItem" id="miLog"><span>CHANGELOG</span></button>
     </nav>
   </div>
 
@@ -3009,6 +3106,7 @@
        When the tutorial lands this whole screen is what it replaces. -->
   <div class="menuScreen hidden" id="menuRules">
     <div class="arcPanel">
+      <button id="btnRulesX" class="xClose corner" aria-label="close"><span class="xG">X</span></button>
       <div class="arcTop">
         <div>
           <h2 class="menuH2 arcTitle">HOW TO PLAY</h2>
@@ -3092,6 +3190,7 @@
        read as a shopping list, never as a mystery box. -->
   <div class="menuScreen hidden" id="menuArchive">
     <div class="arcPanel">
+      <button id="btnArcX" class="xClose corner" aria-label="close"><span class="xG">X</span></button>
       <!-- head: what this is, what is in the purse, what the career has done.
            Outside the scrolling region on purpose — the purse is the number
            every price on this screen is read against, so it must never be the
@@ -10437,6 +10536,10 @@ function leaveMenu(){
 $('miStart').onclick = ()=>{ sfx('click'); startRun(); };
 $('miRules').onclick = ()=>{ sfx('click'); menuScreen('menuRules'); };
 $('miRulesBack').onclick = ()=>{ sfx('click'); menuScreen('menuHome'); };
+// Both full-panel screens close from the corner as well as from the foot �
+// the same X, in the same place, as every other panel in the game.
+$('btnRulesX').onclick = ()=>{ sfx('click'); menuScreen('menuHome'); };
+$('btnArcX').onclick   = ()=>{ sfx('click'); menuScreen('menuHome'); };
 $('miArchive').onclick = ()=>{ sfx('click'); openArchive(); };
 $('miArchiveBack').onclick = ()=>{ sfx('click'); menuScreen('menuHome'); };
 // No Grimoire on the title screen. It is a reference for a run in progress —
