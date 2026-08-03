@@ -111,9 +111,9 @@ console.log('\n3. the deepchalk boon is withheld while no chalk is owned');
 console.log('\n4. the Archive lists chalks, gated like everything else');
 G.openArchive();
 eq('52 tiles now', $('arcRoster').querySelectorAll('.arcCard').length, 52);
-// the group is a filter chip rather than a section header now
-eq('a chalks filter exists', /THE CHALKS/.test($('arcGroupChips').innerHTML), true);
-eq('chalks start 0/4', /0\/4/.test($('arcGroupChips').innerHTML), true);
+// the group is a filter option rather than a section header now
+eq('a chalks filter exists', /CHALKS/.test($('arcGroupList').innerHTML), true);
+eq('chalks start 0/4', /0\/4/.test($('arcGroupList').innerHTML), true);
 eq('row chalk locked', stateOf('chalk','chalk_row'), 'locked');
 eq('cross chalk depth-gated (tier 3)', stateOf('chalk','chalk_cross'), 'gated');
 eq('deepen depth-gated (tier 4)', stateOf('chalk','chalk_deepen'), 'gated');

@@ -14,6 +14,7 @@ const SUITES = [
   'test-oaths.js',       // the four Rite ladders, and what they do to a real run
   'test-loadout.js',     // §11 switches: owned content set aside for a run (jsdom)
   'test-archive-view.js',// the screen itself: panel, tabs, filters, search (jsdom + CSS)
+  'test-shell.js',       // game-wide furniture: close button, title screen (jsdom + CSS)
 ];
 
 const verbose = process.argv.includes('--verbose');

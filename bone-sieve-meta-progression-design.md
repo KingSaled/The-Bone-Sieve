@@ -308,6 +308,19 @@ Two tabs:
 > - **Short screens** get a compact mode at `max-height:880px` so a
 >   1366×768 laptop still gets two full rows.
 >
+> UPDATE (playtest pass): the panel now has a FIXED height rather than a
+> maximum — sized to content it grew and shrank as filters cut the rack
+> down and as the tabs swapped, so the frame moved under the pointer on
+> the way to the thing being clicked. Nothing on the screen translates on
+> hover any more either, for the same reason: a tile that lifts slides the
+> loadout switch out from under the click it is travelling to. The two
+> filter chip rows became one row of the Veil's existing dropdown (SHOW /
+> STATE plus search), and the state labels are plain words now —
+> ALL / OWNED / AFFORDABLE / LOCKED / SET ASIDE. "NOT YET" read as
+> flavour and meant nothing to anyone, including its author. Search
+> matches **names only**: including the rule text meant typing "run" to
+> find the Runt Die returned most of the relic table.
+>
 > Two bugs fell out of doing this, both invisible to the existing tests:
 > the tab panes were switched with a `hidden` class **no CSS rule
 > matched**, so both tabs had been rendering on top of each other since

@@ -78,10 +78,10 @@ eq('runt locked (no marrow)', stateOf('die','runt'), 'locked');
 eq('lidless eye locked', stateOf('relic','eye'), 'locked');
 eq('ash spine depth-gated', stateOf('relic','spine'), 'gated');
 eq('crimson depth-gated', stateOf('die','crimson'), 'gated');
-// the owned counts live on the filter chips now — the section headers they
+// the owned counts live on the filter menu now — the section headers they
 // used to sit on were what made the rack too tall to fit a screen
-eq('owned count on the bones chip', /1\/11/.test($('arcGroupChips').innerHTML), true);
-eq('owned count on the relics chip', /7\/37/.test($('arcGroupChips').innerHTML), true);
+eq('owned count on the dice option', /1\/11/.test($('arcGroupList').innerHTML), true);
+eq('owned count on the relics option', /7\/37/.test($('arcGroupList').innerHTML), true);
 
 console.log('\n3. locked entries show everything — a shopping list, not a mystery');
 {
@@ -126,7 +126,7 @@ eq('marrow spent', G.Meta.data.marrow, 84);
 eq('runt now owned on screen', stateOf('die','runt'), 'owned');
 eq('confirm closed', $('arcConfirmOverlay').classList.contains('hidden'), true);
 eq('a toast announced it', toasts.pop(), 'RUNT DIE JOINS THE POOL');
-eq('bones chip now 2/11', /2\/11/.test($('arcGroupChips').innerHTML), true);
+eq('dice option now 2/11', /2\/11/.test($('arcGroupList').innerHTML), true);
 
 console.log('\n6. buy a relic too, then confirm both reach a run');
 G.Meta.data.marrow = 500; G.renderArchive();

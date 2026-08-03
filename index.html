@@ -603,11 +603,47 @@
   .hudBtn:hover{border-color:var(--neon-p);box-shadow:0 0 20px rgba(176,77,255,.4);
     transform:translateY(-2px);}
 
+  /* ---------- THE CLOSE BUTTON ----------
+     One X for the whole game. There were three before — a ghosted outline on
+     the changelog, a small stone button in the Grimoire, and nothing at all on
+     the Veil — so the single most-used control in the UI looked different
+     everywhere it appeared.
+
+     Square with radiused corners, carrying the same blood the .primary buttons
+     carry, and it DOES NOT MOVE. The base button rule lifts 3px on hover and
+     drops 3px on press, which on a control pinned to a panel corner reads as a
+     wobble and slides the target out from under the pointer. Here the hover is
+     a glow and nothing else — the specificity of `.xClose:hover:not(:disabled)`
+     is what beats `button:hover:not(:disabled)`'s translate. */
+  .xClose{--btn-edge:#1a0207; --btn-rim:rgba(255,180,190,.16);
+    width:38px;height:38px;padding:0;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:9px;border:1px solid var(--crimson);color:#ffd2da;
+    background:
+      radial-gradient(50% 300% at 50% 35%,rgba(200,27,54,.80),rgba(200,27,54,0) 72%),
+      radial-gradient(46% 260% at 50% 70%,rgba(42,2,8,.90),rgba(42,2,8,0) 70%),
+      radial-gradient(48% 280% at 50% 60%,rgba(200,27,54,.50),rgba(200,27,54,0) 74%),
+      radial-gradient(44% 240% at 50% 30%,rgba(42,2,8,.80),rgba(42,2,8,0) 70%),
+      linear-gradient(180deg,#710d1d,#33030d);
+    background-size:130px 100%,105px 100%,165px 100%,85px 100%,100% 100%;
+    background-repeat:repeat-x;
+    animation:btnBlood 7s linear infinite;
+    box-shadow:inset 0 1px 0 var(--btn-rim), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 4px 0 var(--btn-edge), 0 8px 18px rgba(0,0,0,.55);
+    transition:box-shadow .18s linear, border-color .18s linear, color .18s linear;}
+  .xClose .ic{font-size:17px;}
+  .xClose:hover:not(:disabled){transform:none;filter:none;
+    border-color:var(--crimson-hi);color:#fff;
+    box-shadow:inset 0 1px 0 var(--btn-rim), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 4px 0 var(--btn-edge), 0 8px 18px rgba(0,0,0,.55),
+               0 0 26px rgba(255,43,82,.75);}
+  .xClose:active:not(:disabled){transform:none;
+    box-shadow:inset 0 1px 0 var(--btn-rim), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 2px 0 var(--btn-edge), 0 0 30px rgba(255,43,82,.9);}
+  /* pinned to a panel corner rather than sitting in a row */
+  .xClose.corner{position:absolute;top:14px;right:14px;z-index:8;}
+
   /* ---------- CHANGELOG ---------- */
-  .logX{position:absolute;top:12px;right:12px;padding:6px 10px !important;
-    font-size:15px !important;background:none !important;border-color:var(--line) !important;
-    box-shadow:none !important;z-index:2;}
-  .logX:hover{border-color:var(--crimson-hi) !important;color:#fff !important;}
   #logVer{font-family:var(--font-mono);font-size:12px;letter-spacing:3px;
     color:var(--bone-faint);margin-bottom:4px;}
   #logVer b{color:var(--gold);font-weight:800;}
@@ -659,16 +695,17 @@
   #logHistory.hidden{display:none;}
 
   /* ---------- THE VEIL ----------
-     This panel carries more rows than any other, so it takes the ornament a
-     size down — --bfe is a uniform scale, so the medallions stay circular and
-     only the band gets thinner. At the Ossuary's 104px the frame's padding
-     alone ate 176px of height and pushed the buttons off a 1050px screen. */
-  #settingsOverlay{--bfe:74px;--bf-pad:62px;}
+     No ornamental frame. It overhangs its box by 18px, which put it straight
+     over the close button in the corner, and its padding alone was eating
+     124px of width and height on the panel with more rows in it than any
+     other. The Veil is a workbench, not a reveal — the same reasoning that
+     keeps it off the Archive and the Exchange. What is left is the plain
+     panel every other screen in the game is built from. */
   #settingsOverlay .modal{width:min(820px,calc(94vw / var(--ui-scale,1)));max-width:none;padding:0;
-    overflow:visible;max-height:none;
+    overflow:hidden;max-height:calc(92vh / var(--ui-scale,1));
     background:linear-gradient(170deg,#191527,#131020 44%,#0b0912);}
-  #veilBody{max-height:92vh;overflow-y:auto;overflow-x:hidden;
-    padding:var(--bf-pad) calc(var(--bf-pad) + 10px);}
+  #veilBody{max-height:calc(92vh / var(--ui-scale,1));overflow-y:auto;overflow-x:hidden;
+    padding:26px 30px 24px;}
   /* no sigil above the title here — the Veil is a workbench, not a reveal, and
      the emblem was only buying vertical space the controls needed */
   #settingsOverlay h2{color:#e9d4ff;font-size:clamp(32px,3.4vw,44px);margin-bottom:6px;
@@ -876,7 +913,8 @@
     letter-spacing:3px;color:var(--bone);text-shadow:0 0 18px rgba(214,31,60,.5);
     display:flex;align-items:center;gap:10px;}
   #grimHead h3 .ic{color:var(--neon-p);font-size:23px;}
-  #btnGrimClose{padding:5px 11px;font-size:15px;}
+  #btnGrimClose{width:32px;height:32px;}
+  #btnGrimClose .ic{font-size:15px;}
   #grimTabs{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap;}
   .gtab{font-family:var(--font-ui);font-size:12px;letter-spacing:2px;padding:7px 11px;
     background:var(--panel2);border:1px solid var(--line);cursor:pointer;color:var(--bone-dim);
@@ -931,11 +969,13 @@
   .modal .sigil{font-size:56px;color:var(--crimson);margin-bottom:8px;line-height:1;
     filter:drop-shadow(0 0 24px rgba(214,31,60,.75));animation:flicker 6s linear infinite;}
   #menuOverlay h2{font-size:44px;color:var(--bone);}
-  .rules{font-family:var(--font-mono);font-size:15px;
-    color:var(--bone-dim);text-align:left;margin:0 auto 22px;max-width:600px;line-height:1.8;}
-  .rules b{color:var(--bone);}
-  .rules .k{color:var(--crimson-hi);} .rules .g{color:var(--neon-g);} .rules .p{color:var(--neon-p);}
-  .rules .ic{font-size:15.5px;vertical-align:-.2em;}
+  /* The three colours the rules use to name a thing the game colours the same
+     way everywhere else: a conduit and a Trial in crimson, shards and boons in
+     green, the multiplier and decrees in violet. Scoped to the section rather
+     than to the old single .rules block that used to wrap the whole screen. */
+  .ruleSec .k{color:var(--crimson-hi);}
+  .ruleSec .g{color:var(--neon-g);}
+  .ruleSec .p{color:var(--neon-p);}
 
   /* ---------- TITLE SCREEN ----------
      A real title screen: the HUD is hidden, the sieve is cleared away and the
@@ -973,54 +1013,101 @@
                 0 0 110px rgba(176,77,255,.35), 0 6px 0 #2a0208;}
   #menuTitle em{font-style:normal;color:var(--crimson-hi);
     text-shadow:0 0 14px rgba(255,43,82,.9), 0 0 70px rgba(214,31,60,.75), 0 6px 0 #1a0105;}
-  .menuRule{display:flex;align-items:center;gap:14px;margin:20px 0 8px;width:min(420px,74vw);}
-  .menuRule span{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--line-hi),transparent);}
-  .menuRule .ic{font-size:15px;color:var(--crimson);}
-  .menuTag{font-family:var(--font-ui);font-size:13.5px;letter-spacing:8px;
-    color:var(--bone-dim);animation:breathe 6s ease-in-out infinite;}
-  .menuNav{display:flex;flex-direction:column;gap:2px;margin:34px 0 30px;}
+  /* The pitch, as a banner. Rules run out to either side of it so it reads as
+     something struck into the page rather than a caption under the logo. */
+  .menuBanner{display:flex;align-items:center;gap:16px;margin:22px 0 6px;
+    width:min(560px,86vw);}
+  .menuBanner .mbEdge{flex:1;height:1px;
+    background:linear-gradient(90deg,transparent,var(--crimson) 60%,var(--crimson-hi));}
+  .menuBanner .mbEdge:last-child{transform:scaleX(-1);}
+  /* The UI face, not the display one. The title directly above is already
+     Hellbone; setting the line under it in the same hand made the two compete
+     and turned the pitch into more texture. A clean face at a larger size with
+     the crimson behind it reads as a strapline and is legible at a glance,
+     which a tagline has to be. */
+  .menuBanner .mbText{font-family:var(--font-ui);font-weight:700;
+    font-size:clamp(14px,1.5vw,17px);letter-spacing:9px;white-space:nowrap;
+    color:#f3e3d0;padding:0 4px;
+    text-shadow:0 0 20px rgba(214,31,60,.85), 0 0 54px rgba(214,31,60,.45);
+    animation:breathe 6s ease-in-out infinite;}
+
+  /* ---- the nav ----
+     These used to opt out of the button material entirely — background, border
+     and shadow all cleared with !important — which left floating text that did
+     not read as pressable. The base `button` rule already draws carved stone
+     with a chisel grain and a cut edge, so the fix is to stop refusing it. */
+  .menuNav{display:flex;flex-direction:column;gap:10px;margin:30px 0 26px;}
   .menuItem{
-    background:none !important;border:none !important;box-shadow:none !important;
-    font-family:var(--font-ui);font-weight:700;font-size:19px;letter-spacing:5px;
-    color:var(--bone-dim);padding:12px 54px;position:relative;
-    justify-content:center;min-width:340px;
-    transition:color .18s linear, letter-spacing .3s var(--ease-out), transform .2s var(--ease);
+    font-size:17px;letter-spacing:4px;padding:14px 26px;
+    min-width:min(400px,88vw);justify-content:flex-start;gap:14px;
+    color:var(--bone-dim);
+    transition:color .18s linear, border-color .18s linear, box-shadow .18s linear,
+               transform .16s var(--ease), filter .18s linear;
   }
-  .menuItem::after{display:none;}
-  .menuItem .ic{position:absolute;left:20px;top:50%;margin-top:-9px;font-size:19px;
-    color:var(--crimson-hi);opacity:0;transform:translateX(-8px);
-    transition:opacity .2s linear, transform .2s var(--ease-out);}
-  .menuItem::before{content:'';position:absolute;left:8px;top:20%;bottom:20%;width:2px;
-    background:var(--crimson);transform:scaleY(0);transform-origin:center;
-    transition:transform .22s var(--ease-out);}
-  .menuItem:hover{color:#fff;letter-spacing:7px;transform:translateX(8px) translateY(-2px);}
-  .menuItem:hover::before{transform:scaleY(1);}
-  .menuItem:hover .ic{opacity:1;transform:translateX(0);}
-  /* The title screen assembles itself: mark, then name, then rule, then the
-     list, then the small print. Everything arriving at once read as a page
-     that had simply loaded; staged, it reads as a rite being set.
-     `backwards` and not `both` on the nav — a filled animation keeps applying
-     its final transform forever, which would beat .menuItem:hover's translate
-     and leave the whole list unable to move under the cursor. */
-  #menuHome #menuTitle{animation:titleBurn .85s .18s var(--ease-out) both;}
-  #menuHome .menuRule{animation:fadeIn .6s .55s linear both;}
-  #menuHome .menuTag{animation:fadeIn .6s .68s linear both,
-                               breathe 6s 1.3s ease-in-out infinite;}
-  #menuHome .menuItem{animation:rowIn .5s var(--ease-out) backwards;}
-  #menuHome .menuItem:nth-child(1){animation-delay:.80s;}
-  #menuHome .menuItem:nth-child(2){animation-delay:.87s;}
-  #menuHome .menuItem:nth-child(3){animation-delay:.94s;}
-  #menuHome .menuItem:nth-child(4){animation-delay:1.01s;}
-  #menuHome .menuItem:nth-child(5){animation-delay:1.08s;}
-  #menuHome .menuFoot,#menuHome .menuVer{animation:fadeIn .7s 1.2s linear both;}
-  .menuFoot{font-family:var(--font-mono);font-size:13.5px;font-style:italic;
-    color:var(--bone-faint);letter-spacing:1px;}
-  .menuVer{font-family:var(--font-mono);font-size:11px;letter-spacing:2px;
-    color:#4a4456;margin-top:12px;cursor:pointer;transition:color .15s linear;}
+  .menuItem .ic{font-size:19px;color:var(--line-hi);flex:0 0 auto;
+    transition:color .18s linear, filter .18s linear;}
+  /* the crack of light down the cut edge, lit on hover */
+  .menuItem::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+    background:linear-gradient(180deg,transparent,var(--crimson),transparent);
+    opacity:0;transition:opacity .2s linear;}
+  .menuItem:hover:not(:disabled){color:#fff;border-color:var(--crimson);
+    box-shadow:inset 0 1px 0 var(--btn-rim), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 8px 0 var(--btn-edge), 0 14px 28px rgba(0,0,0,.6),
+               0 0 26px rgba(214,31,60,.3);}
+  .menuItem:hover::before{opacity:1;}
+  .menuItem:hover .ic{color:var(--crimson-hi);
+    filter:drop-shadow(0 0 9px rgba(255,43,82,.75));}
+  /* the first item is the one the player came for */
+  #miStart{--btn-a:#4a1420;--btn-b:#360d18;--btn-c:#22060e;--btn-edge:#120307;
+    --btn-rim:rgba(255,180,190,.14);border-color:var(--crimson-dk);color:#f0d5da;}
+  #miStart .ic{color:var(--crimson-hi);}
+
+  /* ---- settings, in the corner ---- */
+  .menuCorner{position:absolute;top:22px;right:24px;z-index:6;
+    font-size:12px;letter-spacing:2.6px;padding:9px 15px;gap:10px;
+    color:var(--bone-dim);}
+  .menuCorner .ic{font-size:17px;color:var(--line-hi);
+    transition:color .2s linear, transform .45s var(--ease-out);}
+  .menuCorner em{font-style:normal;font-family:var(--font-mono);font-size:10px;
+    letter-spacing:1px;color:var(--bone-faint);
+    border:1px solid var(--line);border-radius:4px;padding:1px 5px;}
+  .menuCorner:hover:not(:disabled){color:#fff;border-color:var(--neon-p);
+    box-shadow:inset 0 1px 0 var(--btn-rim), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 8px 0 var(--btn-edge), 0 14px 28px rgba(0,0,0,.6),
+               0 0 22px rgba(176,77,255,.4);}
+  .menuCorner:hover .ic{color:var(--neon-p);transform:rotate(90deg);}
+  .menuCorner:hover em{color:var(--bone-dim);border-color:var(--line-hi);}
+  .menuCorner.hidden{display:none;}
+  /* The title screen assembles itself: mark, then name, then banner, then the
+     list. Everything arriving at once read as a page that had simply loaded;
+     staged, it reads as a rite being set.
+
+     THE WHOLE SEQUENCE IS NOW UNDER HALF A SECOND. It used to finish at 1.2s,
+     which is fine the first time and a wall every time after — the menu is
+     returned to constantly, from a run, from the Archive, from the Veil, and
+     waiting out an entrance to click a button you already know the position of
+     is the animation working against the player. The stagger survives because
+     it is doing something; the length does not, because it was not.
+
+     `backwards` and not `both`, for the reason the Archive's rack learned the
+     hard way: a filled animation keeps applying its final state forever and
+     silently beats every hover style on the element. */
+  #menuHome #menuTitle{animation:titleBurn .5s .04s var(--ease-out) both;}
+  #menuHome .menuBanner{animation:fadeIn .32s .22s linear both;}
+  #menuHome .menuItem{animation:rowIn .26s var(--ease-out) backwards;}
+  #menuHome .menuItem:nth-child(1){animation-delay:.30s;}
+  #menuHome .menuItem:nth-child(2){animation-delay:.35s;}
+  #menuHome .menuItem:nth-child(3){animation-delay:.40s;}
+  #menuHome .menuItem:nth-child(4){animation-delay:.45s;}
+  #menuOverlay .menuVer, #menuOverlay .menuStudio, #menuVeilBtn{
+    animation:fadeIn .3s .42s linear both;}
+  /* version and studio mark, one in each bottom corner */
+  .menuVer{position:absolute;left:24px;bottom:20px;z-index:6;
+    font-family:var(--font-mono);font-size:11px;letter-spacing:2px;
+    color:#4a4456;cursor:pointer;transition:color .15s linear;}
   .menuVer:hover{color:var(--neon-p);}
-  /* studio mark, pinned to the foot of the title screen */
-  .menuStudio{position:absolute;left:0;right:0;bottom:20px;
-    display:flex;align-items:center;justify-content:center;gap:9px;
+  .menuStudio{position:absolute;right:24px;bottom:20px;
+    display:flex;align-items:center;gap:9px;
     font-family:var(--font-ui);font-weight:700;font-size:12px;letter-spacing:4px;
     color:#57506b;text-decoration:none;
     transition:color .2s linear, letter-spacing .3s var(--ease-out);}
@@ -1032,9 +1119,46 @@
   .menuH2{font-family:var(--font-display);font-weight:400;font-size:35px;
     letter-spacing:6px;margin-bottom:20px;color:#f5ecdc;
     text-shadow:0 0 30px rgba(214,31,60,.6), 3px 3px 0 var(--crimson-dk);}
-  #menuRules .rules{background:linear-gradient(170deg,rgba(24,20,32,.86),rgba(12,10,18,.86));
-    border:1px solid var(--line);border-top:2px solid var(--crimson-dk);
-    padding:24px 28px;box-shadow:0 20px 60px rgba(0,0,0,.8);max-width:640px;}
+  /* ---- HOW TO PLAY ----
+     Built on .arcPanel so the game has one panel language rather than one per
+     screen. Numbered beats, and the conduits — the only thing on here a new
+     player genuinely has to memorise — lifted out of the prose into cards. */
+  #menuRules{max-width:none;width:min(880px,calc(94vw / var(--ui-scale,1)));}
+  #rulesBody{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;
+    padding:18px 26px 22px;}
+  .ruleSec{margin-bottom:20px;}
+  .ruleSec:last-child{margin-bottom:0;}
+  .ruleHead{display:flex;align-items:center;gap:11px;margin-bottom:8px;
+    font-family:var(--font-ui);font-weight:700;font-size:13px;letter-spacing:3.4px;
+    color:var(--bone);}
+  .ruleHead em{font-style:normal;font-family:var(--font-mono);font-size:11px;
+    width:22px;height:22px;flex:0 0 auto;border-radius:5px;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(214,31,60,.14);border:1px solid var(--crimson-dk);
+    color:var(--crimson-glow);}
+  .ruleSec p{font-family:var(--font-mono);font-size:12.5px;line-height:1.65;
+    color:var(--bone-dim);margin:0 0 0 33px;max-width:74ch;}
+  .ruleSec p b{color:var(--bone);font-weight:800;}
+  .ruleSec p i{color:var(--bone);}
+  .ruleGrid{display:grid;gap:10px;margin:11px 0 0 33px;
+    grid-template-columns:repeat(auto-fit,minmax(178px,1fr));}
+  .ruleCard{padding:11px 13px;border-radius:8px;
+    background:linear-gradient(168deg,#241f30,#181322 62%,#100c18);
+    border:1px solid var(--line);}
+  .rcName{font-family:var(--font-ui);font-weight:700;font-size:12.5px;
+    letter-spacing:2.6px;color:var(--bone);}
+  .rcMult{font-family:var(--font-mono);font-size:23px;font-weight:800;
+    color:var(--crimson-hi);letter-spacing:-.5px;margin:2px 0 4px;
+    text-shadow:0 0 16px rgba(255,43,82,.45);}
+  .rcDesc{font-family:var(--font-mono);font-size:11px;line-height:1.45;
+    color:var(--bone-faint);}
+  .ruleKeys{display:flex;flex-wrap:wrap;gap:8px;margin-left:33px;}
+  .ruleKeys span{display:flex;align-items:center;gap:8px;padding:6px 12px;
+    border-radius:6px;background:rgba(0,0,0,.34);border:1px solid var(--line);
+    font-family:var(--font-mono);font-size:11.5px;color:var(--bone-faint);}
+  .ruleKeys b{font-family:var(--font-ui);font-weight:700;font-size:11px;
+    letter-spacing:1.6px;color:var(--bone);
+    border:1px solid var(--line-hi);border-radius:4px;padding:2px 7px;}
   /* `stretch`, not `center`: a .ghost beside a .big carries less padding and a
      smaller face, so centring them left two buttons of visibly different
      heights sitting side by side on the death screen and in the Veil. Stretch
@@ -1687,9 +1811,13 @@
      buttons, not for a roster. */
   #menuArchive{max-width:none;
     width:min(1320px,calc(95vw / var(--ui-scale,1)));}
+  /* A FIXED height, not a maximum. Sized to content the panel grew and shrank
+     as filters cut the rack down and as the tabs swapped, so the frame moved
+     under the pointer on the way to the thing being clicked. A career screen
+     is furniture: it holds still and the contents change inside it. */
   .arcPanel{position:relative;display:flex;flex-direction:column;width:100%;
     text-align:left;overflow:hidden;
-    max-height:calc(92vh / var(--ui-scale,1));
+    height:calc(92vh / var(--ui-scale,1));
     background:linear-gradient(170deg,#1b1724,var(--panel) 45%,#100d16);
     border:1px solid var(--line);
     box-shadow:0 30px 90px rgba(0,0,0,.85), 0 0 0 1px rgba(176,77,255,.10) inset;
@@ -1743,39 +1871,41 @@
   .arcTab.on .tabN{color:var(--gold);}
 
   /* ---- filters ----
-     Chips rather than dropdowns: every option is one click away and the counts
-     live on the control, so "how much of this do I own" is answered without
-     opening anything. This is the part that does the real work against
-     scrolling — the roster is unchanged, it is just no longer all on screen. */
-  #arcFilters{display:flex;flex-direction:column;gap:8px;padding:12px 24px;
-    border-bottom:1px solid var(--line);background:rgba(0,0,0,.24);}
+     ONE row. Two rows of chips came to nine controls and 76px of head on a
+     screen whose whole complaint was that the head crowded out the content, so
+     the two axes collapse into the Veil's existing dropdown — same .drop /
+     .dropBtn / .dropList component, so this screen introduces no new control
+     the player has not already used.
+     Labels are plain words. "NOT YET" read as flavour and meant nothing; a
+     filter is signage, and signage is the one place in this game where the
+     flavour has to give way. */
+  #arcFilters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:10px 24px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.24);}
   #arcFilters.hidden{display:none;}
-  .arcFilterRow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
-  /* The chip groups must be flex containers themselves. Left as plain inline
-     spans they are one flex ITEM holding block-level buttons, so the chips
-     stack into a column and the filter bar grows to 290px — taller than the
-     rack it exists to shorten. */
-  #arcGroupChips, #arcStateChips{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
   .arcFilterLabel{font-family:var(--font-ui);font-weight:700;font-size:10px;
-    letter-spacing:2.4px;color:var(--bone-faint);margin-right:4px;min-width:52px;}
-  .arcChip{appearance:none;cursor:pointer;display:flex;align-items:center;gap:7px;
-    padding:6px 13px;border-radius:20px;
-    background:linear-gradient(180deg,#211c2c,#171320);
-    border:1px solid var(--line);
-    font-family:var(--font-ui);font-weight:700;font-size:11px;letter-spacing:1.6px;
-    color:var(--bone-dim);
-    transition:color .15s linear, border-color .15s linear, background .15s linear,
-               transform .15s var(--ease);}
-  .arcChip .ic{font-size:13px;color:var(--line-hi);}
-  .arcChip b{font-family:var(--font-mono);font-size:11px;font-weight:800;
-    color:var(--bone-faint);letter-spacing:.4px;}
-  .arcChip:hover{color:var(--bone);border-color:var(--line-hi);transform:translateY(-1px);}
-  .arcChip.on{color:var(--ink);background:linear-gradient(180deg,var(--gold-hi),var(--gold));
-    border-color:var(--gold-hi);box-shadow:0 0 16px rgba(255,181,77,.34);}
-  .arcChip.on .ic, .arcChip.on b{color:#4a2f08;}
-  .arcChip.empty{opacity:.4;}
+    letter-spacing:2.4px;color:var(--bone-faint);}
+  .arcDrop{width:186px;}
+  .arcDrop .dropBtn{padding:7px 11px;font-size:12px;letter-spacing:1.6px;}
+  .arcDrop .dropOpt{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    font-size:12px;letter-spacing:1.6px;}
+  .arcDrop .dropOpt b{font-family:var(--font-mono);font-size:11px;font-weight:800;
+    color:var(--bone-faint);}
+  .arcDrop .dropOpt.on b{color:var(--gold);}
+  .arcDrop .dropBtn b{font-family:var(--font-mono);font-size:11px;font-weight:800;
+    color:var(--gold);margin-left:auto;}
+  /* how much of the roster survived the filter — the one number that tells a
+     player whether they are looking at everything or at a slice of it */
+  #arcShowing{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.6px;
+    color:var(--bone-faint);margin-left:auto;}
+  #arcShowing b{color:var(--bone-dim);font-weight:800;}
+  #btnArcClearFilters{appearance:none;cursor:pointer;padding:6px 12px;border-radius:20px;
+    background:none;border:1px solid var(--line);
+    font-family:var(--font-ui);font-weight:700;font-size:10px;letter-spacing:2px;
+    color:var(--bone-faint);transition:color .15s linear, border-color .15s linear;}
+  #btnArcClearFilters:hover{color:var(--crimson-glow);border-color:var(--crimson);}
+  #btnArcClearFilters.hidden{display:none;}
 
-  #arcSearchWrap{display:flex;align-items:center;gap:8px;margin-left:auto;
+  #arcSearchWrap{display:flex;align-items:center;gap:8px;
     padding:5px 8px 5px 11px;border-radius:20px;
     background:#0a0810;border:1px solid var(--line);
     transition:border-color .15s linear, box-shadow .15s linear;}
@@ -1820,8 +1950,14 @@
      switching tab, changing a filter. A toggle or a purchase re-renders the
      same rack, and replaying fifty-two entrances on every click is the exact
      blink the Ossuary's cards were fixed for. The delay is capped so the last
-     card in a full roster still arrives inside a third of a second. */
-  #arcRoster.fresh .arcCard{animation:arcCardIn .34s var(--ease-out) both;
+     card in a full roster still arrives inside a third of a second.
+
+     `backwards`, never `both`, for the reason spelled out over the title
+     screen's nav: a filled animation keeps applying its final transform for
+     as long as it is on the element, which silently beat every hover state on
+     a freshly built rack and then stopped beating it after the first
+     re-render. That inconsistency is what made the cards feel unreliable. */
+  #arcRoster.fresh .arcCard{animation:arcCardIn .34s var(--ease-out) backwards;
     animation-delay:calc(min(var(--i,0), 22) * 13ms);}
 
   /* ---- the tile ----
@@ -1901,13 +2037,19 @@
   .arcCard.owned{background:linear-gradient(168deg,#1c2b21,#141d18 62%,#0d130f);}
   .arcCard.owned .acName{color:#dcf3e4;}
 
+  /* Nothing on this screen MOVES on hover. A tile that lifts under the pointer
+     shifts the very control the pointer is travelling to — worst of all the
+     loadout switch, which sits at the bottom edge where a 3px lift is enough
+     to slide it out from under a click. Light it instead: brighter rim, a warm
+     glow, and the art leaning in. */
   .arcCard.buy{cursor:pointer;}
   .arcCard.buy .acFoot{color:var(--gold);border-color:rgba(255,181,77,.28);
     background:rgba(255,181,77,.07);}
-  .arcCard.buy:hover{transform:translateY(-3px);border-color:var(--gold-hi);
+  .arcCard.buy:hover{border-color:var(--gold-hi);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.07), inset 0 -2px 0 rgba(0,0,0,.55),
-               0 14px 28px rgba(0,0,0,.6), 0 0 22px rgba(255,181,77,.28);}
+               0 14px 28px rgba(0,0,0,.6), 0 0 26px rgba(255,181,77,.34);}
   .arcCard.buy:hover .acArt .ic{transform:scale(1.09);}
+  .arcCard.buy:hover .acArt::after{opacity:1.35;}
 
   /* locked entries stay fully legible — design §4 is explicit that a Marrow
      item is a shopping list entry, not a mystery. Dimmed, never hidden. */
@@ -2042,9 +2184,9 @@
   .oathCard.buy{cursor:pointer;}
   .oathCard.buy .acFoot{color:var(--gold);border-color:rgba(255,181,77,.28);
     background:rgba(255,181,77,.07);}
-  .oathCard.buy:hover{transform:translateY(-3px);border-color:var(--gold-hi);
+  .oathCard.buy:hover{border-color:var(--gold-hi);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.07), inset 0 -2px 0 rgba(0,0,0,.55),
-               0 14px 28px rgba(0,0,0,.6), 0 0 22px rgba(255,181,77,.28);}
+               0 14px 28px rgba(0,0,0,.6), 0 0 26px rgba(255,181,77,.34);}
   .oathCard.buy:hover .acArt .ic{transform:scale(1.09);}
   .oathCard.locked{opacity:.62;}
   .oathCard.locked .acFoot{color:var(--bone-faint);}
@@ -2603,7 +2745,7 @@
 <!-- ============ CHANGELOG ============ -->
 <div class="overlay hidden" id="logOverlay" style="z-index:64;">
   <div class="modal" style="max-width:660px;width:min(660px,94vw);text-align:left;">
-    <button id="btnLogClose" class="logX"><i class="ic" data-ic="x"></i></button>
+    <button id="btnLogClose" class="xClose corner" aria-label="close"><i class="ic" data-ic="x"></i></button>
     <div style="text-align:center;">
       <div id="logVer"></div>
       <h2 id="logTitle">THE RECORD</h2>
@@ -2620,7 +2762,7 @@
 <!-- ============ THE VEIL (audio + visual mixer) ============ -->
 <div class="overlay hidden" id="settingsOverlay" style="z-index:66;">
   <div class="modal veilModal">
-    <div class="boneFrame"></div>
+    <button id="btnVeilX" class="xClose corner" aria-label="close"><i class="ic" data-ic="x"></i></button>
     <div id="veilBody">
       <h2>THE VEIL</h2>
       <div class="flavor">What you hear, and how thickly the dark gathers.</div>
@@ -2725,7 +2867,7 @@
 <div id="grimoire">
   <div id="grimHead">
     <h3><i class="ic" data-ic="bookOpenText"></i>GRIMOIRE</h3>
-    <button id="btnGrimClose"><i class="ic" data-ic="x"></i></button>
+    <button id="btnGrimClose" class="xClose" aria-label="close"><i class="ic" data-ic="x"></i></button>
   </div>
   <div id="grimTabs">
     <div class="gtab on" data-tab="hands">CONDUITS</div>
@@ -2815,50 +2957,131 @@
          and read as an icon sitting above a logo rather than part of one -->
     <div id="menuMark"><img src="assets/img/penta.png" alt=""></div>
     <h1 id="menuTitle">THE BONE<br><em>SIEVE</em></h1>
-    <div class="menuRule"><span></span><i class="ic" data-ic="diamond"></i><span></span></div>
-    <div class="menuTag">AN OCCULT WAGER</div>
+    <!-- The one line of flavour that survives. It replaces a three-clause
+         tagline about the knuckles of a dead saint, which named a thing that
+         appears nowhere in the game and promised a story the rite does not
+         tell. This is the actual pitch, so it is drawn like one: a banner
+         rather than a caption. -->
+    <div class="menuBanner">
+      <span class="mbEdge"></span>
+      <span class="mbText">AN OCCULT WAGER</span>
+      <span class="mbEdge"></span>
+    </div>
     <nav class="menuNav">
       <button class="menuItem" id="miStart"><i class="ic" data-ic="pentagram"></i><span>BEGIN THE RITE</span></button>
-      <button class="menuItem" id="miRules"><i class="ic" data-ic="bookOpenText"></i><span>THE RITE</span></button>
       <button class="menuItem" id="miArchive"><i class="ic" data-ic="cards"></i><span>THE ARCHIVE</span></button>
-      <button class="menuItem" id="miGrim"><i class="ic" data-ic="crownSimple"></i><span>GRIMOIRE</span></button>
-      <button class="menuItem" id="miVeil"><i class="ic" data-ic="gearSix"></i><span>THE VEIL</span></button>
+      <button class="menuItem" id="miRules"><i class="ic" data-ic="bookOpenText"></i><span>HOW TO PLAY</span></button>
       <button class="menuItem" id="miLog"><i class="ic" data-ic="sealCheck"></i><span>CHANGELOG</span></button>
     </nav>
-    <div class="menuFoot">six knuckles of a dead saint &nbsp;·&nbsp; a grid of hungry stone &nbsp;·&nbsp; feed it</div>
-    <div class="menuVer" id="menuVer"></div>
   </div>
+
+  <!-- Settings, as a corner control rather than a fifth thing in the list. It
+       is the only item on that menu a player looks for by habit rather than by
+       reading, so it goes where the habit points and answers ESC as well. The
+       label is spelled out beside it — an unlabelled gear is only obvious to
+       people who already know where it is. -->
+  <button id="menuVeilBtn" class="menuCorner" aria-label="settings">
+    <i class="ic" data-ic="gearSix"></i><span>SETTINGS</span><em>ESC</em>
+  </button>
+
+  <div class="menuVer" id="menuVer"></div>
 
   <a class="menuStudio" href="https://github.com/KingSaled" target="_blank" rel="noopener noreferrer">
     <i class="ic" data-ic="flask"></i><span>A SALED LABS RITE</span>
   </a>
 
+  <!-- ============ HOW TO PLAY ============
+       Kept, not cut. An interactive tutorial is the right answer and it is not
+       built yet; until it is, this is the only place the rules exist, and
+       shipping with nothing would be worse than shipping something dated.
+
+       Two things were wrong with it. It was called THE RITE, which is what the
+       game calls a RUN — so the one menu item a lost player needs was named
+       after something else, and read as flavour rather than help. And it was a
+       single column of prose with every rule at the same weight, so the three
+       conduit types (the actual thing a new player has to learn) were a bullet
+       list halfway down a wall.
+
+       Now: named for what it does, on the Archive's panel so the game has one
+       panel language, and broken into numbered beats with the conduits given
+       their own cards. The prose is the same rules, cut shorter.
+
+       When the tutorial lands this whole screen is what it replaces. -->
   <div class="menuScreen hidden" id="menuRules">
-    <h2 class="menuH2">THE RITE</h2>
-    <div class="rules">
-      <b>THE RITE:</b> Cast your dice onto the sieve. Touching dice form
-      <span class="k">conduits</span> when they share blood:<br>
-      • <b>KIND</b> — matching values <span class="k">(×3)</span><br>
-      • <b>RUN</b> — three-plus consecutive values <span class="k">(×4)</span><br>
-      • <b>PARITY</b> — all odd or all even <span class="k">(×1.5)</span><br><br>
-      Conduit blood is summed, then multiplied by your
-      <span class="p">Offering Multiplier</span> — raising it is how you survive the deep.<br><br>
-      Click landed dice to <span class="p">mark</span> them, then re-roll.
-      <b>Seal Fate</b> to bank the blood. You have <b>3 casts</b> to meet the Soul Quota.
-      Between levels, spend <span class="g">Soul Shards</span> at the Ossuary on cursed dice,
-      altar chalks and relics.<br><br>
-      Your <b>altar holds only five relics</b>, and your cup only so many bones. When
-      either is full the Ossuary offers an <b>Exchange</b> — pay the price and name what
-      you leave behind. That choice <i>is</i> your build.<br><br>
-      Every <b>fifth descent</b> is a <span class="k">Trial</span> — a cruel rule and a swollen
-      quota. Break one and the sieve grants a <span class="g">Boon</span>; past level ten it also
-      carves a permanent <span class="p">Decree</span> into the rite.<br><br>
-      <b>SPACE</b> cast / seal &nbsp;·&nbsp; <b>R</b> re-roll marked &nbsp;·&nbsp;
-      <b>A</b> re-roll all &nbsp;·&nbsp; <b>G</b> grimoire
-    </div>
-    <div class="menuBtnRow">
-      <button class="ghost" id="miRulesBack"><i class="ic" data-ic="caretRight" style="transform:rotate(180deg);"></i>RETURN</button>
-      <button class="primary big" id="btnStart"><i class="ic" data-ic="pentagram"></i>BEGIN THE RITE</button>
+    <div class="arcPanel">
+      <div class="arcTop">
+        <div>
+          <h2 class="menuH2 arcTitle">HOW TO PLAY</h2>
+          <div class="arcFlavor">Six bones, a hungry grid, and a quota that never stops climbing.</div>
+        </div>
+      </div>
+      <div id="rulesBody">
+
+        <div class="ruleSec">
+          <div class="ruleHead"><em>1</em>THE CAST</div>
+          <p>Cast your bones onto the sieve. Click any that landed to
+            <span class="p">mark</span> them and re-roll, then <b>SEAL FATE</b> to bank
+            what they are worth. You get <b>three casts</b> to meet the descent's
+            <span class="k">Soul Quota</span> — fall short and the run ends.</p>
+        </div>
+
+        <div class="ruleSec">
+          <div class="ruleHead"><em>2</em>THE CONDUITS</div>
+          <p>Bones that touch form a <span class="k">conduit</span> when they share blood.
+            This is where nearly all of your score comes from.</p>
+          <div class="ruleGrid">
+            <div class="ruleCard"><div class="rcName">KIND</div>
+              <div class="rcMult">×3</div>
+              <div class="rcDesc">Touching bones showing the same value.</div></div>
+            <div class="ruleCard"><div class="rcName">RUN</div>
+              <div class="rcMult">×4</div>
+              <div class="rcDesc">Three or more in consecutive order.</div></div>
+            <div class="ruleCard"><div class="rcName">PARITY</div>
+              <div class="rcMult">×1.5</div>
+              <div class="rcDesc">All odd, or all even.</div></div>
+          </div>
+        </div>
+
+        <div class="ruleSec">
+          <div class="ruleHead"><em>3</em>THE OFFERING</div>
+          <p>Every conduit's blood is summed, then multiplied by your
+            <span class="p">Offering Multiplier</span>. Raising that multiplier — not
+            rolling higher — is how anyone survives the deep.</p>
+        </div>
+
+        <div class="ruleSec">
+          <div class="ruleHead"><em>4</em>THE OSSUARY</div>
+          <p>Between descents, spend <span class="g">Soul Shards</span> on cursed dice,
+            altar chalks and relics. Your <b>altar holds five relics</b> and your cup
+            holds only so many bones; when either is full the Ossuary offers an
+            <b>Exchange</b> — pay, and name what you leave behind.
+            That choice <i>is</i> your build.</p>
+        </div>
+
+        <div class="ruleSec">
+          <div class="ruleHead"><em>5</em>THE TRIALS</div>
+          <p>Every <b>fifth descent</b> is a <span class="k">Trial</span>: a cruel rule and a
+            swollen quota. Break one and the sieve grants a <span class="g">Boon</span>.
+            Past the tenth it also carves a permanent <span class="p">Decree</span> into
+            the rite — for better and for worse.</p>
+        </div>
+
+        <div class="ruleSec">
+          <div class="ruleHead"><em>6</em>THE KEYS</div>
+          <div class="ruleKeys">
+            <span><b>SPACE</b>cast / seal</span>
+            <span><b>R</b>re-roll marked</span>
+            <span><b>A</b>re-roll all</span>
+            <span><b>G</b>grimoire</span>
+            <span><b>ESC</b>settings</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="menuBtnRow arcPanelFoot">
+        <button class="ghost" id="miRulesBack"><i class="ic" data-ic="caretRight" style="transform:rotate(180deg);"></i>RETURN</button>
+        <button class="primary big" id="btnStart"><i class="ic" data-ic="pentagram"></i>BEGIN THE RITE</button>
+      </div>
     </div>
   </div>
 
@@ -2895,19 +3118,22 @@
            what stops all of it being on screen at once, without shrinking any
            of it. Rebuilt by renderArchive so the counts stay honest. -->
       <div id="arcFilters">
-        <div class="arcFilterRow">
-          <span class="arcFilterLabel">SHOW</span>
-          <span id="arcGroupChips"></span>
+        <span class="arcFilterLabel">SHOW</span>
+        <div class="drop arcDrop" id="arcGroupDrop">
+          <div class="dropBtn" id="arcGroupBtn"><span>EVERYTHING</span><i class="ic" data-ic="caretDown"></i></div>
+          <div class="dropList" id="arcGroupList"></div>
         </div>
-        <div class="arcFilterRow">
-          <span class="arcFilterLabel">STATE</span>
-          <span id="arcStateChips"></span>
-          <label id="arcSearchWrap">
-            <i class="ic" data-ic="eye"></i>
-            <input id="arcSearch" type="text" placeholder="SEARCH" autocomplete="off" spellcheck="false">
-            <button type="button" id="arcSearchClear" class="hidden" aria-label="clear search">&times;</button>
-          </label>
+        <div class="drop arcDrop" id="arcStateDrop">
+          <div class="dropBtn" id="arcStateBtn"><span>ALL</span><i class="ic" data-ic="caretDown"></i></div>
+          <div class="dropList" id="arcStateList"></div>
         </div>
+        <label id="arcSearchWrap">
+          <i class="ic" data-ic="eye"></i>
+          <input id="arcSearch" type="text" placeholder="SEARCH BY NAME" autocomplete="off" spellcheck="false">
+          <button type="button" id="arcSearchClear" class="hidden" aria-label="clear search">&times;</button>
+        </label>
+        <span id="arcShowing"></span>
+        <button type="button" id="btnArcClearFilters" class="hidden">CLEAR</button>
       </div>
       <div id="arcBody">
         <div id="arcRoster" class="arcPane"></div>
@@ -9725,9 +9951,15 @@ window.addEventListener('keydown', e=>{
     if(!$('wipeOverlay').classList.contains('hidden')) closeWipe();
     else if(!$('arcConfirmOverlay').classList.contains('hidden')) closeArchiveBuy();
     else if(!$('swapOverlay').classList.contains('hidden')) closeSwap();
+    else if(!$('logOverlay').classList.contains('hidden')) closeChangelog();
     else if($('grimoire').classList.contains('open')) $('grimoire').classList.remove('open');
     else if(!$('settingsOverlay').classList.contains('hidden')) closeSettings();
     else if(!$('menuArchive').classList.contains('hidden')) menuScreen('menuHome');
+    else if(!$('menuRules').classList.contains('hidden')) menuScreen('menuHome');
+    // ...and once there is nothing left to back out of, Escape at the title
+    // screen opens the Veil. The corner button says ESC on its face so this is
+    // discoverable rather than folklore.
+    else if(menuMode) { Sound.unlock(); openSettings(); }
   }
 });
 window.addEventListener('pointerdown', ()=>Sound.unlock(), {once:false});
@@ -9735,6 +9967,10 @@ window.addEventListener('pointerdown', ()=>Sound.unlock(), {once:false});
 //---- title screen ----
 function menuScreen(id){
   ['menuHome','menuRules','menuArchive'].forEach(s=>$(s).classList.toggle('hidden', s!==id));
+  // The settings gear belongs to the title screen only. The Archive is a full
+  // panel and the corner it sits in is the corner the panel wants; Escape
+  // still reaches the Veil from either, once the screen above it is closed.
+  $('menuVeilBtn').classList.toggle('hidden', id !== 'menuHome');
 }
 
 //---- THE ARCHIVE -----------------------------------------------------
@@ -9808,19 +10044,54 @@ function arcMatches(e){
   if(arcFilter === 'buy'    && st !== 'buy') return false;
   if(arcFilter === 'locked' && st !== 'locked' && st !== 'gated') return false;
   if(arcFilter === 'off'    && !e.off) return false;
-  if(arcQuery){
-    const q = arcQuery.toLowerCase();
-    if(!e.name.toLowerCase().includes(q) && !e.desc.toLowerCase().includes(q)) return false;
-  }
+  // NAME only, deliberately. Searching the rule text as well meant that typing
+  // "run" to find the Runt Die also returned everything that mentions a RUN
+  // conduit, which is most of the relic table — the results buried the thing
+  // being looked for. A search box on a roster is for finding a known item by
+  // the word on its face; browsing by effect is what the filters are for.
+  if(arcQuery && !e.name.toLowerCase().includes(arcQuery.toLowerCase())) return false;
   return true;
 }
-function arcChip(attr, value, current, label, count, total){
-  const on = value === current;
-  const num = total === undefined ? (count === undefined ? '' : count) : count + '/' + total;
-  return '<button type="button" class="arcChip' + (on ? ' on' : '') +
-           (count === 0 && !on ? ' empty' : '') + '"' +
-           ' data-' + attr + '="' + value + '" aria-pressed="' + on + '">' + label +
-           (num === '' ? '' : '<b>' + num + '</b>') + '</button>';
+
+// The two filter axes, as data. Rendering the menus and resolving a click both
+// read this, so a label and what it selects cannot drift apart.
+const ARC_GROUP_OPTS = [
+  {v:'all',   label:'EVERYTHING'},
+  {v:'die',   label:'DICE'},
+  {v:'chalk', label:'CHALKS'},
+  {v:'relic', label:'RELICS'},
+];
+const ARC_STATE_OPTS = [
+  {v:'all',    label:'ALL'},
+  {v:'owned',  label:'OWNED'},
+  {v:'buy',    label:'AFFORDABLE'},
+  {v:'locked', label:'LOCKED'},
+  {v:'off',    label:'SET ASIDE'},
+];
+function arcOptCount(axis, v, roster){
+  const inGroup = roster.filter(e => arcGroup === 'all' || e.kind === arcGroup);
+  if(axis === 'group'){
+    const mine = v === 'all' ? roster : roster.filter(e => e.kind === v);
+    return mine.filter(e => e.owned).length + '/' + mine.length;
+  }
+  if(v === 'all')    return String(inGroup.length);
+  if(v === 'owned')  return String(inGroup.filter(e => e.owned).length);
+  if(v === 'buy')    return String(inGroup.filter(e => arcState(e) === 'buy').length);
+  if(v === 'locked') return String(inGroup.filter(e => {
+    const s = arcState(e); return s === 'locked' || s === 'gated'; }).length);
+  return String(inGroup.filter(e => e.off).length);
+}
+function arcBuildDrop(axis, opts, current, roster){
+  const listId = axis === 'group' ? 'arcGroupList' : 'arcStateList';
+  const btnId  = axis === 'group' ? 'arcGroupBtn'  : 'arcStateBtn';
+  $(listId).innerHTML = opts.map(o =>
+    '<div class="dropOpt' + (o.v === current ? ' on' : '') + '" data-v="' + o.v + '">' +
+      '<span>' + o.label + '</span><b>' + arcOptCount(axis, o.v, roster) + '</b>' +
+    '</div>').join('');
+  const sel = opts.find(o => o.v === current) || opts[0];
+  $(btnId).innerHTML = '<span>' + sel.label + '</span>' +
+    '<b>' + arcOptCount(axis, sel.v, roster) + '</b>' +
+    icon('caretDown');
 }
 
 function renderArchive(opts){
@@ -9841,31 +10112,20 @@ function renderArchive(opts){
     RITES.reduce((a, r) => a + riteLevel(r.key), 0) + '/' +
     RITES.reduce((a, r) => a + RITE_MAX[r.key], 0);
 
-  // ---- the filter chips, counted off the live roster ----
-  let g = arcChip('group', 'all', arcGroup, 'ALL', owned.length, roster.length);
-  for(const k of ['die','chalk','relic']){
-    const mine = roster.filter(e => e.kind === k);
-    g += arcChip('group', k, arcGroup, ARC_KIND_LABEL[k],
-                 mine.filter(e => e.owned).length, mine.length);
-  }
-  $('arcGroupChips').innerHTML = g;
-
-  // State counts respect the group filter, because that is the question being
-  // asked: "of what I am looking at, how much can I buy right now".
-  const inGroup = roster.filter(e => arcGroup === 'all' || e.kind === arcGroup);
-  const nBuy    = inGroup.filter(e => arcState(e) === 'buy').length;
-  const nLocked = inGroup.filter(e => { const s = arcState(e); return s === 'locked' || s === 'gated'; }).length;
-  const nOff    = inGroup.filter(e => e.off).length;
-  $('arcStateChips').innerHTML =
-    arcChip('filter', 'all', arcFilter, 'EVERYTHING') +
-    arcChip('filter', 'owned', arcFilter, 'IN THE POOL', inGroup.filter(e => e.owned).length) +
-    arcChip('filter', 'buy', arcFilter, 'CAN AFFORD', nBuy) +
-    arcChip('filter', 'locked', arcFilter, 'NOT YET', nLocked) +
-    arcChip('filter', 'off', arcFilter, 'SET ASIDE', nOff);
+  // ---- the two filter menus, counted off the live roster ----
+  // The state counts respect the group filter, because that is the question
+  // being asked: "of what I am looking at, how much can I buy right now".
+  arcBuildDrop('group', ARC_GROUP_OPTS, arcGroup, roster);
+  arcBuildDrop('state', ARC_STATE_OPTS, arcFilter, roster);
   $('arcSearchClear').classList.toggle('hidden', !arcQuery);
+  const filtered = arcGroup !== 'all' || arcFilter !== 'all' || !!arcQuery;
+  $('btnArcClearFilters').classList.toggle('hidden', !filtered);
 
   // ---- the rack ----
   const shown = arcSorted(roster.filter(arcMatches));
+  $('arcShowing').innerHTML = shown.length === roster.length
+    ? 'showing <b>all ' + roster.length + '</b>'
+    : 'showing <b>' + shown.length + '</b> of ' + roster.length;
   let h = '';
   // Setting everything aside is allowed — design §11 exists to let a player
   // impose their own constraints, and refusing the far end of that would be
@@ -9981,21 +10241,46 @@ function arcShowTab(which){
 $('arcTabRoster').onclick = ()=>{ sfx('click'); arcShowTab('roster'); renderArchive(); };
 $('arcTabOaths').onclick  = ()=>{ sfx('click'); arcShowTab('oaths');  renderArchive(); };
 
-// Filter chips. Delegated, because renderArchive rebuilds them on every pass.
-$('arcGroupChips').onclick = ev=>{
-  const c = ev.target.closest('.arcChip'); if(!c) return;
-  arcGroup = c.dataset.group; sfx('click'); renderArchive();
-};
-$('arcStateChips').onclick = ev=>{
-  const c = ev.target.closest('.arcChip'); if(!c) return;
-  arcFilter = c.dataset.filter; sfx('click'); renderArchive();
-};
+// The filter menus. Same .drop component the Veil uses, so opening, the caret
+// and the dismiss-on-outside-click all behave the way they already do there.
+// Delegated, because renderArchive rebuilds the options on every pass.
+function arcDropWire(dropId, btnId, listId, apply){
+  $(btnId).onclick = e=>{
+    e.stopPropagation();
+    // only one menu open at a time, or the second sits under the first
+    for(const other of ['arcGroupDrop','arcStateDrop'])
+      if(other !== dropId) $(other).classList.remove('open');
+    $(dropId).classList.toggle('open');
+    sfx('click');
+  };
+  $(listId).onclick = e=>{
+    const o = e.target.closest('.dropOpt'); if(!o) return;
+    e.stopPropagation();
+    apply(o.dataset.v);
+    $(dropId).classList.remove('open');
+    sfx('click');
+    renderArchive();
+  };
+}
+arcDropWire('arcGroupDrop','arcGroupBtn','arcGroupList', v => { arcGroup = v; });
+arcDropWire('arcStateDrop','arcStateBtn','arcStateList', v => { arcFilter = v; });
+document.addEventListener('click', ()=>{
+  $('arcGroupDrop').classList.remove('open');
+  $('arcStateDrop').classList.remove('open');
+});
+
 $('arcSearch').addEventListener('input', ()=>{
   arcQuery = $('arcSearch').value.trim();
   renderArchive();
 });
 $('arcSearchClear').onclick = ()=>{
   $('arcSearch').value = ''; arcQuery = ''; sfx('click'); renderArchive();
+};
+$('btnArcClearFilters').onclick = ()=>{
+  arcGroup = 'all'; arcFilter = 'all'; arcQuery = '';
+  $('arcSearch').value = '';
+  sfx('click');
+  renderArchive();
 };
 
 function openArchive(){
@@ -10154,8 +10439,11 @@ $('miRules').onclick = ()=>{ sfx('click'); menuScreen('menuRules'); };
 $('miRulesBack').onclick = ()=>{ sfx('click'); menuScreen('menuHome'); };
 $('miArchive').onclick = ()=>{ sfx('click'); openArchive(); };
 $('miArchiveBack').onclick = ()=>{ sfx('click'); menuScreen('menuHome'); };
-$('miGrim').onclick  = ()=>{ toggleGrimoire(); };
-$('miVeil').onclick  = ()=>{ Sound.unlock(); openSettings(); };
+// No Grimoire on the title screen. It is a reference for a run in progress —
+// what the conduits pay, what is bound to the altar, what this descent's pool
+// holds — and at the menu it has no run to describe. It stays on the HUD and
+// on G, where it is actually wanted. One less item on a list that was long.
+$('menuVeilBtn').onclick = ()=>{ Sound.unlock(); openSettings(); };
 $('miLog').onclick   = ()=>openChangelog();
 document.querySelectorAll('.menuItem').forEach(b=>
   b.addEventListener('mouseenter', ()=>sfx('hover')));
@@ -10518,6 +10806,7 @@ $('btnAbandon').onclick = ()=>{
 };
 $('btnSettings').onclick = openSettings;
 $('btnSettingsClose').onclick = closeSettings;
+$('btnVeilX').onclick = closeSettings;
 // The MIASMA slider is gone: Detail already decides how many fog veils are
 // baked (Perf.veils), so the two controls disagreed — dropping to LOW thinned
 // the fog while the slider still read 100. fogAmt stays as the internal knob

@@ -81,6 +81,18 @@ const SEEDED = {
     console.log('  ' + name.padEnd(22) + WIDTH + 'x' + HEIGHT + '  -> ' + path.relative(process.cwd(), f));
   };
 
+  await shot('menu-home');
+  await page.click('#menuVeilBtn');
+  await new Promise(r => setTimeout(r, 500));
+  await shot('menu-veil');
+  await page.evaluate(()=>{ document.getElementById('btnVeilX').click(); });
+  await new Promise(r => setTimeout(r, 400));
+  await page.click('#miRules');
+  await new Promise(r => setTimeout(r, 500));
+  await shot('menu-howtoplay');
+  await page.click('#miRulesBack');
+  await new Promise(r => setTimeout(r, 400));
+
   await page.click('#miArchive');
   await new Promise(r => setTimeout(r, 700));
   await shot('archive-roster');
@@ -117,9 +129,17 @@ const SEEDED = {
   await shot('archive-oaths');
 
   await page.click('#arcTabRoster');
-  await page.evaluate(()=>{ document.querySelector('.arcChip[data-group="relic"]').click(); });
+  await page.evaluate(()=>{
+    document.getElementById('arcGroupBtn').click();
+    document.querySelector('#arcGroupList .dropOpt[data-v="relic"]').click();
+  });
   await new Promise(r => setTimeout(r, 500));
   await shot('archive-filtered-relics');
+
+  // the filter menu open, so the control itself can be looked at
+  await page.evaluate(()=>{ document.getElementById('arcStateBtn').click(); });
+  await new Promise(r => setTimeout(r, 300));
+  await shot('archive-filter-open');
 
   await browser.close();
 })().catch(e => { console.error(e); process.exit(1); });

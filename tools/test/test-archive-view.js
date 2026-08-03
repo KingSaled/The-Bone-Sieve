@@ -58,8 +58,10 @@ const cards = () => [...$('arcRoster').querySelectorAll('.arcCard')];
 const ids = () => cards().map(c => c.dataset.id);
 const click = el => el.dispatchEvent(new window.MouseEvent('click', {bubbles:true}));
 const shown = el => window.getComputedStyle(el).display !== 'none';
-const chip = (host, attr, val) =>
-  $(host).querySelector('.arcChip[data-' + attr + '="' + val + '"]');
+// the two filter menus, driven the way a player drives them: open, then pick
+const opt = (listId, v) => $(listId).querySelector('.dropOpt[data-v="' + v + '"]');
+const pick = (btnId, listId, v) => { click($(btnId)); click(opt(listId, v)); };
+const chosen = (btnId) => $(btnId).querySelector('span').textContent;
 
 G.Meta.load();
 G.openArchive();
@@ -119,53 +121,74 @@ console.log('\n4. every tile is the same tile');
        window.getComputedStyle(c.querySelector('.acDesc')).height))].length, 1);
 }
 
-console.log('\n5. the group filter cuts the rack down');
+console.log('\n5. the filters are one row of menus, not two rows of chips');
+eq('exactly one filter row', $('menuArchive').querySelectorAll('#arcFilters').length, 1);
+eq('the old chips are gone', $('arcFilters').querySelectorAll('.arcChip').length, 0);
+eq('two menus in it', $('arcFilters').querySelectorAll('.drop').length, 2);
+eq('and they use the Veil\'s own dropdown component',
+   $('arcGroupDrop').classList.contains('drop'), true);
+// the wording a player reads: plain, not flavour. "NOT YET" meant nothing.
+eq('the state options say what they mean',
+   [...$('arcStateList').querySelectorAll('.dropOpt span')].map(s => s.textContent),
+   ['ALL','OWNED','AFFORDABLE','LOCKED','SET ASIDE']);
+eq('and so do the group options',
+   [...$('arcGroupList').querySelectorAll('.dropOpt span')].map(s => s.textContent),
+   ['EVERYTHING','DICE','CHALKS','RELICS']);
+
+console.log('\n6. the group filter cuts the rack down');
 eq('all 52 to begin with', cards().length, 52);
-click(chip('arcGroupChips','group','die'));
-eq('bones only', cards().length, 11);
+pick('arcGroupBtn','arcGroupList','die');
+eq('dice only', cards().length, 11);
 eq('and they really are all dice', cards().every(c => c.dataset.kind === 'die'), true);
-click(chip('arcGroupChips','group','chalk'));
+eq('the button reports what is chosen', chosen('arcGroupBtn'), 'DICE');
+eq('the menu closes behind the choice', $('arcGroupDrop').classList.contains('open'), false);
+pick('arcGroupBtn','arcGroupList','chalk');
 eq('chalks only', cards().length, 4);
-click(chip('arcGroupChips','group','relic'));
+pick('arcGroupBtn','arcGroupList','relic');
 eq('relics only', cards().length, 37);
-eq('the chosen chip is the marked one',
-   chip('arcGroupChips','group','relic').classList.contains('on'), true);
-eq('and the others are not',
-   chip('arcGroupChips','group','die').classList.contains('on'), false);
-click(chip('arcGroupChips','group','all'));
+eq('the chosen option is the marked one', opt('arcGroupList','relic').classList.contains('on'), true);
+eq('and the others are not', opt('arcGroupList','die').classList.contains('on'), false);
+pick('arcGroupBtn','arcGroupList','all');
 eq('back to everything', cards().length, 52);
 
-console.log('\n6. the state filter, and its counts');
-click(chip('arcStateChips','filter','owned'));
+console.log('\n7. the state filter, and its counts');
+pick('arcStateBtn','arcStateList','owned');
 eq('a fresh save owns eight things', cards().length, 8);
-eq('the chip said so before it was clicked',
-   chip('arcStateChips','filter','owned').querySelector('b').textContent, '8');
-click(chip('arcStateChips','filter','buy'));
+eq('the option said so before it was picked',
+   opt('arcStateList','owned').querySelector('b').textContent, '8');
+pick('arcStateBtn','arcStateList','buy');
 eq('nothing is affordable at 0 marrow', cards().length, 0);
 eq('and the rack says so plainly', !!$('arcRoster').querySelector('.arcEmpty'), true);
-click(chip('arcStateChips','filter','locked'));
-eq('forty-four are not yet had', cards().length, 44);
-click(chip('arcStateChips','filter','all'));
+pick('arcStateBtn','arcStateList','locked');
+eq('forty-four are locked', cards().length, 44);
+pick('arcStateBtn','arcStateList','all');
 
-console.log('\n7. the two filters compose');
-click(chip('arcGroupChips','group','die'));
-click(chip('arcStateChips','filter','owned'));
+console.log('\n8. the two filters compose, and can be cleared');
+pick('arcGroupBtn','arcGroupList','die');
+pick('arcStateBtn','arcStateList','owned');
 eq('owned dice only', ids(), ['bone']);
 eq('state counts follow the group, not the whole roster',
-   chip('arcStateChips','filter','owned').querySelector('b').textContent, '1');
-click(chip('arcStateChips','filter','all'));
-click(chip('arcGroupChips','group','all'));
+   opt('arcStateList','owned').querySelector('b').textContent, '1');
+eq('the rack says how much it is hiding', /1<\/b> of 52/.test($('arcShowing').innerHTML), true);
+eq('a clear control appears once anything is filtered', shown($('btnArcClearFilters')), true);
+click($('btnArcClearFilters'));
+eq('and puts everything back', cards().length, 52);
+eq('menus reset with it', [chosen('arcGroupBtn'), chosen('arcStateBtn')], ['EVERYTHING','ALL']);
+eq('the clear control goes away again', shown($('btnArcClearFilters')), false);
+eq('showing reads as the whole roster', /all 52/.test($('arcShowing').textContent), true);
 
-console.log('\n8. search');
+console.log('\n9. search, over names only');
 const search = q => { $('arcSearch').value = q;
   $('arcSearch').dispatchEvent(new window.Event('input', {bubbles:true})); };
 search('mirror');
 eq('finds by name', ids(), ['mirror']);
 search('MIRROR');
 eq('and does not care about case', ids(), ['mirror']);
-search('chalk');
-eq('finds by what a thing does, not only its name',
-   cards().length > 1, true);
+// the reason it is names only: "run" is in half the relic table's rule text,
+// and searching that buried the die the player was actually typing for
+search('run');
+eq('typing run finds the Runt Die', ids(), ['runt']);
+eq('and nothing else', cards().length, 1);
 search('zzzz');
 eq('an empty result says so', cards().length, 0);
 eq('with a message about the search', /answers to that name/.test($('arcRoster').textContent), true);
@@ -175,25 +198,22 @@ eq('clearing restores the rack', cards().length, 52);
 eq('and the field with it', $('arcSearch').value, '');
 eq('the clear button goes away again', shown($('arcSearchClear')), false);
 
-console.log('\n9. a filtered view survives what happens inside it');
+console.log('\n10. a filtered view survives what happens inside it');
 {
   G.Meta.data.marrow = 999; G.renderArchive();
-  click(chip('arcGroupChips','group','die'));
-  click(chip('arcStateChips','filter','buy'));
-  const before = cards().length;
-  eq('a rack of affordable dice', before > 0, true);
+  pick('arcGroupBtn','arcGroupList','die');
+  pick('arcStateBtn','arcStateList','buy');
+  eq('a rack of affordable dice', cards().length > 0, true);
   // setting one aside re-renders; the view must not reset to everything
-  G.Meta.data.marrow = 999;
   G.toggleItem('die','bone');
   G.renderArchive({fresh:false});
-  eq('still on the same filter', chip('arcGroupChips','group','die').classList.contains('on'), true);
-  eq('still on the same state', chip('arcStateChips','filter','buy').classList.contains('on'), true);
+  eq('still on the same group', chosen('arcGroupBtn'), 'DICE');
+  eq('still on the same state', chosen('arcStateBtn'), 'AFFORDABLE');
   G.toggleItem('die','bone');
-  click(chip('arcStateChips','filter','all'));
-  click(chip('arcGroupChips','group','all'));
+  click($('btnArcClearFilters'));
 }
 
-console.log('\n10. the entrance animation is for new racks only');
+console.log('\n11. the entrance animation is for new racks only');
 // replaying fifty-two entrances on every click is the blink the Ossuary's
 // cards were fixed for, so a touched rack must not carry the class
 G.renderArchive();
@@ -202,7 +222,36 @@ G.renderArchive({fresh:false});
 eq('a touched rack is not', $('arcRoster').classList.contains('fresh'), false);
 eq('but the tiles are all still there', cards().length, 52);
 
-console.log('\n11. the Oaths sit in a row, not in four wide bars');
+console.log('\n12. the panel holds still whatever is in it');
+// it used to size to content, so filtering the rack down or swapping tabs
+// moved the frame under the pointer on the way to the thing being clicked
+{
+  const H = () => Math.round($('menuArchive').querySelector('.arcPanel').getBoundingClientRect().height);
+  const full = H();
+  search('zzzz');                                  // an empty rack
+  eq('an empty rack does not shrink the panel', H(), full);
+  search('');
+  pick('arcGroupBtn','arcGroupList','chalk');      // four cards
+  eq('four cards do not shrink it either', H(), full);
+  click($('btnArcClearFilters'));
+  click($('arcTabOaths'));
+  eq('nor does the other tab', H(), full);
+  click($('arcTabRoster'));
+  eq('and it is the same on the way back', H(), full);
+}
+
+console.log('\n13. nothing on the rack moves under the pointer');
+// a tile that lifts on hover slides the loadout switch out from under a click
+{
+  const hoverRules = [...window.document.styleSheets[0].cssRules]
+    .filter(r => r.selectorText && /arcCard|oathCard|aSwitch/.test(r.selectorText) &&
+                 /:hover/.test(r.selectorText));
+  eq('some hover styling exists at all', hoverRules.length > 0, true);
+  eq('but none of it translates anything',
+     hoverRules.filter(r => /translate/.test(r.style.transform || '')).map(r => r.selectorText), []);
+}
+
+console.log('\n14. the Oaths sit in a row, not in four wide bars');
 {
   click($('arcTabOaths'));
   eq('one grid holds them', $('arcOaths').querySelectorAll('.oathGrid').length, 1);

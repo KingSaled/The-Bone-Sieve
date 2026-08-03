@@ -46,6 +46,7 @@ syntax error anywhere in the game fails the run even if no suite covers it.
 | `test-oaths.js` | The four Rite ladders, and what they do to a real started run (jsdom) |
 | `test-loadout.js` | §11 switches: owned content set aside, and gone from shop and boon draws (jsdom) |
 | `test-archive-view.js` | The screen itself: panel, tabs, filters, search — with the real CSS loaded |
+| `test-shell.js` | Game-wide furniture: the one close button, the title screen, the ornament |
 
 ## Seeing it: `shoot.js`
 

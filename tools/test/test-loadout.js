@@ -121,8 +121,9 @@ console.log('\n4. it still reads as OWNED, not as locked');
   // the two are different states and must not collapse into one look
   eq('a locked plaque is a different thing entirely',
      classesOf('relic','ash').includes('off'), false);
-  // the count lives on the SET ASIDE filter chip now, not on a section header
-  eq('the filter chip counts it', /SET ASIDE<b>1<\/b>/.test($('arcStateChips').innerHTML), true);
+  // the count lives on the SET ASIDE filter option now, not on a section header
+  eq('the filter option counts it',
+     /SET ASIDE<\/span><b>1<\/b>/.test($('arcStateList').innerHTML), true);
 }
 
 console.log('\n5. it leaves the next run\'s pool, and the Ossuary stops offering it');
@@ -141,7 +142,8 @@ eq('the switch reads on again', switchOf('relic','dust').classList.contains('on'
 eq('no longer marked off', classesOf('relic','dust').includes('off'), false);
 eq('back in the pool', G.runShopPool().some(i=>i.relic==='dust'), true);
 eq('and offered again', seenInShop(mkRun(8), 4000).has('relic:dust'), true);
-eq('the chip stops counting it', /SET ASIDE<b>0<\/b>/.test($('arcStateChips').innerHTML), true);
+eq('the filter option stops counting it',
+   /SET ASIDE<\/span><b>0<\/b>/.test($('arcStateList').innerHTML), true);
 
 console.log('\n7. it works the same for dice and for chalks');
 click(switchOf('die','runt'));
