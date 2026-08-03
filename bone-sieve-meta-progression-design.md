@@ -621,10 +621,42 @@ everything still choose to run, say, "no wild dice" or "no shard relics"
 for a tighter build focus or a self-imposed challenge — costs nothing to
 build since it's the same filter the unlock system already needs.
 
-> UPDATE: not built yet. The save fields (`disabledDice`/`disabledRelics`,
-> and `disabledChalks` after §2b) already exist and are honored by the
-> run-pool filter — but nothing in the UI writes to them yet. This is
-> the next phase after Phase 4 (Rites).
+> UPDATE: BUILT (Phase 5). The save fields already existed and were
+> already honoured by `dieAvailable`/`relicAvailable`/`chalkAvailable`,
+> so this phase was UI wiring and no second filter was introduced —
+> exactly as this section predicted.
+>
+> - Every **owned** plaque's footer is now a switch. Locked, gated and
+>   unaffordable entries have none: there is no loadout state to keep for
+>   something the player has not got. `toggleItem()` refuses anything
+>   unowned, so the disabled lists can never fill with ids that would
+>   silently switch content off the moment it was finally bought.
+> - Free, instant, no confirm — deliberately the opposite of the rest of
+>   the Archive. The confirm step exists because Marrow is permanent
+>   spend; a loadout choice is neither, and making it feel like one would
+>   be saying something untrue about it.
+> - **Set aside is not locked.** Locked/gated plaques dim to 62% and
+>   recede; a set-aside plaque keeps full opacity and instead drains the
+>   owned green out of itself. It reads as a thing you have and chose to
+>   leave behind, which is what it is. The `off` class rides alongside
+>   `owned` rather than replacing it.
+> - Group headers gain an `N SET ASIDE` count, shown only when any are.
+> - **Setting everything aside is allowed.** §11 exists to let a player
+>   impose their own constraints and refusing the extreme end of that
+>   would be the system second-guessing its own point. The Ossuary
+>   handles an empty counter without complaint, so the only addition is
+>   an Archive banner saying so up front rather than letting it be
+>   discovered at the first shop.
+> - **The Deep Chalk boon follows the loadout for free.** §2b's
+>   suppression already asked the run snapshot whether a chalk ware could
+>   exist, so setting every chalk aside withholds that boon with no new
+>   code — and switching one back on revives it.
+> - A live descent is untouched, via the same snapshot that protects it
+>   from mid-run unlocks. Worth recording why the `menuMode && S`
+>   re-snapshot in `toggleItem`/`buyUnlock` is safe: every route into the
+>   menu (boot, abandoning, returning after a death) replaces `S` with a
+>   fresh state *before* `openMenu()`, so there is no path that reaches
+>   the Archive with a run in progress.
 
 ---
 

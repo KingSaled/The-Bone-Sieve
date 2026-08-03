@@ -44,6 +44,7 @@ syntax error anywhere in the game fails the run even if no suite covers it.
 | `test-archive-ui.js` | The Archive, driven by real clicks (jsdom) |
 | `test-chalk-wipe.js` | Chalk gating, the deepchalk boon, SCOUR THE ARCHIVE (jsdom) |
 | `test-oaths.js` | The four Rite ladders, and what they do to a real started run (jsdom) |
+| `test-loadout.js` | §11 switches: owned content set aside, and gone from shop and boon draws (jsdom) |
 
 ## What they do not cover
 

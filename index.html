@@ -1757,6 +1757,50 @@
   .arcItem.gated{opacity:.62;}
   .arcItem.gated .aFoot{color:var(--neon-p);}
 
+  /* ---- set aside (design §11) ----
+     Deliberately NOT the locked treatment. Locked means "you have not earned
+     this"; set aside means "you own it and chose to leave it behind", and the
+     two must never be mistaken for each other. So this keeps FULL opacity —
+     the plaque does not recede the way a locked one does — and instead drains
+     the owned green out of it. What changes is colour and the switch, not
+     presence. */
+  .arcItem.owned.off{background:linear-gradient(168deg,#242030,#1a1622 62%,#110e18);}
+  .arcItem.owned.off .aName{color:var(--bone-dim);}
+  .arcItem.owned.off .aIco .ic{color:#6f6684;}
+  .arcItem.owned.off::before{opacity:.3;}
+
+  /* the loadout switch. Small, and the only control on this screen that is
+     free and reversible, so it says what it will do rather than what it costs */
+  .aSwitch{appearance:none;background:none;border:0;padding:0;cursor:pointer;
+    display:flex;align-items:center;gap:8px;font:800 12px var(--font-mono);
+    letter-spacing:.4px;color:var(--bone-faint);
+    transition:color .16s linear;}
+  .aSwitch .sTrack{position:relative;width:26px;height:13px;border-radius:7px;flex:0 0 auto;
+    background:#16121f;border:1px solid #3d3550;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.8);transition:background .16s linear,
+      border-color .16s linear;}
+  .aSwitch .sKnob{position:absolute;top:1px;left:1px;width:9px;height:9px;border-radius:50%;
+    background:#6f6684;transition:transform .16s var(--ease), background .16s linear;}
+  .aSwitch.on{color:var(--neon-g);}
+  .aSwitch.on .sTrack{background:#16301f;border-color:var(--neon-g);}
+  .aSwitch.on .sKnob{transform:translateX(13px);background:var(--neon-g);
+    box-shadow:0 0 8px rgba(94,222,138,.7);}
+  .aSwitch:hover{color:var(--bone);}
+  .aSwitch:hover .sTrack{border-color:var(--line-hi);}
+  .aSwitch.on:hover{color:#9df3bb;}
+  .aSwitch:focus-visible{outline:2px solid var(--gold);outline-offset:3px;}
+
+  /* how many of a group are set aside — only drawn when any are */
+  .arcAside{margin-left:9px;font:800 11px var(--font-mono);letter-spacing:1px;
+    color:#c9a05e;font-style:normal;}
+
+  /* the one case the toggles can talk a player into: an empty Ossuary */
+  .arcWarn{display:flex;align-items:center;gap:10px;margin-bottom:14px;
+    padding:10px 14px;border:1px solid #5c4a27;border-left-width:3px;
+    background:linear-gradient(180deg,rgba(46,35,14,.5),rgba(24,18,8,.4));
+    font-family:var(--font-mono);font-size:12px;line-height:1.5;color:#e2c489;}
+  .arcWarn .ic{font-size:19px;color:#c9a05e;flex:0 0 auto;}
+
   /* ---- the two tabs ----
      Underlined rather than boxed: the ledger bar directly above is already a
      hard-edged slab, and a second one would fence the roster in on both
@@ -4248,9 +4292,13 @@ for(const b of BOONS) BOON_BY_ID[b.id] = b;
 //  │      snapshotted into the run by riteSnapshot()        (phase 4) │
 //  │      (the player reads them as THE OATHS: see RITES below)       │
 //  │                                                                  │
+//  │    · the loadout toggles of §11 — disabled* written by           │
+//  │      toggleItem(), read by the same filter as the unlocks        │
+//  │                                                        (phase 5) │
+//  │                                                                  │
 //  │  STILL WITHHELD: the story fields of §12 are reserved and        │
-//  │  untouched, and the loadout toggles of §11 are honoured by the   │
-//  │  pool filter but have no UI writing to them.                     │
+//  │  untouched. Nothing writes storyBeatsFired or storyComplete yet, │
+//  │  and no Archive entry renders as ??? — that needs content first. │
 //  └──────────────────────────────────────────────────────────────────┘
 //======================================================================
 
@@ -4686,38 +4734,78 @@ const MARROW_DEPTH_GATE = {3:15, 4:25};
 function depthGateFor(tier){ return MARROW_DEPTH_GATE[tier] || 0; }
 function depthGateMet(tier){ return Meta.data.lifetime.deepestLevel >= depthGateFor(tier); }
 
+// Which ledger list a purchase lands in. One lookup, so buyUnlock never has to
+// grow a chain of ifs as kinds are added.
+const META_UNLOCK_LIST = {die:'unlockedDice', chalk:'unlockedChalks', relic:'unlockedRelics'};
+// ...and its opposite number for design §11's loadout toggles. Same shape on
+// purpose: everything below can then treat "is it unlocked" and "is it switched
+// on" as two reads of the same kind rather than two subsystems.
+const META_DISABLE_LIST = {die:'disabledDice', chalk:'disabledChalks', relic:'disabledRelics'};
+
+function itemDisabled(kind, id){
+  const list = META_DISABLE_LIST[kind];
+  return !!list && Meta.data[list].includes(id);
+}
+
+// Design §11. Unlocking is permanent and costs Marrow; this costs nothing and
+// reverses on the next click. It is a LOADOUT choice — "no wild dice this run"
+// — so there is no confirmation and no spend, and deliberately no symmetry
+// with the purchase flow beyond sitting on the same plaque.
+//
+// Only an owned thing can be set aside. Refusing on anything else is not
+// defensive noise: it keeps the disabled lists from filling with ids the player
+// has never owned, which would then silently switch content off at the moment
+// they finally bought it.
+function toggleItem(kind, id){
+  const row = archiveRoster().find(e => e.kind === kind && e.id === id);
+  if(!row || !row.owned) return false;
+  const list = META_DISABLE_LIST[kind];
+  if(!list) return false;
+  const arr = Meta.data[list], at = arr.indexOf(id);
+  if(at >= 0) arr.splice(at, 1); else arr.push(id);
+  Meta.save();
+  // Same reasoning as buyUnlock: at the menu S is holding a stale snapshot from
+  // the last freshState(), and the Grimoire reads that rather than the ledger.
+  // A live run is deliberately NOT touched — its pool was fixed when it began.
+  if(menuMode && S) S.wares = runShopPool();
+  return true;
+}
+
 // One row per gateable thing in the game, dice first, tiers ascending. The
 // Archive renders straight off this, so what the screen shows and what the
 // unlock actually does can never drift.
+//
+// `owned` and `off` are two different questions and both are answered here:
+// owned is whether it has been paid for, off is whether the player has set it
+// aside for now. Nothing that is not owned can be off.
 function archiveRoster(){
   const out = [];
+  const row = (kind, id, src, extra) => Object.assign(
+    {kind, id, name:src.name, icon:src.icon, desc:src.desc, off:itemDisabled(kind, id)},
+    extra);
   for(const id of DIE_ORDER){
     // A die with no ware entry has no shard price to convert, so it cannot be
     // priced and is not Archive content. Nothing is in that state today; the
     // guard is here for the story-generated dice of design §12A, which are
     // granted outright and must never turn up as a purchase.
     if(!(id in DIE_PRICE)) continue;
-    const T = DIE_TYPES[id];
-    out.push({kind:'die', id, name:T.name, icon:T.icon, desc:T.desc,
-              tier:DIE_TIER[id], price:marrowPrice(DIE_PRICE[id]),
-              owned:Meta.data.unlockedDice.includes(id)});
+    out.push(row('die', id, DIE_TYPES[id], {
+      tier:DIE_TIER[id], price:marrowPrice(DIE_PRICE[id]),
+      owned:Meta.data.unlockedDice.includes(id)}));
   }
   for(const w of CHALK_WARES){
-    out.push({kind:'chalk', id:w.id, name:w.name, icon:w.icon, desc:w.desc,
-              tier:w.tier, price:marrowPrice(w.price),
-              owned:Meta.data.unlockedChalks.includes(w.id)});
+    out.push(row('chalk', w.id, w, {
+      tier:w.tier, price:marrowPrice(w.price),
+      owned:Meta.data.unlockedChalks.includes(w.id)}));
   }
   for(const id in RELICS){
     const r = RELICS[id];
-    out.push({kind:'relic', id, name:r.name, icon:r.icon, desc:r.desc,
-              tier:r.tier, price:marrowPrice(r.price),
-              owned:Meta.data.unlockedRelics.includes(id)});
+    out.push(row('relic', id, r, {
+      tier:r.tier, price:marrowPrice(r.price),
+      owned:Meta.data.unlockedRelics.includes(id)}));
   }
   return out;
 }
-// Which ledger list a purchase lands in. One lookup, so buyUnlock never has to
-// grow a chain of ifs as kinds are added.
-const META_UNLOCK_LIST = {die:'unlockedDice', chalk:'unlockedChalks', relic:'unlockedRelics'};
 
 // The one place a purchase happens. Returns true only if the ledger actually
 // changed, so the caller never has to re-derive whether it worked.
@@ -9393,8 +9481,21 @@ function arcState(e){
   if(!depthGateMet(e.tier)) return 'gated';
   return Meta.data.marrow >= e.price ? 'buy' : 'locked';
 }
+// An owned plaque's footer is the loadout switch (design §11) — the only
+// control in the Archive that costs nothing and undoes itself. It is a real
+// button rather than the whole plaque, so that reading a 52-entry grid can
+// never switch something off by accident, and so it can carry aria-pressed.
+//
+// Nothing that is not owned gets one: there is no state to keep for a thing
+// the player has not got yet.
 function arcFoot(e, state){
-  if(state === 'owned')  return icon('sealCheck') + 'IN THE POOL';
+  if(state === 'owned'){
+    return '<button type="button" class="aSwitch' + (e.off ? '' : ' on') + '"' +
+             ' aria-pressed="' + (e.off ? 'false' : 'true') + '">' +
+             '<i class="sTrack"><i class="sKnob"></i></i>' +
+             '<span>' + (e.off ? 'SET ASIDE' : 'IN THE POOL') + '</span>' +
+           '</button>';
+  }
   if(state === 'gated')  return icon('stairs') + 'REACH DESCENT ' + depthGateFor(e.tier);
   return icon('bone') + e.price + (state === 'locked' ? ' — NOT ENOUGH' : '');
 }
@@ -9410,13 +9511,28 @@ function renderArchive(){
 
   const roster = archiveRoster();
   let h = '';
+  // Setting everything aside is allowed — design §11 exists to let a player
+  // impose their own constraints, and refusing the extreme end of that would
+  // be the system second-guessing the point of itself. But an Ossuary with
+  // nothing to lay out is a screen that does nothing when it opens, so it is
+  // said out loud here rather than discovered at the first shop.
+  if(!runShopPool().length)
+    h += '<div class="arcWarn">' + icon('warningOctagon') +
+         'Everything is set aside. The Ossuary will have nothing to lay out, ' +
+         'and the next rite will be run on its opening bones alone.</div>';
   for(const group of [{kind:'die',   label:'THE BONES'},
                       {kind:'chalk', label:'THE CHALKS'},
                       {kind:'relic', label:'THE RELICS'}]){
     const mine = roster.filter(e => e.kind === group.kind);
     const owned = mine.filter(e => e.owned).length;
+    // How many of this group are set aside, shown only when any are. A player
+    // mid-loadout wants that number more than they want the owned count, and a
+    // player who has never touched a switch should never have to read it.
+    const aside = mine.filter(e => e.owned && e.off).length;
     h += '<div class="arcGroup">' + group.label +
-         '<em class="arcCount">' + owned + '/' + mine.length + '</em></div>';
+         '<em class="arcCount">' + owned + '/' + mine.length +
+         (aside ? '<b class="arcAside">' + aside + ' SET ASIDE</b>' : '') +
+         '</em></div>';
     for(const tier of [1,2,3,4]){
       const rows = mine.filter(e => e.tier === tier);
       if(!rows.length) continue;
@@ -9426,7 +9542,10 @@ function renderArchive(){
       h += '<div class="arcGrid">';
       for(const e of rows){
         const state = arcState(e);
-        h += '<div class="arcItem tier' + e.tier + ' ' + state + '"' +
+        // `off` rides alongside `owned` rather than replacing it. Set aside is
+        // a state of a thing you HAVE; locked is a thing you have not earned.
+        // Collapsing them into one dimmed look would say the wrong thing.
+        h += '<div class="arcItem tier' + e.tier + ' ' + state + (e.off ? ' off' : '') + '"' +
                ' data-kind="' + e.kind + '" data-id="' + e.id + '">' +
                '<div class="aIco">' + icon(e.icon) + '</div>' +
                '<div class="aBody">' +
@@ -9555,9 +9674,24 @@ function askOathBuy(key){
 function closeArchiveBuy(){ arcPending = null; hide('arcConfirmOverlay'); }
 
 $('arcRoster').addEventListener('mouseenter', e=>{
-  if(e.target.closest && e.target.closest('.arcItem.buy')) sfx('hover');
+  if(!e.target.closest) return;
+  if(e.target.closest('.arcItem.buy') || e.target.closest('.aSwitch')) sfx('hover');
 }, true);
 $('arcRoster').onclick = ev=>{
+  // The loadout switch first: it lives inside an owned plaque, which is never
+  // buyable, so the two paths can never both want the same click.
+  const sw = ev.target.closest('.aSwitch');
+  if(sw){
+    const owner = sw.closest('.arcItem');
+    if(!owner) return;
+    const wasOff = owner.classList.contains('off');
+    if(!toggleItem(owner.dataset.kind, owner.dataset.id)) return;
+    // Borrowed from the altar: socketing is a thing joining, snatching is a
+    // thing being taken back off. Same two gestures, so they sound the same.
+    sfx(wasOff ? 'socket' : 'snatch');
+    renderArchive();
+    return;
+  }
   const el = ev.target.closest('.arcItem');
   if(!el || !el.classList.contains('buy')) return;
   askArchiveBuy(el.dataset.kind, el.dataset.id);
