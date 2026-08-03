@@ -1,0 +1,15 @@
+{
+  "name": "bone-sieve-test",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Test harnesses for The Bone Sieve. They drive the real code and the real markup lifted straight out of index.html.",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node run-all.js",
+    "test:verbose": "node run-all.js --verbose",
+    "extract": "node extract.js"
+  },
+  "dependencies": {
+    "jsdom": "^30.0.1"
+  }
+}
