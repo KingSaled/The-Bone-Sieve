@@ -110,10 +110,14 @@
   .ic{width:1em;height:1em;display:inline-block;flex:0 0 auto;
       fill:currentColor;vertical-align:-0.14em;}
 
-  ::-webkit-scrollbar{width:8px;height:8px;}
-  ::-webkit-scrollbar-track{background:var(--ink);}
-  ::-webkit-scrollbar-thumb{background:var(--line);border:1px solid var(--panel3);}
-  ::-webkit-scrollbar-thumb:hover{background:var(--line-hi);}
+  /* No visible scrollbars anywhere — the scrolling itself is untouched.
+     A themed scrollbar is still a grey rail down the edge of a crypt panel,
+     and it was fighting every border and corner control it sat beside: the
+     Veil's close button ended up half over one. Every scrolling region in this
+     game is an obvious one (a roster, a rules page, a settings panel), so the
+     affordance is not carrying any weight worth the visual cost. */
+  *{scrollbar-width:none;-ms-overflow-style:none;}
+  ::-webkit-scrollbar{width:0;height:0;display:none;}
 
   /* ================= KEYFRAMES ================= */
   @keyframes bump{0%{transform:scale(1);}28%{transform:scale(1.32);}100%{transform:scale(1);}}
@@ -603,11 +607,72 @@
   .hudBtn:hover{border-color:var(--neon-p);box-shadow:0 0 20px rgba(176,77,255,.4);
     transform:translateY(-2px);}
 
+  /* ---------- THE CLOSE BUTTON ----------
+     One X for the whole game. There were three before — a ghosted outline on
+     the changelog, a small stone button in the Grimoire, and nothing at all on
+     the Veil — so the single most-used control in the UI looked different
+     everywhere it appeared.
+
+     Square with radiused corners, carrying the same blood the .primary buttons
+     carry, and it DOES NOT MOVE. The base button rule lifts 3px on hover and
+     drops 3px on press, which on a control pinned to a panel corner reads as a
+     wobble and slides the target out from under the pointer. Here the hover is
+     a glow and nothing else — the specificity of `.xClose:hover:not(:disabled)`
+     is what beats `button:hover:not(:disabled)`'s translate. */
+  .xClose{--btn-edge:#1a0207; --btn-rim:rgba(255,180,190,.16);
+    width:32px;height:32px;padding:0;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:9px;border:1px solid var(--crimson);color:#ffd2da;
+    background:
+      radial-gradient(50% 300% at 50% 35%,rgba(200,27,54,.80),rgba(200,27,54,0) 72%),
+      radial-gradient(46% 260% at 50% 70%,rgba(42,2,8,.90),rgba(42,2,8,0) 70%),
+      radial-gradient(48% 280% at 50% 60%,rgba(200,27,54,.50),rgba(200,27,54,0) 74%),
+      radial-gradient(44% 240% at 50% 30%,rgba(42,2,8,.80),rgba(42,2,8,0) 70%),
+      linear-gradient(180deg,#710d1d,#33030d);
+    background-size:130px 100%,105px 100%,165px 100%,85px 100%,100% 100%;
+    background-repeat:repeat-x;
+    animation:btnBlood 7s linear infinite;
+    box-shadow:inset 0 1px 0 var(--btn-rim), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 4px 0 var(--btn-edge), 0 8px 18px rgba(0,0,0,.55);
+    transition:box-shadow .18s linear, border-color .18s linear, color .18s linear;}
+  /* The game's own hand, not the Phosphor glyph. That icon is an SVG on a
+     square viewBox whose drawn stroke does not fill it evenly, so it sat
+     visibly high and left inside the button however the button was centred.
+     A capital X in Hellbone is drawn on the baseline like any other letter, so
+     it is centred by the same flexbox that centres everything else —
+     `line-height:1` and a block box are what stop the font's own line metrics
+     re-introducing the offset. */
+  /* Centring this by flexbox alone does not work, and the earlier 1px nudge was
+     guesswork against the wrong box. Flexbox centres the LINE box; a display
+     face puts its ink wherever it likes inside that.
+
+     Measured at 21px (canvas actualBoundingBox against Hellbone's own metrics):
+       ink ascent 15, ink descent 1  -> ink is 16 tall, centred 7px above the
+                                        baseline
+       font ascent 18, descent 0     -> a centred line box puts the baseline
+                                        9.5px below the line-box centre
+     so the ink centre lands 2px BELOW the button's centre, which is exactly the
+     "sitting low in the box" this is correcting. Verified after: 0.0px out.
+
+     The nudge is a TRANSFORM, not a margin. A margin on a centred flex item
+     only moves the box by half of what you asked for, because the margin box
+     is what gets centred — the first attempt at this used margin and landed
+     0.75px out for exactly that reason. A transform is applied after layout
+     and moves the glyph by precisely what it says. */
+  .xClose .xG{font-family:var(--font-display);font-weight:400;font-size:21px;
+    line-height:1;display:block;transform:translateY(-2px);}
+  .xClose:hover:not(:disabled){transform:none;filter:none;
+    border-color:var(--crimson-hi);color:#fff;
+    box-shadow:inset 0 1px 0 var(--btn-rim), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 4px 0 var(--btn-edge), 0 8px 18px rgba(0,0,0,.55),
+               0 0 26px rgba(255,43,82,.75);}
+  .xClose:active:not(:disabled){transform:none;
+    box-shadow:inset 0 1px 0 var(--btn-rim), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 2px 0 var(--btn-edge), 0 0 30px rgba(255,43,82,.9);}
+  /* pinned to a panel corner rather than sitting in a row */
+  .xClose.corner{position:absolute;top:14px;right:14px;z-index:8;}
+
   /* ---------- CHANGELOG ---------- */
-  .logX{position:absolute;top:12px;right:12px;padding:6px 10px !important;
-    font-size:15px !important;background:none !important;border-color:var(--line) !important;
-    box-shadow:none !important;z-index:2;}
-  .logX:hover{border-color:var(--crimson-hi) !important;color:#fff !important;}
   #logVer{font-family:var(--font-mono);font-size:12px;letter-spacing:3px;
     color:var(--bone-faint);margin-bottom:4px;}
   #logVer b{color:var(--gold);font-weight:800;}
@@ -659,16 +724,17 @@
   #logHistory.hidden{display:none;}
 
   /* ---------- THE VEIL ----------
-     This panel carries more rows than any other, so it takes the ornament a
-     size down — --bfe is a uniform scale, so the medallions stay circular and
-     only the band gets thinner. At the Ossuary's 104px the frame's padding
-     alone ate 176px of height and pushed the buttons off a 1050px screen. */
-  #settingsOverlay{--bfe:74px;--bf-pad:62px;}
+     No ornamental frame. It overhangs its box by 18px, which put it straight
+     over the close button in the corner, and its padding alone was eating
+     124px of width and height on the panel with more rows in it than any
+     other. The Veil is a workbench, not a reveal — the same reasoning that
+     keeps it off the Archive and the Exchange. What is left is the plain
+     panel every other screen in the game is built from. */
   #settingsOverlay .modal{width:min(820px,calc(94vw / var(--ui-scale,1)));max-width:none;padding:0;
-    overflow:visible;max-height:none;
+    overflow:hidden;max-height:calc(92vh / var(--ui-scale,1));
     background:linear-gradient(170deg,#191527,#131020 44%,#0b0912);}
-  #veilBody{max-height:92vh;overflow-y:auto;overflow-x:hidden;
-    padding:var(--bf-pad) calc(var(--bf-pad) + 10px);}
+  #veilBody{max-height:calc(92vh / var(--ui-scale,1));overflow-y:auto;overflow-x:hidden;
+    padding:26px 30px 24px;}
   /* no sigil above the title here — the Veil is a workbench, not a reveal, and
      the emblem was only buying vertical space the controls needed */
   #settingsOverlay h2{color:#e9d4ff;font-size:clamp(32px,3.4vw,44px);margin-bottom:6px;
@@ -876,7 +942,8 @@
     letter-spacing:3px;color:var(--bone);text-shadow:0 0 18px rgba(214,31,60,.5);
     display:flex;align-items:center;gap:10px;}
   #grimHead h3 .ic{color:var(--neon-p);font-size:23px;}
-  #btnGrimClose{padding:5px 11px;font-size:15px;}
+  #btnGrimClose{width:32px;height:32px;}
+  #btnGrimClose .ic{font-size:15px;}
   #grimTabs{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap;}
   .gtab{font-family:var(--font-ui);font-size:12px;letter-spacing:2px;padding:7px 11px;
     background:var(--panel2);border:1px solid var(--line);cursor:pointer;color:var(--bone-dim);
@@ -931,11 +998,13 @@
   .modal .sigil{font-size:56px;color:var(--crimson);margin-bottom:8px;line-height:1;
     filter:drop-shadow(0 0 24px rgba(214,31,60,.75));animation:flicker 6s linear infinite;}
   #menuOverlay h2{font-size:44px;color:var(--bone);}
-  .rules{font-family:var(--font-mono);font-size:15px;
-    color:var(--bone-dim);text-align:left;margin:0 auto 22px;max-width:600px;line-height:1.8;}
-  .rules b{color:var(--bone);}
-  .rules .k{color:var(--crimson-hi);} .rules .g{color:var(--neon-g);} .rules .p{color:var(--neon-p);}
-  .rules .ic{font-size:15.5px;vertical-align:-.2em;}
+  /* The three colours the rules use to name a thing the game colours the same
+     way everywhere else: a conduit and a Trial in crimson, shards and boons in
+     green, the multiplier and decrees in violet. Scoped to the section rather
+     than to the old single .rules block that used to wrap the whole screen. */
+  .ruleSec .k{color:var(--crimson-hi);}
+  .ruleSec .g{color:var(--neon-g);}
+  .ruleSec .p{color:var(--neon-p);}
 
   /* ---------- TITLE SCREEN ----------
      A real title screen: the HUD is hidden, the sieve is cleared away and the
@@ -973,54 +1042,176 @@
                 0 0 110px rgba(176,77,255,.35), 0 6px 0 #2a0208;}
   #menuTitle em{font-style:normal;color:var(--crimson-hi);
     text-shadow:0 0 14px rgba(255,43,82,.9), 0 0 70px rgba(214,31,60,.75), 0 6px 0 #1a0105;}
-  .menuRule{display:flex;align-items:center;gap:14px;margin:20px 0 8px;width:min(420px,74vw);}
-  .menuRule span{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--line-hi),transparent);}
-  .menuRule .ic{font-size:15px;color:var(--crimson);}
-  .menuTag{font-family:var(--font-ui);font-size:13.5px;letter-spacing:8px;
-    color:var(--bone-dim);animation:breathe 6s ease-in-out infinite;}
-  .menuNav{display:flex;flex-direction:column;gap:2px;margin:34px 0 30px;}
+  /* The pitch, as a banner. Rules run out to either side of it so it reads as
+     something struck into the page rather than a caption under the logo. */
+  .menuBanner{display:flex;align-items:center;gap:16px;margin:22px 0 6px;
+    width:min(560px,86vw);}
+  .menuBanner .mbEdge{flex:1;height:1px;
+    background:linear-gradient(90deg,transparent,var(--crimson) 60%,var(--crimson-hi));}
+  .menuBanner .mbEdge:last-child{transform:scaleX(-1);}
+  /* The UI face, not the display one. The title directly above is already
+     Hellbone; setting the line under it in the same hand made the two compete
+     and turned the pitch into more texture. A clean face at a larger size with
+     the crimson behind it reads as a strapline and is legible at a glance,
+     which a tagline has to be. */
+  .menuBanner .mbText{font-family:var(--font-ui);font-weight:700;
+    font-size:clamp(14px,1.5vw,17px);letter-spacing:9px;white-space:nowrap;
+    color:#f3e3d0;padding:0 4px;
+    text-shadow:0 0 20px rgba(214,31,60,.85), 0 0 54px rgba(214,31,60,.45);
+    animation:breathe 6s ease-in-out infinite;}
+
+  /* ---- the nav ----
+     These used to opt out of the button material entirely — background, border
+     and shadow all cleared with !important — which left floating text that did
+     not read as pressable. The base `button` rule already draws carved stone
+     with a chisel grain and a cut edge, so the fix is to stop refusing it. */
+  .menuNav{display:flex;flex-direction:column;gap:12px;margin:30px 0 26px;}
+
+  /* ---- HEWN STONE ----
+     The previous pass got these onto the button material and stopped there,
+     which left four slate-grey slabs. The base material is a rounded block
+     with a chisel grain; stone that has been CUT is a different thing � it has
+     broken corners, a lit top face, a shadowed foot, pitting, and a fracture
+     running through it.
+
+     Built entirely in gradients, no image:
+       � clip-path knocks the four corners off, so the silhouette is a split
+         block rather than a rounded rectangle
+       � one steep linear-gradient does the whole depth read � lit face at the
+         top, body, then a dark foot and the cut side beneath it
+       � four small radial-gradients are pits in the surface
+       � two offset diagonals are one fracture: a dark crack with a lit lip
+         along its upper side, which is what makes it read as split rather
+         than drawn on
+       � the grain from the base rule stays underneath all of it
+
+     Darker and colder than the base button, and tinted toward violet, so it
+     belongs to this game rather than to a generic UI kit.
+
+     The outer glow on hover is a `filter: drop-shadow`, not a box-shadow:
+     clip-path clips box-shadows to the cut silhouette, so an outer shadow
+     simply would not render. drop-shadow follows the clipped shape instead. */
+  /* --bevel is the corner cut, and both layers below share it so the rim
+     follows the chamfer instead of squaring off across it. */
   .menuItem{
-    background:none !important;border:none !important;box-shadow:none !important;
-    font-family:var(--font-ui);font-weight:700;font-size:19px;letter-spacing:5px;
-    color:var(--bone-dim);padding:12px 54px;position:relative;
-    justify-content:center;min-width:340px;
-    transition:color .18s linear, letter-spacing .3s var(--ease-out), transform .2s var(--ease);
+    --s-lit:#3a3049;          /* top face */
+    --s-mid:#241d31;
+    --s-dark:#150f1e;         /* shadowed foot */
+    --s-cut:#0b0812;          /* the side it was split from */
+    --s-ring:rgba(0,0,0,.6);
+    --bevel:11px;
+    font-size:17px;letter-spacing:4px;padding:17px 30px;
+    min-width:min(400px,88vw);justify-content:center;
+    color:#b7abc6;border:0;border-radius:0;overflow:visible;
+    /* A shallow chamfer, in px on both axes. The previous cut was 20px wide by
+       27% of the height, which on a 57px slab is a 15px vertical run — an
+       angle steep enough to read as a spike rather than a broken corner. */
+    clip-path:polygon(var(--bevel) 0, calc(100% - var(--bevel)) 0,
+                      100% var(--bevel), 100% calc(100% - var(--bevel)),
+                      calc(100% - var(--bevel)) 100%, var(--bevel) 100%,
+                      0 calc(100% - var(--bevel)), 0 var(--bevel));
+    /* the rim IS the element; the stone is the inset layer on top of it, which
+       is the only way to get a 1px outline that turns the corners — an inset
+       box-shadow ring is a rectangle and gets sliced off by the clip */
+    background:var(--s-ring);
+    box-shadow:none;
+    transition:color .18s linear, filter .2s linear;
   }
-  .menuItem::after{display:none;}
-  .menuItem .ic{position:absolute;left:20px;top:50%;margin-top:-9px;font-size:19px;
-    color:var(--crimson-hi);opacity:0;transform:translateX(-8px);
-    transition:opacity .2s linear, transform .2s var(--ease-out);}
-  .menuItem::before{content:'';position:absolute;left:8px;top:20%;bottom:20%;width:2px;
-    background:var(--crimson);transform:scaleY(0);transform-origin:center;
-    transition:transform .22s var(--ease-out);}
-  .menuItem:hover{color:#fff;letter-spacing:7px;transform:translateX(8px) translateY(-2px);}
-  .menuItem:hover::before{transform:scaleY(1);}
-  .menuItem:hover .ic{opacity:1;transform:translateX(0);}
-  /* The title screen assembles itself: mark, then name, then rule, then the
-     list, then the small print. Everything arriving at once read as a page
-     that had simply loaded; staged, it reads as a rite being set.
-     `backwards` and not `both` on the nav — a filled animation keeps applying
-     its final transform forever, which would beat .menuItem:hover's translate
-     and leave the whole list unable to move under the cursor. */
-  #menuHome #menuTitle{animation:titleBurn .85s .18s var(--ease-out) both;}
-  #menuHome .menuRule{animation:fadeIn .6s .55s linear both;}
-  #menuHome .menuTag{animation:fadeIn .6s .68s linear both,
-                               breathe 6s 1.3s ease-in-out infinite;}
-  #menuHome .menuItem{animation:rowIn .5s var(--ease-out) backwards;}
-  #menuHome .menuItem:nth-child(1){animation-delay:.80s;}
-  #menuHome .menuItem:nth-child(2){animation-delay:.87s;}
-  #menuHome .menuItem:nth-child(3){animation-delay:.94s;}
-  #menuHome .menuItem:nth-child(4){animation-delay:1.01s;}
-  #menuHome .menuItem:nth-child(5){animation-delay:1.08s;}
-  #menuHome .menuFoot,#menuHome .menuVer{animation:fadeIn .7s 1.2s linear both;}
-  .menuFoot{font-family:var(--font-mono);font-size:13.5px;font-style:italic;
-    color:var(--bone-faint);letter-spacing:1px;}
-  .menuVer{font-family:var(--font-mono);font-size:11px;letter-spacing:2px;
-    color:#4a4456;margin-top:12px;cursor:pointer;transition:color .15s linear;}
+  .menuItem::before{
+    content:'';position:absolute;inset:1px;z-index:0;pointer-events:none;
+    clip-path:polygon(var(--bevel) 0, calc(100% - var(--bevel)) 0,
+                      100% var(--bevel), 100% calc(100% - var(--bevel)),
+                      calc(100% - var(--bevel)) 100%, var(--bevel) 100%,
+                      0 calc(100% - var(--bevel)), 0 var(--bevel));
+    background:
+      /* pitting, kept to the ends where a real block chips */
+      radial-gradient(circle at 8% 64%, rgba(0,0,0,.32) 0 2.4px, transparent 3px),
+      radial-gradient(circle at 11% 74%, rgba(0,0,0,.22) 0 1.6px, transparent 2.2px),
+      radial-gradient(circle at 91% 33%, rgba(0,0,0,.28) 0 2.1px, transparent 2.7px),
+      radial-gradient(circle at 94% 44%, rgba(0,0,0,.18) 0 1.4px, transparent 2px),
+      /* chisel grain */
+      repeating-linear-gradient(64deg, rgba(255,255,255,.016) 0 2px, transparent 2px 7px),
+      repeating-linear-gradient(-19deg, rgba(0,0,0,.05) 0 3px, transparent 3px 9px),
+      /* lit top face, body, shadowed foot, cut side */
+      linear-gradient(176deg, var(--s-lit) 0 7%, var(--s-mid) 36%,
+                      var(--s-dark) 86%, var(--s-cut));
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.075),
+               inset 0 -7px 14px rgba(0,0,0,.6);
+    transition:background .2s linear, box-shadow .2s linear;
+  }
+  .menuItem span{position:relative;z-index:1;}
+  .menuItem:hover:not(:disabled), .menuItem:active:not(:disabled){transform:none;}
+  .menuItem:hover:not(:disabled){
+    --s-lit:#4a3a5e; --s-mid:#2e2440;
+    --s-ring:rgba(255,43,82,.85);
+    color:#fff;
+    filter:drop-shadow(0 0 10px rgba(214,31,60,.55))
+           drop-shadow(0 0 22px rgba(214,31,60,.3));}
+  .menuItem:hover:not(:disabled)::before{
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.1),
+               inset 0 -7px 14px rgba(0,0,0,.55),
+               inset 0 0 26px rgba(214,31,60,.22);}
+  /* pressed: it settles into its own socket rather than sliding down the
+     screen � a translate here is what makes a click miss */
+  .menuItem:active:not(:disabled){filter:brightness(.9);}
+  .menuItem:active:not(:disabled)::before{
+    box-shadow:inset 0 3px 10px rgba(0,0,0,.75),
+               inset 0 0 26px rgba(214,31,60,.16);}
+
+  /* the one the player came for: the same block, cut from bloodier rock */
+  #miStart{--s-lit:#5a2130; --s-mid:#3d1220; --s-dark:#250810; --s-cut:#150307;
+    --s-ring:rgba(214,31,60,.6); color:#f0d5da;}
+  #miStart:hover:not(:disabled){--s-lit:#712a3c; --s-mid:#4d1728;
+    --s-ring:rgba(255,43,82,.95);
+    filter:drop-shadow(0 0 12px rgba(214,31,60,.7))
+           drop-shadow(0 0 26px rgba(214,31,60,.45));}
+
+  /* ---- settings, in the corner ---- */
+  .menuCorner{position:absolute;top:22px;right:24px;z-index:6;
+    font-size:12px;letter-spacing:2.6px;padding:9px 15px;gap:10px;
+    color:var(--bone-dim);}
+  .menuCorner .ic{font-size:17px;color:var(--line-hi);
+    transition:color .2s linear, transform .45s var(--ease-out);}
+  .menuCorner em{font-style:normal;font-family:var(--font-mono);font-size:10px;
+    letter-spacing:1px;color:var(--bone-faint);
+    border:1px solid var(--line);border-radius:4px;padding:1px 5px;}
+  .menuCorner:hover:not(:disabled){color:#fff;border-color:var(--neon-p);
+    box-shadow:inset 0 1px 0 var(--btn-rim), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 8px 0 var(--btn-edge), 0 14px 28px rgba(0,0,0,.6),
+               0 0 22px rgba(176,77,255,.4);}
+  .menuCorner:hover .ic{color:var(--neon-p);transform:rotate(90deg);}
+  .menuCorner:hover em{color:var(--bone-dim);border-color:var(--line-hi);}
+  .menuCorner.hidden{display:none;}
+  /* The title screen assembles itself: mark, then name, then banner, then the
+     list. Everything arriving at once read as a page that had simply loaded;
+     staged, it reads as a rite being set.
+
+     THE WHOLE SEQUENCE IS NOW UNDER HALF A SECOND. It used to finish at 1.2s,
+     which is fine the first time and a wall every time after — the menu is
+     returned to constantly, from a run, from the Archive, from the Veil, and
+     waiting out an entrance to click a button you already know the position of
+     is the animation working against the player. The stagger survives because
+     it is doing something; the length does not, because it was not.
+
+     `backwards` and not `both`, for the reason the Archive's rack learned the
+     hard way: a filled animation keeps applying its final state forever and
+     silently beats every hover style on the element. */
+  #menuHome #menuTitle{animation:titleBurn .5s .04s var(--ease-out) both;}
+  #menuHome .menuBanner{animation:fadeIn .32s .22s linear both;}
+  #menuHome .menuItem{animation:rowIn .26s var(--ease-out) backwards;}
+  #menuHome .menuItem:nth-child(1){animation-delay:.30s;}
+  #menuHome .menuItem:nth-child(2){animation-delay:.35s;}
+  #menuHome .menuItem:nth-child(3){animation-delay:.40s;}
+  #menuHome .menuItem:nth-child(4){animation-delay:.45s;}
+  #menuOverlay .menuVer, #menuOverlay .menuStudio, #menuVeilBtn{
+    animation:fadeIn .3s .42s linear both;}
+  /* version and studio mark, one in each bottom corner */
+  .menuVer{position:absolute;left:24px;bottom:20px;z-index:6;
+    font-family:var(--font-mono);font-size:11px;letter-spacing:2px;
+    color:#4a4456;cursor:pointer;transition:color .15s linear;}
   .menuVer:hover{color:var(--neon-p);}
-  /* studio mark, pinned to the foot of the title screen */
-  .menuStudio{position:absolute;left:0;right:0;bottom:20px;
-    display:flex;align-items:center;justify-content:center;gap:9px;
+  .menuStudio{position:absolute;right:24px;bottom:20px;
+    display:flex;align-items:center;gap:9px;
     font-family:var(--font-ui);font-weight:700;font-size:12px;letter-spacing:4px;
     color:#57506b;text-decoration:none;
     transition:color .2s linear, letter-spacing .3s var(--ease-out);}
@@ -1032,9 +1223,46 @@
   .menuH2{font-family:var(--font-display);font-weight:400;font-size:35px;
     letter-spacing:6px;margin-bottom:20px;color:#f5ecdc;
     text-shadow:0 0 30px rgba(214,31,60,.6), 3px 3px 0 var(--crimson-dk);}
-  #menuRules .rules{background:linear-gradient(170deg,rgba(24,20,32,.86),rgba(12,10,18,.86));
-    border:1px solid var(--line);border-top:2px solid var(--crimson-dk);
-    padding:24px 28px;box-shadow:0 20px 60px rgba(0,0,0,.8);max-width:640px;}
+  /* ---- HOW TO PLAY ----
+     Built on .arcPanel so the game has one panel language rather than one per
+     screen. Numbered beats, and the conduits — the only thing on here a new
+     player genuinely has to memorise — lifted out of the prose into cards. */
+  #menuRules{max-width:none;width:min(880px,calc(94vw / var(--ui-scale,1)));}
+  #rulesBody{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;
+    padding:18px 26px 22px;}
+  .ruleSec{margin-bottom:20px;}
+  .ruleSec:last-child{margin-bottom:0;}
+  .ruleHead{display:flex;align-items:center;gap:11px;margin-bottom:8px;
+    font-family:var(--font-ui);font-weight:700;font-size:13px;letter-spacing:3.4px;
+    color:var(--bone);}
+  .ruleHead em{font-style:normal;font-family:var(--font-mono);font-size:11px;
+    width:22px;height:22px;flex:0 0 auto;border-radius:5px;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(214,31,60,.14);border:1px solid var(--crimson-dk);
+    color:var(--crimson-glow);}
+  .ruleSec p{font-family:var(--font-mono);font-size:12.5px;line-height:1.65;
+    color:var(--bone-dim);margin:0 0 0 33px;max-width:74ch;}
+  .ruleSec p b{color:var(--bone);font-weight:800;}
+  .ruleSec p i{color:var(--bone);}
+  .ruleGrid{display:grid;gap:10px;margin:11px 0 0 33px;
+    grid-template-columns:repeat(auto-fit,minmax(178px,1fr));}
+  .ruleCard{padding:11px 13px;border-radius:8px;
+    background:linear-gradient(168deg,#241f30,#181322 62%,#100c18);
+    border:1px solid var(--line);}
+  .rcName{font-family:var(--font-ui);font-weight:700;font-size:12.5px;
+    letter-spacing:2.6px;color:var(--bone);}
+  .rcMult{font-family:var(--font-mono);font-size:23px;font-weight:800;
+    color:var(--crimson-hi);letter-spacing:-.5px;margin:2px 0 4px;
+    text-shadow:0 0 16px rgba(255,43,82,.45);}
+  .rcDesc{font-family:var(--font-mono);font-size:11px;line-height:1.45;
+    color:var(--bone-faint);}
+  .ruleKeys{display:flex;flex-wrap:wrap;gap:8px;margin-left:33px;}
+  .ruleKeys span{display:flex;align-items:center;gap:8px;padding:6px 12px;
+    border-radius:6px;background:rgba(0,0,0,.34);border:1px solid var(--line);
+    font-family:var(--font-mono);font-size:11.5px;color:var(--bone-faint);}
+  .ruleKeys b{font-family:var(--font-ui);font-weight:700;font-size:11px;
+    letter-spacing:1.6px;color:var(--bone);
+    border:1px solid var(--line-hi);border-radius:4px;padding:2px 7px;}
   /* `stretch`, not `center`: a .ghost beside a .big carries less padding and a
      smaller face, so centring them left two buttons of visibly different
      heights sitting side by side on the death screen and in the Veil. Stretch
@@ -1374,14 +1602,23 @@
   @keyframes cursedPulse{0%,100%{opacity:.28;} 50%{opacity:1;}}
 
   /* ---- states ----
-     Selection reads purely through the gold outline now — a "CHOSEN" pill
-     used to straddle the card's top edge here, but it nudged the row's
-     height every time a card was picked. The outline alone is unmistakable
-     and never touches layout. */
+     Selection reads purely through the outline — a "CHOSEN" pill used to
+     straddle the card's top edge here, but it nudged the row's height every
+     time a card was picked. The outline alone is unmistakable and never
+     touches layout.
+
+     That outline is VIOLET, and must not go back to gold. Gold is tier 3's
+     rarity rim (and the gold cEtch frame that comes with it), so a gold
+     selection ring left an unselected RARE ware looking exactly like a
+     selected one — the two states were the same colour on the same edge of
+     the same element. Violet is the rite's existing "this is marked" colour:
+     marked dice, decrees, and the Culling's own selected row already use it,
+     and no rarity tier claims it. It reads clean against all four rims —
+     tier 1 grey, tier 2 steel, tier 3 gold, tier 4 crimson. */
   .card.selected .cInner{
     box-shadow:inset 0 1px 0 rgba(255,255,255,.14), inset 0 -2px 0 rgba(0,0,0,.75),
-               0 0 0 2px var(--gold), 0 0 0 3px rgba(0,0,0,.6),
-               0 30px 58px rgba(0,0,0,.72), 0 0 40px rgba(255,181,77,.45);}
+               0 0 0 2px var(--neon-p), 0 0 0 3px rgba(0,0,0,.6),
+               0 30px 58px rgba(0,0,0,.72), 0 0 40px rgba(176,77,255,.5);}
   .card.cantAfford .cInner{opacity:.5;}
   .card.sold{cursor:default;}
   .card.sold .cInner{opacity:.3;filter:grayscale(.85);}
@@ -1644,6 +1881,626 @@
   @keyframes boonLost{
     0%{transform:translateY(0) scale(1);opacity:1;filter:none;}
     100%{transform:translateY(18px) scale(.93);opacity:0;filter:grayscale(1) brightness(.5);}}
+
+  /* ================= THE ARCHIVE =================
+     The career screen, rebuilt as a panel instead of a column of content
+     floating on the title screen's fog.
+
+     Three things drove the rebuild. It had no panel of its own, so it read as
+     loose furniture over the miasma rather than as part of the game. It drew
+     all fifty-two entries at once under twelve section headers, which pushed
+     the ledger bar off the top of a 1080p screen before the player had
+     scrolled anywhere. And every plaque sized itself to its own sentence, so
+     no two rows in a grid ever lined up.
+
+     The answers, in order: a bordered panel with a fixed height and exactly
+     ONE scrolling region inside it, so the title, the purse and the filters
+     can never scroll away; filters that cut fifty-two down to whatever is
+     being looked for, which is what actually removes the scrolling rather
+     than shrinking the type; and one uniform tile whose art slot is the same
+     size on every single card.
+
+     That last one is the load-bearing decision. Those icons are placeholders
+     for real painted art, so the tile is built around a fixed art window and
+     the text arranges itself underneath — never the other way round. Every
+     region of the card has a fixed height and its own visual container, so a
+     four-line relic and a one-line die are the same object with different
+     contents rather than two differently-shaped cards.
+
+     No ornamental frame. The boneFrame overhangs its box by 18px and is a
+     reveal; this is a workbench. The Veil and the Exchange go without it for
+     the same reason. */
+
+  /* The panel is the screen — .menuScreen's 760px cap is for a column of
+     buttons, not for a roster. */
+  #menuArchive{max-width:none;
+    width:min(1320px,calc(95vw / var(--ui-scale,1)));}
+  /* A FIXED height, not a maximum. Sized to content the panel grew and shrank
+     as filters cut the rack down and as the tabs swapped, so the frame moved
+     under the pointer on the way to the thing being clicked. A career screen
+     is furniture: it holds still and the contents change inside it. */
+  .arcPanel{position:relative;display:flex;flex-direction:column;width:100%;
+    text-align:left;overflow:hidden;
+    height:calc(92vh / var(--ui-scale,1));
+    background:linear-gradient(170deg,#1b1724,var(--panel) 45%,#100d16);
+    border:1px solid var(--line);
+    box-shadow:0 30px 90px rgba(0,0,0,.85), 0 0 0 1px rgba(176,77,255,.10) inset;
+    animation:modalIn .32s var(--ease-out);}
+  /* the same crimson-into-violet rule every modal in the game wears */
+  .arcPanel::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;z-index:3;
+    background:linear-gradient(90deg,transparent,var(--crimson),var(--neon-p),transparent);}
+
+  /* ---- the head: title, purse, career. Fixed; never scrolls away. ---- */
+  /* the right padding is clearance for the corner close button — the lifetime
+     chips are right-aligned and ran straight under it otherwise */
+  .arcTop{display:flex;align-items:flex-end;justify-content:space-between;gap:20px 28px;
+    flex-wrap:wrap;padding:18px 52px 14px 24px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(176,77,255,.07),transparent 78%);}
+  .arcTitle{margin:0 0 3px;font-size:clamp(26px,2.6vw,34px);letter-spacing:5px;}
+  .arcFlavor{font-family:var(--font-mono);color:var(--bone-dim);font-style:italic;
+    font-size:12.5px;letter-spacing:.4px;margin:0;}
+
+  #arcLedger{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    justify-content:flex-end;margin-left:auto;}
+  /* the purse gets a plate of its own — it is the number every other number on
+     this screen is measured against */
+  #arcMarrow{font-family:var(--font-mono);font-size:23px;font-weight:800;color:var(--gold);
+    display:flex;align-items:center;gap:8px;white-space:nowrap;
+    padding:6px 13px;border-radius:8px;
+    background:linear-gradient(180deg,rgba(255,181,77,.12),rgba(255,181,77,.03));
+    border:1px solid rgba(255,181,77,.34);
+    text-shadow:0 0 18px rgba(255,181,77,.5);}
+  #arcMarrow .ic{font-size:23px;}
+  #arcMarrow small{font-family:var(--font-ui);font-size:10.5px;font-weight:700;
+    letter-spacing:2.6px;color:var(--bone-faint);text-shadow:none;}
+  #arcLife{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  #arcLife span{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:6px;
+    white-space:nowrap;
+    background:rgba(0,0,0,.34);border:1px solid var(--line);
+    font-family:var(--font-mono);font-size:10.5px;letter-spacing:.4px;color:var(--bone-faint);}
+  #arcLife .ic{font-size:12px;color:var(--line-hi);}
+  #arcLife b{color:var(--bone);font-weight:800;font-size:12px;}
+
+  /* ---- tabs ---- */
+  #arcTabs{display:flex;gap:2px;padding:0 24px;border-bottom:1px solid var(--line);
+    background:rgba(0,0,0,.2);}
+  .arcTab{appearance:none;background:none;border:0;cursor:pointer;
+    font-family:var(--font-ui);font-weight:700;font-size:12.5px;letter-spacing:2.6px;
+    color:var(--bone-faint);padding:11px 18px 10px;margin-bottom:-1px;
+    border-bottom:2px solid transparent;display:flex;align-items:center;gap:8px;
+    transition:color .16s linear, border-color .16s linear;}
+  .arcTab .ic{font-size:15px;}
+  .arcTab:hover{color:var(--bone-dim);}
+  .arcTab.on{color:var(--bone);border-bottom-color:var(--gold);}
+  .arcTab.on .ic{color:var(--gold);}
+  .arcTab .tabN{font-family:var(--font-mono);font-size:11px;color:var(--bone-faint);
+    letter-spacing:.5px;}
+  .arcTab.on .tabN{color:var(--gold);}
+
+  /* ---- filters ----
+     ONE row. Two rows of chips came to nine controls and 76px of head on a
+     screen whose whole complaint was that the head crowded out the content, so
+     the two axes collapse into the Veil's existing dropdown — same .drop /
+     .dropBtn / .dropList component, so this screen introduces no new control
+     the player has not already used.
+     Labels are plain words. "NOT YET" read as flavour and meant nothing; a
+     filter is signage, and signage is the one place in this game where the
+     flavour has to give way. */
+  #arcFilters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:10px 24px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.24);}
+  #arcFilters.hidden{display:none;}
+  .arcFilterLabel{font-family:var(--font-ui);font-weight:700;font-size:10px;
+    letter-spacing:2.4px;color:var(--bone-faint);}
+  .arcDrop{width:186px;}
+  .arcDrop .dropBtn{padding:7px 11px;font-size:12px;letter-spacing:1.6px;}
+  .arcDrop .dropOpt{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    font-size:12px;letter-spacing:1.6px;}
+  .arcDrop .dropOpt b{font-family:var(--font-mono);font-size:11px;font-weight:800;
+    color:var(--bone-faint);}
+  .arcDrop .dropOpt.on b{color:var(--gold);}
+  .arcDrop .dropBtn b{font-family:var(--font-mono);font-size:11px;font-weight:800;
+    color:var(--gold);margin-left:auto;}
+  /* how much of the roster survived the filter — the one number that tells a
+     player whether they are looking at everything or at a slice of it */
+  #arcShowing{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.6px;
+    color:var(--bone-faint);margin-left:auto;}
+  #arcShowing b{color:var(--bone-dim);font-weight:800;}
+  #btnArcClearFilters{appearance:none;cursor:pointer;padding:6px 12px;border-radius:20px;
+    background:none;border:1px solid var(--line);
+    font-family:var(--font-ui);font-weight:700;font-size:10px;letter-spacing:2px;
+    color:var(--bone-faint);transition:color .15s linear, border-color .15s linear;}
+  #btnArcClearFilters:hover{color:var(--crimson-glow);border-color:var(--crimson);}
+  #btnArcClearFilters.hidden{display:none;}
+
+  #arcSearchWrap{display:flex;align-items:center;gap:8px;
+    padding:5px 8px 5px 11px;border-radius:20px;
+    background:#0a0810;border:1px solid var(--line);
+    transition:border-color .15s linear, box-shadow .15s linear;}
+  #arcSearchWrap:focus-within{border-color:var(--gold);
+    box-shadow:0 0 14px rgba(255,181,77,.22);}
+  #arcSearchWrap .ic{font-size:14px;color:var(--line-hi);flex:0 0 auto;}
+  #arcSearch{appearance:none;background:none;border:0;outline:none;
+    color:var(--bone);font:700 12px var(--font-mono);letter-spacing:1px;
+    width:clamp(120px,15vw,190px);padding:0;}
+  #arcSearch::placeholder{color:var(--bone-faint);letter-spacing:2px;font-weight:700;}
+  #arcSearchClear{appearance:none;background:none;border:0;cursor:pointer;padding:0 4px;
+    color:var(--bone-faint);font:800 15px var(--font-mono);line-height:1;
+    transition:color .15s linear;}
+  #arcSearchClear:hover{color:var(--crimson-hi);}
+  #arcSearchClear.hidden{display:none;}
+
+  /* ---- the one scrolling region ---- */
+  #arcBody{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;
+    padding:16px 24px 20px;}
+  /* There is no global .hidden rule in this file — only .overlay.hidden and
+     .menuScreen.hidden. Both panes need their own, or a "hidden" tab simply
+     renders underneath the visible one, which is exactly what happened.
+
+     ID selectors, and they have to be: both panes set their own display off an
+     id (#arcRoster is a grid, #arcOaths is a column), and a bare .arcPane.hidden
+     loses to those on specificity — so the class would be applied, read back
+     true from classList, and change nothing on screen. */
+  #arcRoster.hidden, #arcOaths.hidden{display:none;}
+
+  /* ---- the roster grid ----
+     One track size for every card, so the rack lines up whatever is filtered
+     into it. Full-width notices ride in the same grid on grid-column:1/-1
+     rather than needing a wrapper. */
+  #arcRoster{display:grid;gap:12px;align-content:start;
+    grid-template-columns:repeat(auto-fill,minmax(196px,1fr));}
+  .arcSpan{grid-column:1/-1;}
+
+  @keyframes arcCardIn{
+    from{opacity:0;transform:translateY(12px) scale(.96);}
+    to{opacity:1;transform:none;}}
+  /* Only ever on a rack that has just been BUILT — opening the screen,
+     switching tab, changing a filter. A toggle or a purchase re-renders the
+     same rack, and replaying fifty-two entrances on every click is the exact
+     blink the Ossuary's cards were fixed for. The delay is capped so the last
+     card in a full roster still arrives inside a third of a second.
+
+     `backwards`, never `both`, for the reason spelled out over the title
+     screen's nav: a filled animation keeps applying its final transform for
+     as long as it is on the element, which silently beat every hover state on
+     a freshly built rack and then stopped beating it after the first
+     re-render. That inconsistency is what made the cards feel unreliable. */
+  #arcRoster.fresh .arcCard{animation:arcCardIn .34s var(--ease-out) backwards;
+    animation-delay:calc(min(var(--i,0), 22) * 13ms);}
+
+  /* ---- the tile ----
+     Fixed heights on every region. The art window is the constant the whole
+     card is built around: it does not move or resize for a longer name, a
+     longer rule, or a different footer, because one day it holds a painting. */
+  .arcCard{position:relative;display:flex;flex-direction:column;
+    border-radius:10px;overflow:hidden;
+    background:linear-gradient(168deg,#241f30,#181322 62%,#100c18);
+    border:1px solid var(--aRim,#3f3850);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 6px 16px rgba(0,0,0,.5);
+    transition:border-color .16s linear, transform .16s var(--ease),
+               box-shadow .16s linear;}
+
+  /* header strip: rarity on the left, what KIND of thing it is on the right.
+     The kind matters most when the group filter is on ALL and dice, chalks and
+     relics are sitting in one rack together. */
+  .acTop{display:flex;align-items:center;justify-content:space-between;gap:6px;
+    height:24px;padding:0 10px;flex:0 0 auto;
+    background:linear-gradient(180deg,rgba(0,0,0,.45),transparent);
+    border-bottom:1px solid rgba(255,255,255,.045);}
+  .acTier{font-family:var(--font-ui);font-weight:700;font-size:8.5px;letter-spacing:2px;
+    color:var(--aKey,#a89ec0);opacity:.95;}
+  .acKind{font-size:12px;color:var(--line-hi);display:flex;}
+  .acKind .ic{font-size:12px;}
+
+  /* the art window */
+  .acArt{position:relative;flex:0 0 auto;height:88px;margin:9px 9px 0;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    background:radial-gradient(122% 104% at 50% 2%,#251e35,#0a0710 80%);
+    box-shadow:inset 0 4px 14px rgba(0,0,0,.92), inset 0 1px 0 rgba(255,255,255,.14);}
+  .acArt::after{content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(70% 60% at 50% 108%,var(--aGlow,rgba(168,158,192,.28)),transparent 70%);}
+  .acArt .ic{font-size:42px;color:var(--aKey,#a89ec0);position:relative;z-index:1;
+    filter:drop-shadow(0 3px 10px rgba(0,0,0,.85));
+    transition:transform .2s var(--ease);}
+
+  .acName{flex:0 0 auto;height:20px;margin:9px 11px 0;
+    font-family:var(--font-ui);font-weight:700;font-size:13px;letter-spacing:1px;
+    color:var(--bone);line-height:20px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  /* the rule the item plays by, in its own recessed box so it reads as data
+     rather than as more of the name. Four lines fits the longest one in the
+     game (93 characters) at this width. */
+  /* A FIXED height, not a minimum. Every region of this card is fixed, and this
+     is the only one whose content varies — leave it free to grow or shrink and
+     a one-line die sits 14px shorter than a four-line relic, which is exactly
+     the ragged rack the rebuild was for. Four lines at this size and leading is
+     75.6px inside the border, which fits the longest rule in the game (93
+     characters) with nothing clipped. */
+  .acDesc{flex:0 0 auto;height:76px;margin:6px 9px 0;padding:7px 9px;border-radius:6px;
+    background:rgba(0,0,0,.34);border:1px solid rgba(255,255,255,.04);
+    font-family:var(--font-mono);font-size:10.5px;
+    /* px, not a ratio: the box height is a whole number of these, so an exact
+       line-height is what stops a 1px sliver of the clamped-away line showing
+       under the last one. 4 x 15 + 14 padding + 2 border = 76. */
+    line-height:15px;
+    color:var(--bone-dim);
+    display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;
+    overflow:hidden;}
+  .acFoot{flex:0 0 auto;height:34px;margin:8px 9px 9px;padding:0 10px;border-radius:6px;
+    display:flex;align-items:center;gap:7px;
+    background:rgba(0,0,0,.34);border:1px solid rgba(255,255,255,.04);
+    font-family:var(--font-mono);font-weight:800;font-size:12px;letter-spacing:.4px;}
+  .acFoot .ic{font-size:14px;}
+
+  /* rarity, the same read as the Ossuary's */
+  .arcCard.tier1{--aRim:#4f4759;--aKey:#a89ec0;--aGlow:rgba(168,158,192,.26);}
+  .arcCard.tier2{--aRim:#7d8aa3;--aKey:#b9c6dd;--aGlow:rgba(185,198,221,.3);}
+  .arcCard.tier3{--aRim:var(--gold);--aKey:var(--gold-hi);--aGlow:rgba(255,181,77,.34);}
+  .arcCard.tier4{--aRim:var(--crimson-hi);--aKey:#ff7fb0;--aGlow:rgba(255,91,120,.34);}
+
+  /* ---- the states ----
+     Owned, buyable, unaffordable, depth-locked, and set aside. Tellable apart
+     without relying on colour alone: each carries its own word in the footer. */
+  .arcCard.owned{background:linear-gradient(168deg,#1c2b21,#141d18 62%,#0d130f);}
+  .arcCard.owned .acName{color:#dcf3e4;}
+
+  /* Nothing on this screen MOVES on hover. A tile that lifts under the pointer
+     shifts the very control the pointer is travelling to — worst of all the
+     loadout switch, which sits at the bottom edge where a 3px lift is enough
+     to slide it out from under a click. Light it instead: brighter rim, a warm
+     glow, and the art leaning in. */
+  .arcCard.buy{cursor:pointer;}
+  .arcCard.buy .acFoot{color:var(--gold);border-color:rgba(255,181,77,.28);
+    background:rgba(255,181,77,.07);}
+  .arcCard.buy:hover{border-color:var(--gold-hi);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 14px 28px rgba(0,0,0,.6), 0 0 26px rgba(255,181,77,.34);}
+  .arcCard.buy:hover .acArt .ic{transform:scale(1.09);}
+  .arcCard.buy:hover .acArt::after{opacity:1.35;}
+
+  /* locked entries stay fully legible — design §4 is explicit that a Marrow
+     item is a shopping list entry, not a mystery. Dimmed, never hidden. */
+  .arcCard.locked{opacity:.6;}
+  .arcCard.locked .acFoot{color:var(--bone-faint);}
+  .arcCard.gated{opacity:.6;}
+  .arcCard.gated .acFoot{color:var(--neon-p);border-color:rgba(176,77,255,.24);}
+
+  /* set aside (design §11): NOT the locked treatment. Locked means "you have
+     not earned this"; set aside means "you own it and left it behind". So this
+     keeps full opacity — it does not recede — and instead has the owned green
+     drained out of it. What changes is colour, not presence. */
+  .arcCard.owned.off{background:linear-gradient(168deg,#242030,#1a1622 62%,#110e18);}
+  .arcCard.owned.off .acName{color:var(--bone-dim);}
+  .arcCard.owned.off .acArt .ic{color:#6f6684;}
+  .arcCard.owned.off .acArt::after{opacity:.3;}
+
+  /* ---- sealed (design §12) ----
+     The third kind of not-yours, and it has to be unmistakable against the
+     other two. Locked and gated both DIM: they recede to 60% and keep their
+     name, art, rule and price, because they are a shopping list and the whole
+     point is that you can plan for them.
+
+     This one does the opposite. It sits at FULL opacity — it is not a faded
+     version of anything, it is present and deliberate — and withholds instead:
+     no rarity colour (a tier would leak how good it is), no art, no name, no
+     rule, no price, and a hatch laid over the whole card so it reads as
+     something covered rather than something dark. Violet, which this game
+     already uses for the unknown and the marked, and never gold, which is the
+     colour of things that have a price.
+
+     A player must never look at this and think "I could save up for that". */
+  .arcCard.sealed{--aRim:#4a3f63; --aKey:#8a7cb0; --aGlow:rgba(176,77,255,.22);
+    background:linear-gradient(168deg,#1c1728,#161120 62%,#0d0a14);
+    cursor:default;}
+  .arcCard.sealed::after{content:'';position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(-45deg,
+      rgba(176,77,255,.055) 0 5px, transparent 5px 11px);}
+  .arcCard.sealed .acTop{border-bottom-color:rgba(176,77,255,.12);}
+  .arcCard.sealed .acTier{color:#7a6c9e;letter-spacing:2.4px;}
+  .arcCard.sealed .acKind{color:#4d4368;}
+  .arcCard.sealed .acArt{background:radial-gradient(122% 104% at 50% 2%,#211a30,#09070e 80%);}
+  .arcCard.sealed .acArt::after{opacity:.55;}
+  /* the silhouette: the game's own hand, so it belongs to the crypt rather
+     than looking like a missing-asset glyph */
+  .acSeal{font-family:var(--font-display);font-weight:400;font-size:46px;
+    line-height:1;color:#6f6390;opacity:.85;position:relative;z-index:1;
+    transform:translateY(-2px);
+    text-shadow:0 0 22px rgba(176,77,255,.45);
+    animation:breathe 7s ease-in-out infinite;}
+  .arcCard.sealed .acName{color:#8a7cb0;letter-spacing:4px;}
+  /* redacted bars where the rule would be: the SHAPE of a description with
+     none of its content, which is what "it exists, you may not read it" looks
+     like. Empty space would have read as an unfinished card. */
+  .sealBars{display:flex;flex-direction:column;justify-content:center;gap:7px;
+    padding:9px 11px;}
+  .sealBars i{display:block;height:5px;border-radius:3px;
+    background:linear-gradient(90deg,rgba(176,77,255,.20),rgba(176,77,255,.07));}
+  .sealBars i:nth-child(1){width:86%;}
+  .sealBars i:nth-child(2){width:96%;}
+  .sealBars i:nth-child(3){width:54%;}
+  .arcCard.sealed .acFoot{justify-content:center;color:#8a7cb0;
+    letter-spacing:3.4px;font-size:11px;
+    border-color:rgba(176,77,255,.2);background:rgba(176,77,255,.05);}
+
+  /* a card that has just been paid for */
+  @keyframes arcBought{
+    0%{box-shadow:0 0 0 rgba(255,181,77,0), 0 6px 16px rgba(0,0,0,.5);
+       border-color:var(--gold-hi);}
+    20%{box-shadow:0 0 34px rgba(255,181,77,.85), inset 0 0 26px rgba(255,181,77,.4),
+        0 6px 16px rgba(0,0,0,.5);transform:scale(1.045);border-color:var(--gold-hi);}
+    100%{box-shadow:0 0 0 rgba(255,181,77,0), 0 6px 16px rgba(0,0,0,.5);transform:none;}}
+  .arcCard.justPaid{animation:arcBought .85s var(--ease-out);z-index:2;}
+
+  /* ---- the loadout switch (design §11) ----
+     The only control in the Archive that costs nothing and undoes itself, so
+     it says what it will do rather than what it costs. A real button inside
+     the card, not the whole card: reading a rack must never flip something. */
+  .aSwitch{appearance:none;background:none;border:0;padding:0;cursor:pointer;
+    display:flex;align-items:center;gap:8px;width:100%;
+    font:800 11px var(--font-mono);letter-spacing:.6px;color:var(--bone-faint);
+    transition:color .16s linear;}
+  .aSwitch .sTrack{position:relative;width:26px;height:13px;border-radius:7px;flex:0 0 auto;
+    background:#16121f;border:1px solid #3d3550;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.8);
+    transition:background .16s linear, border-color .16s linear;}
+  .aSwitch .sKnob{position:absolute;top:1px;left:1px;width:9px;height:9px;border-radius:50%;
+    background:#6f6684;transition:transform .16s var(--ease), background .16s linear;}
+  .aSwitch.on{color:var(--neon-g);}
+  .aSwitch.on .sTrack{background:#16301f;border-color:var(--neon-g);}
+  .aSwitch.on .sKnob{transform:translateX(13px);background:var(--neon-g);
+    box-shadow:0 0 8px rgba(94,222,138,.7);}
+  /* The switch is a <button>, so it was inheriting the base button's lift on
+     hover AND its 3px drop on :active. That drop is why a click sometimes did
+     nothing: pressing moved the control down out from under the cursor, so the
+     mouseup landed somewhere else and no click event was ever produced. It
+     holds still now and answers with light.
+     `:not(:disabled)` is here only to out-specify the base rule. */
+  .aSwitch:hover:not(:disabled), .aSwitch:active:not(:disabled){transform:none;}
+  .aSwitch:hover{color:var(--bone);}
+  .aSwitch:hover .sTrack{border-color:var(--line-hi);
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.8), 0 0 10px rgba(255,255,255,.10);}
+  .aSwitch.on:hover{color:#9df3bb;}
+  .aSwitch.on:hover .sTrack{border-color:#7bffb4;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.8), 0 0 14px rgba(94,222,138,.55);}
+  .aSwitch:focus-visible{outline:2px solid var(--gold);outline-offset:3px;}
+
+  /* Same cancellation for every other small control on this screen. The lift
+     is right for a slab you press; it is wrong for a tab, a chip or a clear
+     button that has to stay under the pointer. */
+  .arcTab:hover:not(:disabled), .arcTab:active:not(:disabled),
+  #arcSearchClear:hover:not(:disabled), #arcSearchClear:active:not(:disabled),
+  #btnArcClearFilters:hover:not(:disabled), #btnArcClearFilters:active:not(:disabled){
+    transform:none;}
+
+  /* ---- notices ---- */
+  .arcWarn{display:flex;align-items:center;gap:10px;margin-bottom:4px;
+    padding:11px 15px;border:1px solid #5c4a27;border-left-width:3px;border-radius:6px;
+    background:linear-gradient(180deg,rgba(46,35,14,.55),rgba(24,18,8,.42));
+    font-family:var(--font-mono);font-size:12px;line-height:1.5;color:#e2c489;}
+  .arcWarn .ic{font-size:19px;color:#c9a05e;flex:0 0 auto;}
+  .arcEmpty{padding:52px 12px;text-align:center;color:var(--bone-faint);
+    font-family:var(--font-mono);font-size:13px;letter-spacing:1px;}
+  .arcEmpty .ic{display:block;margin:0 auto 12px;font-size:30px;color:var(--line);}
+
+  /* ================= THE OATHS =================
+     Four ladders, laid out as four columns rather than four wide bars with a
+     third of their width empty. Each is built on the same fixed art window as
+     a roster card, so the two tabs read as the same furniture. */
+  #arcOaths{display:flex;flex-direction:column;gap:14px;}
+  .oathIntro{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;}
+  .oathIntro h3{font-family:var(--font-display);font-weight:400;font-size:23px;
+    letter-spacing:4px;color:var(--bone);margin:0;}
+  .oathIntro .arcFlavor{margin:0;}
+  .oathIntro .oathCount{margin-left:auto;font:800 12px var(--font-mono);
+    letter-spacing:1px;color:var(--bone-faint);}
+  .oathGrid{display:grid;gap:14px;align-items:stretch;
+    grid-template-columns:repeat(auto-fit,minmax(232px,1fr));}
+
+  .oathCard{position:relative;display:flex;flex-direction:column;
+    border-radius:10px;overflow:hidden;
+    --aRim:#6b5a86;--aKey:#c9b6e8;--aGlow:rgba(201,182,232,.3);
+    background:linear-gradient(168deg,#241f30,#181322 62%,#100c18);
+    border:1px solid var(--aRim);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 6px 16px rgba(0,0,0,.5);
+    transition:border-color .16s linear, transform .16s var(--ease),
+               box-shadow .16s linear;}
+  /* There are only four of these and they are the biggest thing Marrow buys,
+     so they get room the roster's fifty-two cannot afford: a taller art
+     window, a name that can breathe, and the full four-line rule box. It also
+     narrows the height gap between the two tabs, so switching does not resize
+     the panel out from under the pointer. */
+  .oathCard .acArt{height:128px;margin:11px 11px 0;}
+  .oathCard .acArt .ic{font-size:56px;}
+  .oathCard .acName{height:auto;line-height:1.25;white-space:normal;
+    font-size:15.5px;letter-spacing:1.4px;text-align:center;margin:12px 12px 0;}
+  /* Two lines, not four: an Oath's rule is one short sentence — the longest is
+     46 characters — so the roster's four-line box would be mostly empty air on
+     all four of them. 2 x 15 + 16 = 46. */
+  .oathCard .acDesc{height:46px;-webkit-line-clamp:2;text-align:center;}
+
+  /* the rungs, filled with the same liquid the Soul Quota bar is filled with —
+     recoloured from blood to marrow, because this is a purse emptying into a
+     promise rather than a quota being met. Same channel, same swirl, same
+     transition, so the two read as one material. */
+  .oPips{display:flex;gap:5px;margin:10px 11px 0;}
+  .oPip{position:relative;flex:1 1 0;height:13px;border-radius:4px;overflow:hidden;
+    background:#050408;border:1px solid var(--line);
+    box-shadow:inset 0 2px 4px rgba(0,0,0,.7);}
+  .oPipFill{--fl-hi:255,181,77; --fl-mid:176,116,36; --fl-lo:92,56,12; --fl-clot:48,28,6;
+    position:absolute;inset:0;width:0;
+    background:
+      radial-gradient(50% 300% at 50% 35%, rgba(var(--fl-hi),.90), rgba(var(--fl-hi),0) 72%),
+      radial-gradient(46% 260% at 50% 70%, rgba(var(--fl-clot),.95), rgba(var(--fl-clot),0) 70%),
+      radial-gradient(48% 280% at 50% 60%, rgba(var(--fl-hi),.60), rgba(var(--fl-hi),0) 74%),
+      radial-gradient(44% 240% at 50% 30%, rgba(var(--fl-clot),.85), rgba(var(--fl-clot),0) 70%),
+      linear-gradient(180deg, rgb(var(--fl-mid)), rgb(var(--fl-lo)));
+    background-size:210px 100%, 170px 100%, 260px 100%, 130px 100%, 100% 100%;
+    background-repeat:repeat-x;
+    box-shadow:inset 0 3px 6px rgba(0,0,0,.5), inset 0 -4px 7px rgba(0,0,0,.6);
+    animation:bloodSwirl 6s linear infinite;
+    transition:width .5s var(--ease-out);}
+  .oPip.on .oPipFill{width:100%;}
+  /* a rung still behind a descent key is drawn as an outline, so the two
+     locked reasons — cannot afford, cannot yet reach — never look alike */
+  .oPip.gated{border-color:var(--neon-p);border-style:dashed;opacity:.65;}
+  /* the rung that has just been sworn: it pours, and the channel surges */
+  @keyframes oathPour{from{width:0;}to{width:100%;}}
+  .oPip.pour .oPipFill{animation:bloodSwirl 6s linear infinite,
+                                 oathPour .55s var(--ease-out) both;}
+  .oPip.pour{animation:quotaSurge .8s var(--ease-out);}
+
+  .oathNow{display:flex;align-items:center;gap:6px;margin:9px 11px 0;
+    font-family:var(--font-mono);font-size:10.5px;line-height:1.4;color:var(--bone-dim);}
+  .oathNow .ic{font-size:13px;color:var(--aKey);flex:0 0 auto;}
+  .oathNone{font-style:italic;color:var(--bone-faint);}
+  .oathCard .acFoot{justify-content:center;}
+  .oathCard.buy{cursor:pointer;}
+  .oathCard.buy .acFoot{color:var(--gold);border-color:rgba(255,181,77,.28);
+    background:rgba(255,181,77,.07);}
+  .oathCard.buy:hover{border-color:var(--gold-hi);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 14px 28px rgba(0,0,0,.6), 0 0 26px rgba(255,181,77,.34);}
+  .oathCard.buy:hover .acArt .ic{transform:scale(1.09);}
+  .oathCard.locked{opacity:.62;}
+  .oathCard.locked .acFoot{color:var(--bone-faint);}
+  .oathCard.gated{opacity:.62;}
+  .oathCard.gated .acFoot{color:var(--neon-p);border-color:rgba(176,77,255,.24);}
+  .oathCard.owned{border-color:var(--neon-g);
+    background:linear-gradient(168deg,#1c2b21,#141d18 62%,#0d130f);}
+  .oathCard.owned .acFoot{color:var(--neon-g);}
+  .oathCard.owned .acName{color:#dcf3e4;}
+  .oathCard.justPaid{animation:arcBought .85s var(--ease-out);z-index:2;}
+  .rRung{font:700 11px var(--font-ui);letter-spacing:2.4px;color:var(--bone-faint);
+    font-style:normal;}
+
+  /* ---- the panel's foot ---- */
+  .arcPanelFoot{margin:0;padding:14px 24px;border-top:1px solid var(--line);
+    background:rgba(0,0,0,.28);justify-content:flex-end;}
+
+  /* ---- short screens ----
+     A 1366x768 laptop has about 390px of scrolling region left once the head,
+     the tabs, the filters and the foot have taken their share, which is one
+     and a bit rows of a 285px tile. The panel still FITS — that was the actual
+     fault — but a rack you can only see a row and a half of is not much of a
+     rack, so everything that is furniture rather than content gives up height
+     and the tile itself comes down to three lines of rule and a smaller art
+     window. Nothing is removed except the flavour line, which is the one piece
+     of text on the screen that says nothing a player needs. */
+  @media (max-height: 880px){
+    .arcTop{padding:12px 58px 10px 20px;}
+    .arcTitle{font-size:24px;letter-spacing:4px;margin-bottom:0;}
+    .arcTop .arcFlavor{display:none;}
+    #arcMarrow{font-size:21px;padding:5px 12px;}
+    #arcLife span{padding:4px 8px;}
+    #arcTabs{padding:0 20px;}
+    .arcTab{padding:9px 15px 8px;}
+    #arcFilters{padding:9px 20px;gap:6px;}
+    #arcBody{padding:12px 20px 14px;}
+    .arcPanelFoot{padding:10px 20px;}
+    #arcRoster{gap:10px;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));}
+    .acArt{height:70px;margin:8px 8px 0;}
+    .acArt .ic{font-size:34px;}
+    .acName{margin-top:7px;}
+    .acDesc{height:61px;-webkit-line-clamp:3;margin-top:5px;}
+    .acFoot{height:30px;margin:6px 8px 8px;}
+    .oathCard .acArt{height:96px;}
+    .oathCard .acArt .ic{font-size:46px;}
+    .oathCard .acDesc{height:46px;-webkit-line-clamp:2;}
+  }
+
+  /* ---- the purchase confirmation ---- */
+  /* same reasoning as the wipe dialog — see the note there */
+  #arcConfirmOverlay .modal{max-width:560px;width:min(560px,calc(92vw / var(--ui-scale,1)));
+    padding:26px 32px 24px;overflow:visible;max-height:none;}
+  #arcConfirmOverlay h2{font-size:clamp(28px,3.2vw,38px);margin-bottom:8px;}
+  #arcConfirmOverlay .flavor{margin-bottom:14px;font-size:14px;}
+  #arcConfirmOverlay .menuBtnRow{margin-top:18px;}
+  #arcWhat{display:flex;align-items:center;justify-content:center;gap:12px;
+    margin:6px 0 4px;font-family:var(--font-ui);font-weight:700;font-size:20px;
+    letter-spacing:2px;color:var(--bone);}
+  #arcWhat .ic{font-size:26px;color:var(--gold-hi);}
+  #arcWhatDesc{font-family:var(--font-mono);font-size:12.5px;line-height:1.6;
+    color:var(--bone-dim);margin-bottom:16px;}
+  #arcCost{display:flex;justify-content:center;gap:26px;flex-wrap:wrap;margin-bottom:6px;}
+  #arcCost div{font-family:var(--font-mono);font-size:12px;color:var(--bone-faint);
+    letter-spacing:1.4px;}
+  #arcCost b{display:block;font-size:23px;font-weight:800;margin-top:3px;
+    color:var(--bone);letter-spacing:-.4px;}
+  #arcCost .pay b{color:var(--gold);}
+  #arcCost .after b{color:var(--bone-dim);}
+
+  /* ---- scouring the Archive ---- */
+  /* The one destructive control in the Veil, so it is fenced off: its own rule
+     above it, crimson where everything else in the panel is bone, and a button
+     that opens a dialog rather than doing anything itself. */
+  #veilDanger{margin-top:26px;padding-top:18px;border-top:1px solid #3a2028;}
+  .veilHead.danger{color:#c98a96;}
+  .veilHead.danger .ic{color:var(--crimson);}
+  #btnWipe{display:flex;margin:14px auto 0;border-color:#5c2732;color:#e0b4bc;}
+  #btnWipe:hover:not(:disabled){border-color:var(--crimson-hi);color:#ffd2da;
+    box-shadow:0 0 18px rgba(214,31,60,.28);}
+  #wipeOverlay{background:radial-gradient(85% 85% at 50% 46%,
+    rgba(46,4,12,.86), rgba(3,2,4,.98) 74%);}
+  /* Sized so the whole decision — mark, title, copy, the four numbers, the
+     warning and both buttons — is on screen at once. A confirmation you have
+     to scroll is a confirmation you did not really read. overflow stays
+     visible so nothing can quietly clip; the content is short enough that it
+     does not need to scroll on any normal desktop window. */
+  #wipeOverlay .modal{max-width:600px;width:min(600px,calc(92vw / var(--ui-scale,1)));
+    padding:26px 32px 24px;overflow:visible;max-height:none;
+    background:linear-gradient(170deg,#1e1014,#170b0f 46%,#0c0608);}
+  #wipeOverlay h2{color:var(--crimson-hi);font-size:clamp(28px,3.2vw,38px);
+    margin-bottom:8px;}
+  #wipeOverlay .sigil{color:var(--crimson);font-size:38px;margin-bottom:4px;}
+  #wipeOverlay .flavor{margin-bottom:14px;font-size:14px;}
+  #wipeOverlay .menuBtnRow{margin-top:18px;}
+  /* what is about to be lost, counted out — an abstract warning is easy to
+     click past, a number you recognise as yours is not */
+  #wipeWhat{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;
+    margin:14px 0 16px;padding:12px 14px;border-radius:9px;
+    background:rgba(0,0,0,.35);border:1px solid #3a2830;}
+  #wipeWhat div{font-family:var(--font-mono);font-size:11px;letter-spacing:1.6px;
+    color:#8a7078;}
+  #wipeWhat b{display:block;font-size:21px;font-weight:800;margin-top:3px;
+    color:#e4d2d6;letter-spacing:-.4px;}
+  #wipeWhat .marrow b{color:var(--gold);}
+  #wipeWarn{display:flex;align-items:center;justify-content:center;gap:9px;
+    font-family:var(--font-ui);font-weight:700;font-size:13px;letter-spacing:3.4px;
+    color:var(--crimson-hi);margin-bottom:4px;}
+  #wipeWarn .ic{font-size:16px;}
+
+  /* ---- what the run paid out, on the death screen ---- */
+  /* Not a seventh .gslab: the six slabs are a record of what the descent LOST,
+     and the grid note above them says they are fixed three-across because a
+     seventh would orphan onto its own row. This is the opposite number — the
+     one thing carried out of the crypt — so it gets its own band, in gold
+     against all that grey, rather than being filed in with the losses. */
+  #goMarrow{position:relative;margin:0 0 22px;padding:15px 18px 14px;border-radius:10px;
+    background:linear-gradient(180deg,rgba(46,33,12,.72),rgba(20,14,6,.6) 60%,rgba(11,8,4,.7));
+    border:1px solid #5c4620;
+    box-shadow:inset 0 1px 0 rgba(255,224,160,.14), inset 0 -2px 0 rgba(0,0,0,.55),
+               0 8px 22px rgba(0,0,0,.55);
+    animation:tabletRise .5s 1s var(--ease-out) backwards;}
+  #goMarrow::before{content:'';position:absolute;left:12px;right:12px;top:0;height:1px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .goMarrowHead{font-family:var(--font-ui);font-weight:700;font-size:10.5px;
+    letter-spacing:2.6px;color:#9c8452;margin-bottom:6px;}
+  .goMarrowVal{font-family:var(--font-mono);font-weight:800;font-size:38px;line-height:1;
+    color:var(--gold);letter-spacing:-1px;text-shadow:0 0 26px rgba(255,181,77,.55);
+    display:flex;align-items:center;justify-content:center;gap:10px;}
+  .goMarrowVal .ic{font-size:30px;}
+  .goMarrowParts{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:11px;}
+  .goMarrowParts span{font-family:var(--font-mono);font-size:11px;letter-spacing:.6px;
+    color:#a8925f;padding:4px 9px;border-radius:5px;
+    background:rgba(0,0,0,.34);border:1px solid #4a3819;}
+  .goMarrowParts span b{color:var(--gold-hi);font-weight:800;}
+  /* the personal-best chip is the loudest thing on the band, because beating
+     your own depth is the biggest single payout in the economy */
+  .goMarrowParts span.pb{border-color:var(--gold);color:var(--gold-hi);
+    background:rgba(90,62,14,.5);box-shadow:0 0 16px rgba(255,181,77,.3);}
+  .goMarrowFoot{font-family:var(--font-mono);font-size:11.5px;color:#8a7a55;margin-top:10px;}
+  .goMarrowFoot b{color:var(--gold);font-weight:800;}
 
   /* ================= GAME OVER =================
      Losing is a big beat too, so it gets the same carved frame and staged
@@ -2062,7 +2919,7 @@
 <!-- ============ CHANGELOG ============ -->
 <div class="overlay hidden" id="logOverlay" style="z-index:64;">
   <div class="modal" style="max-width:660px;width:min(660px,94vw);text-align:left;">
-    <button id="btnLogClose" class="logX"><i class="ic" data-ic="x"></i></button>
+    <button id="btnLogClose" class="xClose corner" aria-label="close"><span class="xG">X</span></button>
     <div style="text-align:center;">
       <div id="logVer"></div>
       <h2 id="logTitle">THE RECORD</h2>
@@ -2079,7 +2936,7 @@
 <!-- ============ THE VEIL (audio + visual mixer) ============ -->
 <div class="overlay hidden" id="settingsOverlay" style="z-index:66;">
   <div class="modal veilModal">
-    <div class="boneFrame"></div>
+    <button id="btnVeilX" class="xClose corner" aria-label="close"><span class="xG">X</span></button>
     <div id="veilBody">
       <h2>THE VEIL</h2>
       <div class="flavor">What you hear, and how thickly the dark gathers.</div>
@@ -2133,6 +2990,23 @@
         </div>
       </div>
 
+      <!-- Set apart from the settings above it by a rule and its own colour,
+           because nothing else in this panel destroys anything. -->
+      <div class="veilSection" id="veilDanger">
+        <div class="veilHead danger"><i class="ic" data-ic="warningOctagon"></i>THE LONG MEMORY</div>
+        <div class="veilNote">
+          The Archive remembers every rite you have ever run — your Marrow, your
+          unlocked bones, chalks and relics, and how deep you have ever gone.
+          Scouring it puts you back where a stranger starts.
+        </div>
+        <button class="ghost" id="btnWipe"><i class="ic" data-ic="trash"></i>SCOUR THE ARCHIVE</button>
+        <!-- centred by #btnWipe's own auto margins: .veilSection is text-align
+             left for its body copy, which would otherwise strand the button
+             against the edge while every other control in the Veil is a full
+             width row -->
+
+      </div>
+
       <div id="nowPlaying">silence</div>
       <div class="menuBtnRow">
         <button class="ghost" id="btnAbandon" style="display:none;">
@@ -2167,7 +3041,7 @@
 <div id="grimoire">
   <div id="grimHead">
     <h3><i class="ic" data-ic="bookOpenText"></i>GRIMOIRE</h3>
-    <button id="btnGrimClose"><i class="ic" data-ic="x"></i></button>
+    <button id="btnGrimClose" class="xClose" aria-label="close"><span class="xG">X</span></button>
   </div>
   <div id="grimTabs">
     <div class="gtab on" data-tab="hands">CONDUITS</div>
@@ -2257,49 +3131,242 @@
          and read as an icon sitting above a logo rather than part of one -->
     <div id="menuMark"><img src="assets/img/penta.png" alt=""></div>
     <h1 id="menuTitle">THE BONE<br><em>SIEVE</em></h1>
-    <div class="menuRule"><span></span><i class="ic" data-ic="diamond"></i><span></span></div>
-    <div class="menuTag">AN OCCULT WAGER</div>
+    <!-- The one line of flavour that survives. It replaces a three-clause
+         tagline about the knuckles of a dead saint, which named a thing that
+         appears nowhere in the game and promised a story the rite does not
+         tell. This is the actual pitch, so it is drawn like one: a banner
+         rather than a caption. -->
+    <div class="menuBanner">
+      <span class="mbEdge"></span>
+      <span class="mbText">AN OCCULT WAGER</span>
+      <span class="mbEdge"></span>
+    </div>
     <nav class="menuNav">
-      <button class="menuItem" id="miStart"><i class="ic" data-ic="pentagram"></i><span>BEGIN THE RITE</span></button>
-      <button class="menuItem" id="miRules"><i class="ic" data-ic="bookOpenText"></i><span>THE RITE</span></button>
-      <button class="menuItem" id="miGrim"><i class="ic" data-ic="crownSimple"></i><span>GRIMOIRE</span></button>
-      <button class="menuItem" id="miVeil"><i class="ic" data-ic="gearSix"></i><span>THE VEIL</span></button>
-      <button class="menuItem" id="miLog"><i class="ic" data-ic="sealCheck"></i><span>CHANGELOG</span></button>
+      <!-- No icons on these. The label was already centred to within a
+           hundredth of a pixel, but an icon pinned to the left edge with
+           nothing answering it on the right made the slab read lopsided, and
+           centring icon-and-label as a group instead put the four icons at
+           four different x positions down the stack. A cut plaque with one
+           centred inscription is both the honest fix and the better object. -->
+      <button class="menuItem" id="miStart"><span>BEGIN THE RITE</span></button>
+      <button class="menuItem" id="miArchive"><span>THE ARCHIVE</span></button>
+      <button class="menuItem" id="miRules"><span>HOW TO PLAY</span></button>
+      <button class="menuItem" id="miLog"><span>CHANGELOG</span></button>
     </nav>
-    <div class="menuFoot">six knuckles of a dead saint &nbsp;·&nbsp; a grid of hungry stone &nbsp;·&nbsp; feed it</div>
-    <div class="menuVer" id="menuVer"></div>
   </div>
+
+  <!-- Settings, as a corner control rather than a fifth thing in the list. It
+       is the only item on that menu a player looks for by habit rather than by
+       reading, so it goes where the habit points and answers ESC as well. The
+       label is spelled out beside it — an unlabelled gear is only obvious to
+       people who already know where it is. -->
+  <button id="menuVeilBtn" class="menuCorner" aria-label="settings">
+    <i class="ic" data-ic="gearSix"></i><span>SETTINGS</span><em>ESC</em>
+  </button>
+
+  <div class="menuVer" id="menuVer"></div>
 
   <a class="menuStudio" href="https://github.com/KingSaled" target="_blank" rel="noopener noreferrer">
     <i class="ic" data-ic="flask"></i><span>A SALED LABS RITE</span>
   </a>
 
+  <!-- ============ HOW TO PLAY ============
+       Kept, not cut. An interactive tutorial is the right answer and it is not
+       built yet; until it is, this is the only place the rules exist, and
+       shipping with nothing would be worse than shipping something dated.
+
+       Two things were wrong with it. It was called THE RITE, which is what the
+       game calls a RUN — so the one menu item a lost player needs was named
+       after something else, and read as flavour rather than help. And it was a
+       single column of prose with every rule at the same weight, so the three
+       conduit types (the actual thing a new player has to learn) were a bullet
+       list halfway down a wall.
+
+       Now: named for what it does, on the Archive's panel so the game has one
+       panel language, and broken into numbered beats with the conduits given
+       their own cards. The prose is the same rules, cut shorter.
+
+       When the tutorial lands this whole screen is what it replaces. -->
   <div class="menuScreen hidden" id="menuRules">
-    <h2 class="menuH2">THE RITE</h2>
-    <div class="rules">
-      <b>THE RITE:</b> Cast your dice onto the sieve. Touching dice form
-      <span class="k">conduits</span> when they share blood:<br>
-      • <b>KIND</b> — matching values <span class="k">(×3)</span><br>
-      • <b>RUN</b> — three-plus consecutive values <span class="k">(×4)</span><br>
-      • <b>PARITY</b> — all odd or all even <span class="k">(×1.5)</span><br><br>
-      Conduit blood is summed, then multiplied by your
-      <span class="p">Offering Multiplier</span> — raising it is how you survive the deep.<br><br>
-      Click landed dice to <span class="p">mark</span> them, then re-roll.
-      <b>Seal Fate</b> to bank the blood. You have <b>3 casts</b> to meet the Soul Quota.
-      Between levels, spend <span class="g">Soul Shards</span> at the Ossuary on cursed dice,
-      altar chalks and relics.<br><br>
-      Your <b>altar holds only five relics</b>, and your cup only so many bones. When
-      either is full the Ossuary offers an <b>Exchange</b> — pay the price and name what
-      you leave behind. That choice <i>is</i> your build.<br><br>
-      Every <b>fifth descent</b> is a <span class="k">Trial</span> — a cruel rule and a swollen
-      quota. Break one and the sieve grants a <span class="g">Boon</span>; past level ten it also
-      carves a permanent <span class="p">Decree</span> into the rite.<br><br>
-      <b>SPACE</b> cast / seal &nbsp;·&nbsp; <b>R</b> re-roll marked &nbsp;·&nbsp;
-      <b>A</b> re-roll all &nbsp;·&nbsp; <b>G</b> grimoire
+    <div class="arcPanel">
+      <button id="btnRulesX" class="xClose corner" aria-label="close"><span class="xG">X</span></button>
+      <div class="arcTop">
+        <div>
+          <h2 class="menuH2 arcTitle">HOW TO PLAY</h2>
+          <div class="arcFlavor">Six bones, a hungry grid, and a quota that never stops climbing.</div>
+        </div>
+      </div>
+      <div id="rulesBody">
+
+        <div class="ruleSec">
+          <div class="ruleHead"><em>1</em>THE CAST</div>
+          <p>Cast your bones onto the sieve. Click any that landed to
+            <span class="p">mark</span> them and re-roll, then <b>SEAL FATE</b> to bank
+            what they are worth. You get <b>three casts</b> to meet the descent's
+            <span class="k">Soul Quota</span> — fall short and the run ends.</p>
+        </div>
+
+        <div class="ruleSec">
+          <div class="ruleHead"><em>2</em>THE CONDUITS</div>
+          <p>Bones that touch form a <span class="k">conduit</span> when they share blood.
+            This is where nearly all of your score comes from.</p>
+          <div class="ruleGrid">
+            <div class="ruleCard"><div class="rcName">KIND</div>
+              <div class="rcMult">×3</div>
+              <div class="rcDesc">Touching bones showing the same value.</div></div>
+            <div class="ruleCard"><div class="rcName">RUN</div>
+              <div class="rcMult">×4</div>
+              <div class="rcDesc">Three or more in consecutive order.</div></div>
+            <div class="ruleCard"><div class="rcName">PARITY</div>
+              <div class="rcMult">×1.5</div>
+              <div class="rcDesc">All odd, or all even.</div></div>
+          </div>
+        </div>
+
+        <div class="ruleSec">
+          <div class="ruleHead"><em>3</em>THE OFFERING</div>
+          <p>Every conduit's blood is summed, then multiplied by your
+            <span class="p">Offering Multiplier</span>. Raising that multiplier — not
+            rolling higher — is how anyone survives the deep.</p>
+        </div>
+
+        <div class="ruleSec">
+          <div class="ruleHead"><em>4</em>THE OSSUARY</div>
+          <p>Between descents, spend <span class="g">Soul Shards</span> on cursed dice,
+            altar chalks and relics. Your <b>altar holds five relics</b> and your cup
+            holds only so many bones; when either is full the Ossuary offers an
+            <b>Exchange</b> — pay, and name what you leave behind.
+            That choice <i>is</i> your build.</p>
+        </div>
+
+        <div class="ruleSec">
+          <div class="ruleHead"><em>5</em>THE TRIALS</div>
+          <p>Every <b>fifth descent</b> is a <span class="k">Trial</span>: a cruel rule and a
+            swollen quota. Break one and the sieve grants a <span class="g">Boon</span>.
+            Past the tenth it also carves a permanent <span class="p">Decree</span> into
+            the rite — for better and for worse.</p>
+        </div>
+
+        <div class="ruleSec">
+          <div class="ruleHead"><em>6</em>THE KEYS</div>
+          <div class="ruleKeys">
+            <span><b>SPACE</b>cast / seal</span>
+            <span><b>R</b>re-roll marked</span>
+            <span><b>A</b>re-roll all</span>
+            <span><b>G</b>grimoire</span>
+            <span><b>ESC</b>settings</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="menuBtnRow arcPanelFoot">
+        <button class="ghost" id="miRulesBack"><i class="ic" data-ic="caretRight" style="transform:rotate(180deg);"></i>RETURN</button>
+        <button class="primary big" id="btnStart"><i class="ic" data-ic="pentagram"></i>BEGIN THE RITE</button>
+      </div>
     </div>
+  </div>
+
+  <!-- ============ THE ARCHIVE ============
+       The career screen. Everything the sieve has ever offered, what it costs
+       in Marrow, and what has already been bought. Locked entries show in
+       full — name, icon, description, price — because design §4 wants this to
+       read as a shopping list, never as a mystery box. -->
+  <div class="menuScreen hidden" id="menuArchive">
+    <div class="arcPanel">
+      <button id="btnArcX" class="xClose corner" aria-label="close"><span class="xG">X</span></button>
+      <!-- head: what this is, what is in the purse, what the career has done.
+           Outside the scrolling region on purpose — the purse is the number
+           every price on this screen is read against, so it must never be the
+           thing that scrolled away. -->
+      <div class="arcTop">
+        <div>
+          <h2 class="menuH2 arcTitle">THE ARCHIVE</h2>
+          <div class="arcFlavor">What the deep has already been paid for, and what it still wants.</div>
+        </div>
+        <div id="arcLedger">
+          <div id="arcMarrow"></div>
+          <div id="arcLife"></div>
+        </div>
+      </div>
+      <!-- Two tabs, per design §4. They share one ledger bar above them because
+           they spend one purse: the split is what the Marrow buys, not what it
+           is. THE OATHS rather than "the Rites" — see the note over RITES in the
+           script, where a rite already means a run. -->
+      <div id="arcTabs">
+        <button class="arcTab on" id="arcTabRoster"><i class="ic" data-ic="cards"></i>THE ROSTER<span class="tabN" id="arcTabRosterN"></span></button>
+        <button class="arcTab" id="arcTabOaths"><i class="ic" data-ic="handFist"></i>THE OATHS<span class="tabN" id="arcTabOathsN"></span></button>
+      </div>
+      <!-- Filters. The roster is fifty-two entries and always will be; this is
+           what stops all of it being on screen at once, without shrinking any
+           of it. Rebuilt by renderArchive so the counts stay honest. -->
+      <div id="arcFilters">
+        <span class="arcFilterLabel">SHOW</span>
+        <div class="drop arcDrop" id="arcGroupDrop">
+          <div class="dropBtn" id="arcGroupBtn"><span>EVERYTHING</span><i class="ic" data-ic="caretDown"></i></div>
+          <div class="dropList" id="arcGroupList"></div>
+        </div>
+        <div class="drop arcDrop" id="arcStateDrop">
+          <div class="dropBtn" id="arcStateBtn"><span>ALL</span><i class="ic" data-ic="caretDown"></i></div>
+          <div class="dropList" id="arcStateList"></div>
+        </div>
+        <label id="arcSearchWrap">
+          <i class="ic" data-ic="eye"></i>
+          <input id="arcSearch" type="text" placeholder="SEARCH BY NAME" autocomplete="off" spellcheck="false">
+          <button type="button" id="arcSearchClear" class="hidden" aria-label="clear search">&times;</button>
+        </label>
+        <span id="arcShowing"></span>
+        <button type="button" id="btnArcClearFilters" class="hidden">CLEAR</button>
+      </div>
+      <div id="arcBody">
+        <div id="arcRoster" class="arcPane"></div>
+        <div id="arcOaths" class="arcPane hidden"></div>
+      </div>
+      <div class="menuBtnRow arcPanelFoot">
+        <button class="ghost" id="miArchiveBack"><i class="ic" data-ic="caretRight" style="transform:rotate(180deg);"></i>RETURN</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ARCHIVE PURCHASE ============
+     Unlocks are permanent and Marrow is slow, so a mis-click must never be
+     able to spend it. Same two-button shape as the Ossuary's Exchange. -->
+<!-- Frameless, for the same reason as the wipe dialog below it. -->
+<div class="overlay hidden" id="arcConfirmOverlay" style="z-index:67;">
+  <div class="modal">
+    <h2>PAY THE ARCHIVE</h2>
+    <div class="flavor">What is bought here is bought for good.</div>
+    <div id="arcWhat"></div>
+    <div id="arcWhatDesc"></div>
+    <div id="arcCost"></div>
     <div class="menuBtnRow">
-      <button class="ghost" id="miRulesBack"><i class="ic" data-ic="caretRight" style="transform:rotate(180deg);"></i>RETURN</button>
-      <button class="primary big" id="btnStart"><i class="ic" data-ic="pentagram"></i>BEGIN THE RITE</button>
+      <button class="ghost" id="btnArcCancel"><i class="ic" data-ic="x"></i>NOT YET</button>
+      <button class="primary" id="btnArcConfirm"><i class="ic" data-ic="handFist"></i>PAY IN MARROW</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCOUR THE ARCHIVE ============
+     The only irreversible thing in the game. It sits above the Veil that
+     launched it, keeps the cancel on the left where the safe answer belongs,
+     and names out loud what is about to be lost. -->
+<!-- No <div class="boneFrame">. The ornament is sized for the big panels — its
+     band reaches ~86px into whatever it wraps, and it overhangs the box by
+     18px, which against .modal's overflow-y:auto put scrollbars on BOTH axes
+     and buried the content. Panels that carry it (the Ossuary, the Boon, the
+     death screen, the Veil) all pair it with an inner body padded by
+     --bf-pad; a 600px dialog has no room for that. The Exchange and the
+     Culling — this dialog's actual peers — carry no frame either. -->
+<div class="overlay hidden" id="wipeOverlay" style="z-index:70;">
+  <div class="modal wipeModal">
+    <i class="ic sigil" data-ic="warningOctagon"></i>
+    <h2>SCOUR THE ARCHIVE</h2>
+    <div class="flavor">The deep forgets you. Everything it owed you goes with it.</div>
+    <div id="wipeWhat"></div>
+    <div id="wipeWarn"><i class="ic" data-ic="prohibit"></i>THIS CANNOT BE UNDONE</div>
+    <div class="menuBtnRow">
+      <button class="primary" id="btnWipeCancel"><i class="ic" data-ic="check"></i>KEEP MY ARCHIVE</button>
+      <button class="danger" id="btnWipeConfirm"><i class="ic" data-ic="trash"></i>SCOUR IT ALL</button>
     </div>
   </div>
 </div>
@@ -2415,6 +3482,7 @@
       <h2>THE SIEVE FEEDS</h2>
       <div class="flavor">Your marrow joins the mortar. Another gambler will find your dice.</div>
       <div class="goStats" id="goStats"></div>
+      <div id="goMarrow"></div>
       <div class="menuBtnRow">
         <button class="ghost" id="btnToMenu"><i class="ic" data-ic="pentagram"></i>THE ALTAR</button>
         <button class="primary big" id="btnRestart"><i class="ic" data-ic="arrowsCounterClockwise"></i>RISE AGAIN</button>
@@ -3478,6 +4546,21 @@ const CHANGELOG_HISTORY_URL =
 // Newest first. Add to the FRONT.
 const CHANGELOG = [
   {
+    id:'the_bone_sieve_v1.0.0_beta.10', date:'2026-08-03',
+    codename:'WHAT OUTLIVES THE RITE',
+    flavor:'Every rite ends the same way. What it leaves behind does not.',
+    entries:[
+      {kind:'added',   text:'The deep pays for what you bring it. Every rite now ends with MARROW — earned on depth above all, and on the blood and the single greatest offering you drew before you fell. Going one descent deeper than you ever have is the largest payment in the game, and it is paid once.'},
+      {kind:'added',   text:'THE ARCHIVE. A second ledger, kept between rites, holding every bone, chalk and relic the sieve has ever offered — what each costs in Marrow, and what is already yours. Nothing is hidden from you: a thing you have not bought still shows its name, its face and its price. It is a list of what to want.'},
+      {kind:'changed', text:'A new practitioner begins with less. The bone die and seven relics, and everything else earned. This will be true of a rite you have already been running: the sieve has forgotten what it used to lay out for you, and you will buy it back. The counter is thinner at first and grows into itself, which is the shape it should always have had.'},
+      {kind:'added',   text:'THE OATHS. Four standing promises bought with Marrow and kept for good — one more bone in the cup, one more re-roll on every cast, cheaper wares, a fuller purse at the mouth of a run. Each is a ladder climbed a rung at a time, and each rung is felt in every rite after it.'},
+      {kind:'added',   text:'What you own, you may set aside. Any bone, chalk or relic can be switched off in the Archive and switched back on again, free and at any time, so a rite can be run on the build you mean to run rather than on whatever the counter feels like offering. Unlocking is forever; the loadout is yours each time.'},
+      {kind:'changed', text:'The fifteenth and the twenty-fifth descents are keys as well as depths. The rarest bones and the cursed relics cannot be bought at any price until you have been that deep at least once. Marrow is earned at any depth; the deep content is not for sale to a purse alone.'},
+      {kind:'balance', text:'Chalk is content now, not garnish, and is earned like everything else. DEEPEN THE SIGIL is cursed and priced as what it is: the one ware with no ceiling, bought again and again against the same line. It surfaces late, and rarely, and only once you have gone deep enough to have earned it.'},
+      {kind:'changed', text:'The Archive, the title screen and THE VEIL have been rebuilt: one panel language, filters and a search over the roster, carved stone under the menu, and one close button across the whole crypt. THE RITE is now HOW TO PLAY, which is what it always was.'},
+    ],
+  },
+  {
     id:'the_bone_sieve_v1.0.0_beta.8', date:'2026-07-30',
     codename:'WHAT THE DEEP OWES',
     flavor:'The sieve weighed what it had been asking for, and found it was asking too much.',
@@ -3604,6 +4687,9 @@ const GRID = 5;
 // applyUIScale() is the only thing that writes it.
 let SIDEBAR_W = 376;
 const BASE_POOL = 12;
+// What the cup holds at the mouth of a run, before any Rite adds to it. The
+// pool CAP is BASE_POOL above; this is how many bones are actually in hand.
+const STARTING_BONES = 6;
 const MIN_POOL  = 4;              // Brittle Bone stops gnawing here
 // Famine is a flat withholding, not a floor: see startLevel().
 const FAMINE_HOLD = 3;
@@ -3785,7 +4871,17 @@ const CHALK_WARES = [
    desc:'Scrawls a sigil down a random COLUMN. Conduits lying on it score x3.'},
   {id:'chalk_cross',  kind:'chalk', axis:'cross',icon:'crosshairSimple', name:'Crossed Sigil', price:22, tier:3,
    desc:'Scrawls BOTH a row and a column at once.'},
-  {id:'chalk_deepen', kind:'chalk', axis:'deepen',icon:'paintBrush', name:'Deepen the Sigil', price:16, tier:2,
+  // Tier 4, and priced above every other chalk on the counter. This is the one
+  // ware in the game with no ceiling on it: every other multiplier is a fixed
+  // number you buy once, but Deepen can be bought again and again against the
+  // SAME line, and a conduit lying on that line is multiplied by the result
+  // every cast. That compounding is what let a fresh save with no relics at
+  // all reach descent 20+, which is tier-4 behaviour at a tier-2 price.
+  // Moving the tier does three things at once, which is why it is the whole
+  // fix: it raises the shard cost, it moves the ware onto tierWeight()'s
+  // tier-4 curve so it surfaces rarely and only in the deep, and it puts the
+  // Archive unlock behind design §9's descent-25 key.
+  {id:'chalk_deepen', kind:'chalk', axis:'deepen',icon:'paintBrush', name:'Deepen the Sigil', price:30, tier:4,
    desc:'Cuts an existing chalk line deeper: its multiplier gains +2.'},
 ];
 function buildShopPool(){
@@ -3862,23 +4958,795 @@ const BOON_BY_ID = {};
 for(const b of BOONS) BOON_BY_ID[b.id] = b;
 
 //======================================================================
+// 9b. THE MARROW LEDGER — the save that outlives the run
+//
+//  ┌──────────────────────────────────────────────────────────────────┐
+//  │  Everything else in this file is ONE DESCENT. `S` is born in     │
+//  │  freshState() and forfeit in gameOver(), and that is correct —   │
+//  │  losing the run is the game.                                     │
+//  │                                                                  │
+//  │  This is the other ledger: what the sieve remembers about a      │
+//  │  PLAYER rather than a descent. Its own localStorage key, its     │
+//  │  own shape, read once at boot. Nothing in a run may touch it     │
+//  │  mid-descent — Marrow is awarded between runs, never during one, │
+//  │  which is what keeps the tuned in-run shard economy untouched.   │
+//  │                                                                  │
+//  │  The shape below is the WHOLE meta-progression design            │
+//  │  (bone-sieve-meta-progression-design.md §7, plus §11), declared  │
+//  │  in full now on purpose: later phases should add BEHAVIOUR to    │
+//  │  fields that already exist, never a migration over a career a    │
+//  │  player has already spent thirty runs building.                  │
+//  │                                                                  │
+//  │  WHAT IS LIVE SO FAR:                                            │
+//  │    · the ledger itself — load, save, repair, persist  (phase 1)  │
+//  │    · unlockedDice / unlockedRelics / unlockedChalks gate what a  │
+//  │      run may draw, through runShopPool() below         (phase 2) │
+//  │    · Marrow is earned at every run end by closeOutRun(), and     │
+//  │      spent through buyUnlock() from The Archive        (phase 3) │
+//  │    · the four Rite ladders of §3 — bought through buyRite(),     │
+//  │      snapshotted into the run by riteSnapshot()        (phase 4) │
+//  │      (the player reads them as THE OATHS: see RITES below)       │
+//  │                                                                  │
+//  │    · the loadout toggles of §11 — disabled* written by           │
+//  │      toggleItem(), read by the same filter as the unlocks        │
+//  │                                                        (phase 5) │
+//  │                                                                  │
+//  │  STILL WITHHELD: the story fields of §12 are reserved and        │
+//  │  untouched. Nothing writes storyBeatsFired or storyComplete yet, │
+//  │  and no Archive entry renders as ??? — that needs content first. │
+//  └──────────────────────────────────────────────────────────────────┘
+//======================================================================
+
+// Its own key, alongside boneSieveAudio / boneSieveDetail / boneSieveView /
+// boneSieveSeenVersion — never folded in with them. Those four are PREFERENCES:
+// losing one costs a player a slider position. This is a CAREER, and it is the
+// only stored thing in the game whose loss would actually hurt.
+const META_KEY = 'boneSieveMeta';
+
+// Bumped only when the shape changes in a way a stored ledger cannot be read
+// straight through. Every load runs migrateMeta() on the way in, so an old or
+// damaged ledger is REPAIRED rather than discarded — see the note there.
+//
+// v2: the four Rites stopped being buy-once booleans and became tiered ladders
+// (design §3's restructure). That is a change of TYPE on a field a player may
+// already have paid for, which is exactly the case this number exists for.
+const META_VERSION = 2;
+
+// Sanity ceilings for anything read back off disk. localStorage is a text file
+// the player can edit, so every number that comes out of it is untrusted input,
+// not a number. These are absurdly high on purpose: they exist to stop NaN,
+// Infinity and hand-typed nonsense from poisoning arithmetic later, not to cap
+// legitimate play. A ledger sits in the low thousands of Marrow (design §5).
+const META_MAX_MARROW = 1e9;
+const META_MAX_STAT   = 1e12;
+const META_MAX_IDS    = 512;
+
+// The bone die alone (design §2 — it is already the sole starting die, so a
+// fresh ledger matches today's build exactly). Not derived from DIE_WARES tier
+// 1, which also holds `runt` and `rotting`; those are the first two PURCHASES.
+const META_START_DICE = ['bone'];
+
+// Every tier-1 relic, derived rather than listed (design §9). Deriving means a
+// tier-1 relic added to RELICS later is automatically part of a fresh ledger,
+// with no second list to remember to update — the same reason DIE_ORDER and
+// buildShopPool() read their content out of the tables instead of restating it.
+function metaStartRelics(){
+  return Object.keys(RELICS).filter(id => RELICS[id].tier === 1);
+}
+
+// How deep each Rite ladder goes (design §3, restructured). The ladders are
+// bought a step at a time and the levels stack — reroll level 2 is +2 in total,
+// not +2 instead of +1 — so the level IS the purchase history and a cap is the
+// only thing standing between the ledger and an unbounded power sink.
+//
+// Two caps, for two different kinds of thing. An extra starting die or reroll
+// is run POWER, compounding with every unlock a player owns, so those stop at
+// 3. A cheaper reroll or a few more opening shards is economy SMOOTHING, which
+// is why they can run to 5 without the same risk: they give the endless mode
+// somewhere to keep spending Marrow once the Archive is bought out.
+//
+// Levels only. What a level costs and what it does are Phase 4's business —
+// this table exists here because hydration cannot clamp what it cannot measure,
+// and everything read off disk is untrusted input.
+const RITE_MAX = {
+  extraDie:    3,
+  extraReroll: 3,
+  cheapReroll: 5,
+  extraShards: 5,
+};
+
+function freshMeta(){
+  return {
+    version: META_VERSION,
+
+    // ---- the currency (design §1, §5) --------------------------------
+    // Earned at the end of every run, identically, with no win-state branch.
+    marrow: 0,
+
+    // ---- what the player owns (design §2, §9, §12) --------------------
+    // One list apiece, TWO ways into each: bought with Marrow, or granted by a
+    // story flag. §12 is explicit that the grant paths differ but the record
+    // does not, so the pool filter that Phase 2 needs stays a single check.
+    unlockedDice:   META_START_DICE.slice(),
+    unlockedRelics: metaStartRelics(),
+    // Chalks start entirely locked, and unlike dice and relics there is no
+    // opening gift at all. Design §2 gated only dice and relics — chalks were
+    // left ungated on the reasoning that they are consumable board effects
+    // rather than collectible content. Playtesting killed that: a fresh save
+    // with no relic support was still reaching descent 20+ on stacked chalk
+    // alone, because a chalk multiplies a conduit that a deepened chalk then
+    // multiplies again. That is not a garnish on a build, it IS a build, so
+    // it is gated like one.
+    unlockedChalks: [],
+
+    // ---- loadout toggles (design §11) ---------------------------------
+    // Unlocking is permanent; toggling is a per-run loadout choice made in the
+    // hub ("no wild dice this run"). Stored as the EXCEPTIONS rather than a
+    // flag per item, because the overwhelmingly common state is "on" and a
+    // sparse list cannot drift out of sync with the content tables.
+    // Not in design §7's block — §11 needs it, and it would have been exactly
+    // the field that forced the first migration.
+    disabledDice:   [],
+    disabledRelics: [],
+    disabledChalks: [],
+
+    // ---- small permanent power (design §3, restructured) ----------------
+    // LADDER LEVELS, not flags. These began as buy-once booleans, on §3's
+    // original reading that one more die or one more reroll was a light touch.
+    // Against the real starting numbers — 12 dice, 5 altar slots, 2 rerolls —
+    // it plainly is not: a second reroll is a 50% increase in the scarcest
+    // resource in the shop loop. So each is a ladder bought a step at a time,
+    // levels stacking, capped by RITE_MAX above.
+    //
+    // `extraAltar` is the exception and stays a flag, because it is still an
+    // idea rather than a plan — §3 files it under "possibly, much later",
+    // gated expensive so it does not undercut the `shrine` relic, and the
+    // restructure did not revisit it. A reserved `false` costs nothing.
+    rites: {
+      extraDie:     0,
+      extraReroll:  0,
+      cheapReroll:  0,
+      extraShards:  0,
+      extraAltar:   false,
+    },
+
+    // ---- the career (design §4, §5, §9) --------------------------------
+    // `deepestLevel` carries three jobs at once: the hub's headline stat, the
+    // test for §5's one-time personal-best Marrow bonus, and the level-15 /
+    // level-25 depth gates that hold back tier-3 and tier-4 content. It is the
+    // single most load-bearing number in this ledger.
+    lifetime: {
+      runs:          0,
+      deepestLevel:  0,
+      bestOffering:  0,
+      trialsCleared: 0,
+    },
+
+    // ---- narrative (design §12; story bible §3) -------------------------
+    // Beat keys in the order they fired, so the milestone dispatcher can never
+    // re-fire one and the hub knows which story-gated entries have opened.
+    storyBeatsFired: [],
+    storyComplete:   false,
+
+    // ---- tutorial ------------------------------------------------------
+    // Reserved during THIS build even though the tutorial ships later, for the
+    // same reason as everything else here: no migration for it afterwards.
+    tutorial: { seen:false, skipped:false },
+  };
+}
+
+//---- reading untrusted values back off disk ---------------------------
+function metaInt(v, fallback, max){
+  const n = Math.floor(Number(v));
+  if(!isFinite(n)) return fallback;
+  return Math.max(0, Math.min(max, n));
+}
+function metaBool(v, fallback){ return typeof v === 'boolean' ? v : fallback; }
+
+// Ids are validated for SHAPE — non-empty string, sane length, no duplicates —
+// and deliberately NOT filtered against DIE_TYPES / RELICS. Design §12A has the
+// deep dying author new die entries at runtime, so a perfectly legitimate
+// unlocked id may name something no static table in this file has ever heard
+// of. Dropping an unrecognised id would silently delete content the player
+// earned; carrying a stale string costs nothing, since the pool filter has to
+// resolve ids against live content anyway before it can use them.
+function metaIdList(v, fallback){
+  if(!Array.isArray(v)) return fallback;
+  const out = [], seen = Object.create(null);
+  for(const raw of v){
+    if(typeof raw !== 'string') continue;
+    const id = raw.trim();
+    if(!id || id.length > 64 || seen[id]) continue;
+    seen[id] = true;
+    out.push(id);
+    if(out.length >= META_MAX_IDS) break;
+  }
+  return out;
+}
+
+// A ledger from an older shape is repaired on the way in, never thrown away.
+// v1 is the first shape ever written, so there is nothing behind it to migrate
+// FROM and this is a pass-through today. It exists now so that the next shape
+// change is a few lines here rather than a decision about whether it is
+// acceptable to wipe everyone's career — by then it would be, and it isn't.
+function migrateMeta(raw){
+  if(!raw || typeof raw !== 'object') return null;
+  // An unversioned ledger predates the stamp and is treated as v1 — v1 is the
+  // first shape ever written, so there is nothing older to mistake it for.
+  const v = metaInt(raw.version, 0, 999);
+
+  // v1 -> v2: the four Rites were buy-once booleans; design §3's restructure
+  // makes them ladder levels. A ledger that bought one paid for exactly one
+  // step, so `true` is level 1 and `false` is level 0.
+  //
+  // Worth being honest about: hydration would land on the same two numbers by
+  // itself, since metaInt() runs its input through Number() and JavaScript
+  // scores `true` as 1. This is written out anyway because that would be right
+  // by coincidence rather than by intent, and a coincidence is not something
+  // the next shape change can safely be built on top of. If a later ladder
+  // ever wants `true` to mean something other than level 1, this is the line
+  // that changes, and it is already here to be changed.
+  if(v < 2 && raw.rites && typeof raw.rites === 'object')
+    for(const k in RITE_MAX)
+      if(typeof raw.rites[k] === 'boolean') raw.rites[k] = raw.rites[k] ? 1 : 0;
+
+  return raw;
+}
+
+// Merge a stored ledger onto a fresh one field by field, so a save missing a
+// key (written before that key existed) gets the default rather than an
+// undefined, and a save carrying a key we no longer know about simply loses it.
+function hydrateMeta(raw){
+  const d = freshMeta();
+  if(!raw || typeof raw !== 'object') return d;
+
+  d.marrow = metaInt(raw.marrow, 0, META_MAX_MARROW);
+
+  d.unlockedDice   = metaIdList(raw.unlockedDice,   d.unlockedDice);
+  d.unlockedRelics = metaIdList(raw.unlockedRelics, d.unlockedRelics);
+  // A ledger written before chalks were gated simply has no such key, and the
+  // default — everything locked — is exactly the state that change wanted. No
+  // migration step and no META_VERSION bump: an ADDITIVE field is readable
+  // straight through, which is the bar migrateMeta() sets for bumping.
+  d.unlockedChalks = metaIdList(raw.unlockedChalks, d.unlockedChalks);
+  d.disabledDice   = metaIdList(raw.disabledDice,   []);
+  d.disabledRelics = metaIdList(raw.disabledRelics, []);
+  d.disabledChalks = metaIdList(raw.disabledChalks, []);
+  // The starting content is a floor, not an initial value. A ledger that has
+  // somehow lost the bone die is a ledger that cannot roll anything, so the
+  // opening set is unioned back in rather than trusted from disk.
+  for(const id of META_START_DICE)   if(!d.unlockedDice.includes(id))   d.unlockedDice.push(id);
+  for(const id of metaStartRelics()) if(!d.unlockedRelics.includes(id)) d.unlockedRelics.push(id);
+
+  // The ladders are levels, clamped to their caps; `extraAltar` is the one
+  // Rite still stored as a flag, so it is the one read as a boolean.
+  if(raw.rites && typeof raw.rites === 'object'){
+    for(const k in RITE_MAX) d.rites[k] = metaInt(raw.rites[k], d.rites[k], RITE_MAX[k]);
+    d.rites.extraAltar = metaBool(raw.rites.extraAltar, d.rites.extraAltar);
+  }
+
+  if(raw.lifetime && typeof raw.lifetime === 'object')
+    for(const k in d.lifetime) d.lifetime[k] = metaInt(raw.lifetime[k], d.lifetime[k], META_MAX_STAT);
+
+  d.storyBeatsFired = metaIdList(raw.storyBeatsFired, []);
+  d.storyComplete   = metaBool(raw.storyComplete, false);
+
+  if(raw.tutorial && typeof raw.tutorial === 'object')
+    for(const k in d.tutorial) d.tutorial[k] = metaBool(raw.tutorial[k], d.tutorial[k]);
+
+  return d;
+}
+
+// Same shape as View below — a live object, a load() and a save() — so this
+// reads as one more thing the game remembers rather than a subsystem. Callers
+// mutate Meta.data and call Meta.save(), exactly as View.font is set and then
+// View.save() is called. It stays deliberately dumb: it stores, repairs and
+// persists, and knows nothing about what a Marrow is worth. The RULES —
+// earning, pricing, depth gates, buying — live further down this section, so
+// that a change to what a Rite costs never reaches the thing holding a career.
+const Meta = {
+  data: freshMeta(),
+
+  load(){
+    let raw = null;
+    try{
+      const txt = localStorage.getItem(META_KEY);
+      // A ledger that will not parse reads as no ledger at all. There is
+      // nothing better to do with half a JSON object, and refusing to boot
+      // over one would be worse than starting a career again.
+      if(txt) raw = JSON.parse(txt);
+    }catch(e){ raw = null; }
+    this.data = hydrateMeta(migrateMeta(raw));
+    // Write straight back: on a first launch this is what puts the ledger on
+    // disk at all (so "close the game and reopen it" is testable from the very
+    // first boot), and on every later launch it flushes the repairs hydration
+    // just made instead of leaving a damaged copy stored.
+    this.save();
+    return this.data;
+  },
+
+  save(){
+    try{ localStorage.setItem(META_KEY, JSON.stringify(this.data)); return true; }
+    catch(e){ return false; }   // private mode, full quota — never fatal
+  },
+
+  // Wipes the career back to a fresh ledger — the same state a player who has
+  // never launched the game would see. SCOUR THE ARCHIVE in the Veil is the
+  // only thing that calls it, behind its own confirmation.
+  reset(){
+    this.data = freshMeta();
+    this.save();
+    return this.data;
+  },
+};
+
+//---- what the ledger gates --------------------------------------------
+// Design §2: a locked die or relic is simply absent from the pool a run draws
+// from. That is the whole mechanism, and it is deliberately the ONLY one —
+// there is no second "is this locked?" test guarding a purchase, because
+// content that was never dealt cannot be bought, banished, rolled or rewarded.
+// One filter, one place, no gameplay code touched.
+//
+// Both checks read unlock AND toggle together on purpose. Unlocking is
+// permanent and toggling is a loadout choice (design §11), but nothing that
+// draws content ever cares about the difference — it only wants to know
+// whether this run is allowed to see the thing.
+function dieAvailable(id){
+  const m = Meta.data;
+  return m.unlockedDice.includes(id) && !m.disabledDice.includes(id);
+}
+function relicAvailable(id){
+  const m = Meta.data;
+  return m.unlockedRelics.includes(id) && !m.disabledRelics.includes(id);
+}
+// Keyed on the WARE id ('chalk_row'), not an axis: 'cross' and 'deepen' are
+// wares in their own right and unlock separately from the plain lines.
+function chalkAvailable(id){
+  const m = Meta.data;
+  return m.unlockedChalks.includes(id) && !m.disabledChalks.includes(id);
+}
+
+// SHOP_POOL stays the whole CATALOGUE — every die, chalk and relic in the game.
+// The Archive has to render locked entries with their names and prices (design
+// §4), so the complete list must survive somewhere untouched. This derives the
+// subset one descent is permitted to draw from.
+//
+// Snapshotted per run rather than filtered per draw, because design §11 makes
+// the toggles a choice taken BEFORE a run: a switch flipped while a descent is
+// live must never change what the Ossuary is already holding, and a filter
+// evaluated at draw time would do exactly that.
+//
+// Chalks are gated too, as of the post-Phase-3 balance pass. They were exempt
+// on the theory that they were board garnish and that leaving them in kept a
+// fresh save's counter from being seven relics and a bone die. Both halves of
+// that turned out to be wrong: stacked chalk carried relic-less runs past
+// descent 20, and a thin opening counter is the intended shape of a fresh
+// save rather than a problem to pad around.
+function runShopPool(){
+  return SHOP_POOL.filter(it=>{
+    if(it.kind === 'die')   return dieAvailable(it.die);
+    if(it.kind === 'relic') return relicAvailable(it.relic);
+    if(it.kind === 'chalk') return chalkAvailable(it.id);
+    return true;
+  });
+}
+
+// The Grimoire is the book for THIS descent, so it asks the run's own snapshot
+// what exists rather than asking the ledger — otherwise a toggle flipped
+// between runs could leave the book and the counter disagreeing about what is
+// down here. A relic already bound to the altar always shows, whatever the
+// ledger has since been told, because the player is plainly holding it.
+function runKnowsDie(id){
+  return !!S && S.wares.some(w => w.kind === 'die' && w.die === id);
+}
+function runKnowsRelic(id){
+  return !!S && (S.relics.includes(id) ||
+                 S.wares.some(w => w.kind === 'relic' && w.relic === id));
+}
+
+//---- what the deep owes: earning Marrow (design §5) --------------------
+// Awarded on EVERY run end, identically. There is no win state in this game
+// and so there is no win bonus, no branch and no special case — see design §5,
+// which is emphatic about it.
+//
+// The three inputs live on wildly different scales: depth is a small integer
+// while blood and best-offering run from the low thousands into six figures.
+// Added raw, blood would drown depth entirely, which is backwards — depth is
+// the thing this economy exists to reward. So blood and best-offering are
+// square-rooted and capped, and depth stays linear and uncapped.
+const MARROW_PER_LEVEL  = 3;
+const MARROW_BLOOD_CAP  = 60;
+const MARROW_ROLL_CAP   = 20;
+// The single biggest payday in the game, and deliberately so: it fires only on
+// the run that beats your lifetime deepest, and never again at that depth. A
+// player farming a safe shallow build caps out on blood and offering within a
+// few runs and never sees this at all. A player actually pushing deeper earns
+// steadily AND spikes. That is the whole anti-grind mechanism, not a bolt-on.
+const MARROW_PB_BONUS   = 50;
+
+function marrowFor(level, blood, bestOffering, priorDeepest){
+  const depth = Math.max(0, level) * MARROW_PER_LEVEL;
+  const bloodC = Math.min(MARROW_BLOOD_CAP, Math.floor(Math.sqrt(Math.max(0, blood)) / 10));
+  const rollC  = Math.min(MARROW_ROLL_CAP,  Math.floor(Math.max(0, bestOffering) / 1000));
+  const pb     = level > priorDeepest ? MARROW_PB_BONUS : 0;
+  return {depth, blood:bloodC, roll:rollC, pb, total: depth + bloodC + rollC + pb};
+}
+
+// Called once as a run ends. Returns the award so the death screen can show its
+// working; the ledger is already updated and written by the time it returns.
+//
+// The PB test has to read lifetime.deepestLevel BEFORE it is raised, or the
+// bonus could never fire — hence the local copy on the first line.
+function closeOutRun(){
+  const m = Meta.data;
+  const priorDeepest = m.lifetime.deepestLevel;
+  const award = marrowFor(S.level, S.totalScore, S.stats.best, priorDeepest);
+  m.marrow += award.total;
+  m.lifetime.runs++;
+  m.lifetime.deepestLevel  = Math.max(priorDeepest,           S.level);
+  m.lifetime.bestOffering  = Math.max(m.lifetime.bestOffering, S.stats.best);
+  m.lifetime.trialsCleared += S.stats.trialsCleared;
+  Meta.save();
+  return award;
+}
+
+//---- what it buys: Archive pricing (design §10) ------------------------
+// PLACEHOLDER MULTIPLIER — expected to be tuned, and the only number that
+// should need to move.
+//
+// Design §10: rather than hand-tuning a second economy, a Marrow price is the
+// item's existing SHARD price times one flat constant, so the relative costs
+// inside and across tiers automatically mirror balance work already done.
+//
+// Why 3, so a future tuning pass has the arithmetic rather than a bare number:
+// every locked item's shard price totals 845 (144 in dice, 76 in chalks, 625
+// in relics), so x3 puts the full roster at 2,535 Marrow. Design §5's own
+// calibration table has a strong run paying ~150, a modest one ~49 and a rough
+// one ~19; a player improving across a career averages somewhere near 80-100
+// with PB spikes, which clears the roster in roughly 25-32 runs. Design §6
+// asks for 15-25, so this is the number that is expected to come down.
+//
+// The chalk column is why: gating them in the §2b balance pass added 76 shards
+// of content to a roster that had been costed at 769, and the pacing estimate
+// was not recomputed at the time.
+// It also keeps the early hook: the cheapest locked die (Runt, 5 shards) costs
+// 15 Marrow, inside the reach of a single bad first run.
+const MARROW_PRICE_MULT = 3;
+function marrowPrice(shardPrice){ return shardPrice * MARROW_PRICE_MULT; }
+
+// Shard price and tier by die id, lifted off the ware table so the Archive
+// never restates a number the Ossuary already owns.
+const DIE_PRICE = {}, DIE_TIER = {};
+for(const w of DIE_WARES){ DIE_PRICE[w.die] = w.price; DIE_TIER[w.die] = w.tier; }
+
+// Design §9's depth gates, layered ON TOP of the Marrow cost. Marrow can be
+// earned at any depth, but the deep content needs a one-time "prove you got
+// this far" key as well — so a shallow grinder can stockpile currency and
+// still be unable to spend it on the top tiers. Purely a function of tier:
+// tier 3 (obsidian, mirror, the rare relics) wants descent 15, tier 4
+// (crimson, the cursed relics) wants descent 25.
+const MARROW_DEPTH_GATE = {3:15, 4:25};
+function depthGateFor(tier){ return MARROW_DEPTH_GATE[tier] || 0; }
+function depthGateMet(tier){ return Meta.data.lifetime.deepestLevel >= depthGateFor(tier); }
+
+// Which ledger list a purchase lands in. One lookup, so buyUnlock never has to
+// grow a chain of ifs as kinds are added.
+const META_UNLOCK_LIST = {die:'unlockedDice', chalk:'unlockedChalks', relic:'unlockedRelics'};
+// ...and its opposite number for design §11's loadout toggles. Same shape on
+// purpose: everything below can then treat "is it unlocked" and "is it switched
+// on" as two reads of the same kind rather than two subsystems.
+const META_DISABLE_LIST = {die:'disabledDice', chalk:'disabledChalks', relic:'disabledRelics'};
+
+function itemDisabled(kind, id){
+  const list = META_DISABLE_LIST[kind];
+  return !!list && Meta.data[list].includes(id);
+}
+
+// Design §11. Unlocking is permanent and costs Marrow; this costs nothing and
+// reverses on the next click. It is a LOADOUT choice — "no wild dice this run"
+// — so there is no confirmation and no spend, and deliberately no symmetry
+// with the purchase flow beyond sitting on the same plaque.
+//
+// Only an owned thing can be set aside. Refusing on anything else is not
+// defensive noise: it keeps the disabled lists from filling with ids the player
+// has never owned, which would then silently switch content off at the moment
+// they finally bought it.
+function toggleItem(kind, id){
+  const row = archiveRoster().find(e => e.kind === kind && e.id === id);
+  if(!row || !row.owned) return false;
+  const list = META_DISABLE_LIST[kind];
+  if(!list) return false;
+  const arr = Meta.data[list], at = arr.indexOf(id);
+  if(at >= 0) arr.splice(at, 1); else arr.push(id);
+  Meta.save();
+  // Same reasoning as buyUnlock: at the menu S is holding a stale snapshot from
+  // the last freshState(), and the Grimoire reads that rather than the ledger.
+  // A live run is deliberately NOT touched — its pool was fixed when it began.
+  if(menuMode && S) S.wares = runShopPool();
+  return true;
+}
+
+// One row per gateable thing in the game, dice first, tiers ascending. The
+// Archive renders straight off this, so what the screen shows and what the
+// unlock actually does can never drift.
+//
+// `owned` and `off` are two different questions and both are answered here:
+// owned is whether it has been paid for, off is whether the player has set it
+// aside for now. Nothing that is not owned can be off.
+function archiveRoster(){
+  const out = [];
+  const row = (kind, id, src, extra) => Object.assign(
+    {kind, id, name:src.name, icon:src.icon, desc:src.desc, off:itemDisabled(kind, id)},
+    extra);
+  for(const id of DIE_ORDER){
+    // A die with no ware entry has no shard price to convert, so it cannot be
+    // priced and is not Archive content. Nothing is in that state today; the
+    // guard is here for the story-generated dice of design §12A, which are
+    // granted outright and must never turn up as a purchase.
+    if(!(id in DIE_PRICE)) continue;
+    out.push(row('die', id, DIE_TYPES[id], {
+      tier:DIE_TIER[id], price:marrowPrice(DIE_PRICE[id]),
+      owned:Meta.data.unlockedDice.includes(id)}));
+  }
+  for(const w of CHALK_WARES){
+    out.push(row('chalk', w.id, w, {
+      tier:w.tier, price:marrowPrice(w.price),
+      owned:Meta.data.unlockedChalks.includes(w.id)}));
+  }
+  for(const id in RELICS){
+    const r = RELICS[id];
+    out.push(row('relic', id, r, {
+      tier:r.tier, price:marrowPrice(r.price),
+      owned:Meta.data.unlockedRelics.includes(id)}));
+  }
+  for(const s of storyPlaceholders()) out.push(s);
+  return out;
+}
+
+//---- story-gated entries (design §12) — SCAFFOLD ONLY ------------------
+//  ┌──────────────────────────────────────────────────────────────────┐
+//  │  This is a SHAPE, not a feature. Everything below draws the slot  │
+//  │  a story-gated thing will one day sit in. NOTHING fires one.      │
+//  │                                                                   │
+//  │  Deliberately NOT built here, and each needs its own content      │
+//  │  pass before it can be:                                           │
+//  │    · §12A death-generated dice — a death past depth 15 authoring  │
+//  │      a die with generated remains-flavour. Needs the hand-written │
+//  │      descriptor pool that design's "Still Open" list is waiting   │
+//  │      on, plus death-tracking that does not exist.                 │
+//  │    · §12B the two story-completion items — hand-authored, and     │
+//  │      there is no narrative for them to be the reward for yet.     │
+//  │    · anything that WRITES storyBeatsFired or storyComplete. Both  │
+//  │      fields have been on the ledger since phase 1 and both are    │
+//  │      still only ever read back as defaults.                       │
+//  │                                                                   │
+//  │  What IS here: one render state, and one fake row to prove it     │
+//  │  draws. When the content pass starts, it replaces                 │
+//  │  storyPlaceholders() and touches nothing else on this screen.     │
+//  └──────────────────────────────────────────────────────────────────┘
+//======================================================================
+
+// TEMPORARY — REMOVE BEFORE RELEASE.
+// A single fake row so the sealed state can be seen and tested while there is
+// no real data to drive it. It is a `let` rather than a `const` on purpose:
+// the tests flip it to prove the roster is clean without it, and a `const`
+// would read as something intended to stay.
+let STORY_FIXTURE = true;
+
+// A sealed row carries almost nothing, and that is the point — design §12 wants
+// its EXISTENCE revealed and its identity withheld. No name, no icon, no
+// description, no price: anything more is a thing the player could start
+// planning around. `kind` survives because the grid groups by it and because
+// "there is a die you have not met" is part of what the slot is saying.
+function storyPlaceholders(){
+  if(!STORY_FIXTURE) return [];
+  return [{
+    kind:'die', id:'__story_fixture__', sealed:true,
+    // never read while sealed; present so nothing downstream has to guard
+    name:'', icon:'', desc:'', tier:0, price:0, owned:false, off:false,
+  }];
+}
+// Sealed rows are outside the economy entirely: they cannot be bought, cannot
+// be set aside, and must not appear in any count of what a player owns or
+// could own. Everything that counts the roster asks this first.
+function isSealed(e){ return !!e && e.sealed === true; }
+
+// The one place a purchase happens. Returns true only if the ledger actually
+// changed, so the caller never has to re-derive whether it worked.
+function buyUnlock(kind, id){
+  const row = archiveRoster().find(e => e.kind === kind && e.id === id);
+  if(!row || row.owned) return false;
+  if(!depthGateMet(row.tier)) return false;
+  if(Meta.data.marrow < row.price) return false;
+  const list = META_UNLOCK_LIST[kind];
+  if(!list) return false;
+  Meta.data.marrow -= row.price;
+  Meta.data[list].push(id);
+  Meta.save();
+  // The pool a run draws from is snapshotted when the run is born, and at the
+  // menu that snapshot is already sitting in S from the last freshState().
+  // Re-take it so the Grimoire — which reads the run's snapshot, not the
+  // ledger — agrees with what was just bought without waiting for a run.
+  if(menuMode && S) S.wares = runShopPool();
+  return true;
+}
+
+//---- the Oaths: permanent power (design §3, restructured) --------------
+// The other half of what Marrow buys. Everything above this line UNLOCKS
+// content that was always in the game and merely hidden; these four make every
+// future run begin stronger, which is a different kind of purchase and is
+// deliberately priced and gated as one.
+//
+// A NOTE ON THE NAME. Design §3 calls these "Rites", and so does the save
+// field, and so do all the identifiers here — changing that now would churn a
+// schema that has just been migrated for no gain. But in this game's own voice
+// a *rite* is a RUN: the title screen says BEGIN THE RITE, the ledger counts
+// RITES to mean runs performed, and a descent means a level within one. A
+// screen called THE RITES sitting next to a stat called RITES would be two
+// different meanings of the word an arm's length apart. So the code says rite
+// and the player reads OATH — a standing promise carried into every rite,
+// which is what these actually are. If that reads wrong, ARC_OATH_LABEL and
+// the four `name` fields below are the only strings that need to move.
+const ARC_OATH_LABEL = 'THE OATHS';
+
+// How much one level of each economy Oath is actually worth in play.
+//
+// The floor matters more than it looks. Skeleton Key (tier 2, 14 shards) makes
+// new wares cost a flat 1 AND lays out a fifth ware; an Oath that reached 1
+// would have quietly eaten half of a relic a player can still be asked to pay
+// shards for. Stopping at 2 keeps the relic strictly the better thing, which
+// is the same care design §3 asked for around the altar slot and `shrine`.
+const RITE_REROLL_FLOOR = 2;
+// Design §3's own figure for one purchase, kept as the per-level step: five
+// levels is +15 shards at the mouth of a run, a little over one tier-1 relic.
+const RITE_SHARD_STEP = 3;
+
+// Two shapes of ladder, for two different kinds of effect.
+//
+//   Extra bones and extra re-rolls are run POWER. They compound with every
+//   relic, boon and die a player will ever unlock, so they stop at 3 and the
+//   climb is steep.
+//
+//   Cheaper wares and a fuller opening purse are economy SMOOTHING. They fade
+//   in relevance as a run deepens — an extra 15 shards is a head start, not a
+//   build — so they can run to 5 and act as the long sink the endless mode
+//   needs once the roster is bought out.
+//
+// PLACEHOLDER PRICES, on the same footing as MARROW_PRICE_MULT above and
+// expected to move once there is real data. The arithmetic, so a tuning pass
+// has something to argue with: design §5 puts a modest run near 49 Marrow and
+// a strong one near 150, so a first level at 40-60 is one honest run — cheap
+// enough to be the thing a new player buys early, dear enough to compete with
+// unlocking content. The last level of a power ladder is 340, which is over
+// three times the dearest thing on the roster (a tier-4 relic at ~108), and
+// that gap is the point: content is revealed once, an Oath is paid once and
+// then collected on for the rest of the career.
+const RITES = [
+  {key:'extraDie', name:'The Ninth Bone', icon:'bone',
+   prices:[60, 160, 340],
+   per:'+1 bone in the cup when a rite begins.',
+   now:  n => '+' + n + ' bone' + (n === 1 ? '' : 's') + ' at the mouth of every run'},
+
+  {key:'extraReroll', name:'The Steady Hand', icon:'arrowsClockwise',
+   prices:[60, 160, 340],
+   per:'+1 re-roll on every cast.',
+   now:  n => '+' + n + ' re-roll' + (n === 1 ? '' : 's') + ' on every cast'},
+
+  {key:'cheapReroll', name:"The Ossuary's Favour", icon:'shuffle',
+   prices:[40, 90, 160, 250, 360],
+   per:'New wares cost 1 shard less.',
+   now:  n => 'new wares cost ' + n + ' shard' + (n === 1 ? '' : 's') +
+              ' less, never below ' + RITE_REROLL_FLOOR},
+
+  {key:'extraShards', name:'The Full Purse', icon:'coins',
+   prices:[40, 90, 160, 250, 360],
+   per:'+' + RITE_SHARD_STEP + ' soul shards in the purse when a rite begins.',
+   now:  n => '+' + (n * RITE_SHARD_STEP) + ' soul shards at the mouth of every run'},
+];
+const RITE_BY_KEY = {};
+for(const r of RITES) RITE_BY_KEY[r.key] = r;
+
+// Every price array must agree with the cap it is climbing, or a ladder would
+// either run out of prices or hide a level nobody can reach. Cheaper to assert
+// it here than to find it as an undefined price in a confirm dialog.
+for(const r of RITES){
+  if(r.prices.length !== RITE_MAX[r.key])
+    console.warn('rite ' + r.key + ': ' + r.prices.length + ' prices for ' +
+                 RITE_MAX[r.key] + ' levels');
+}
+
+function riteLevel(key){ return Meta.data.rites[key] || 0; }
+// `level` here is the level being BOUGHT, 1-based.
+function ritePrice(key, level){
+  const r = RITE_BY_KEY[key];
+  return r ? r.prices[level - 1] : undefined;
+}
+
+// Design §9's depth keys, reused rather than reinvented — the same "prove you
+// can survive this far" language the roster already speaks. The LAST TWO rungs
+// of every ladder are gated, whatever its height: the final rung wants descent
+// 25 and the one below it descent 15. That is what stops a player emptying
+// their first few payouts into a maxed ladder before they have met most of the
+// content the Archive exists to hand out.
+function riteDepthGate(key, level){
+  const max = RITE_MAX[key];
+  if(level >= max)     return 25;
+  if(level === max - 1) return 15;
+  return 0;
+}
+function riteGateMet(key, level){
+  return Meta.data.lifetime.deepestLevel >= riteDepthGate(key, level);
+}
+
+// The rung a purchase would buy next, or 0 once the ladder is topped out.
+// There is no argument for which level to buy, and that is the strict
+// progression: the only rung ever on offer is the one immediately above the
+// one already paid for, so a full purse cannot skip ahead.
+function riteNextLevel(key){
+  const cur = riteLevel(key), max = RITE_MAX[key];
+  return cur >= max ? 0 : cur + 1;
+}
+function buyRite(key){
+  if(!RITE_BY_KEY[key]) return false;
+  const next = riteNextLevel(key);
+  if(!next) return false;                              // already at the top
+  if(!riteGateMet(key, next)) return false;
+  const price = ritePrice(key, next);
+  if(!(price >= 0)) return false;
+  if(Meta.data.marrow < price) return false;
+  Meta.data.marrow -= price;
+  Meta.data.rites[key] = next;
+  Meta.save();
+  return true;
+}
+
+//======================================================================
 // 10. GAME STATE
 //======================================================================
 let S = null;
 let dieUid = 0;
 
+// The Oaths a run is played under, read once at the mouth of it and then never
+// again. Exactly the reasoning behind S.wares: a purchase made between runs is
+// the player's to make, but a ledger that changed underneath a descent already
+// in progress would be a run whose own rules moved while it was being played.
+// Snapshotting also means every reader downstream is a plain property lookup
+// with no opinion about where the number came from.
+function riteSnapshot(){
+  const out = {};
+  for(const k in RITE_MAX) out[k] = Meta.data.rites[k] || 0;
+  return out;
+}
+// The one way the run side asks about an Oath. Answers 0 rather than throwing
+// when there is no run — the menu, and anything that reaches a scoring helper
+// before a descent exists, both land here.
+function runRite(key){ return (S && S.rites && S.rites[key]) || 0; }
+
 function freshState(){
+  const rites = riteSnapshot();
   return {
     phase:'menu',        // menu|awaitCast|rolling|placed|sealing|shopWait|shop|boon|gameover
-    level:1, quota:60, levelScore:0, totalScore:0, shards:0,
+    level:1, quota:60, levelScore:0, totalScore:0,
+    // The Full Purse is the only Oath that pays out once rather than standing
+    // over the whole run, so it is spent here, into the opening shard count.
+    shards: RITE_SHARD_STEP * rites.extraShards,
     castNum:1, rerollsLeft:2,
+    // What this descent is played under. See riteSnapshot().
+    rites,
     dicePool:[], board:[], relics:[], chalks:[], decrees:[],
     previewSegments:[], previewScore:0, previewMult:1,
+    // The catalogue this descent is allowed to draw from, fixed the moment the
+    // run is born. Every later draw reads THIS, never SHOP_POOL — see
+    // runShopPool() for why it is a snapshot and not a live filter.
+    wares: runShopPool(),
     offers:[], selIdx:null, hoverTile:null,
     hoverDieId:null, focusRow:null,
     shopRerolls:0,
     // run-long counters that relics feed on
     rotted:0, ouroStacks:0,
+    // set the instant the run's Marrow is paid into the ledger, so it can only
+    // ever happen once however gameOver() is reached
+    marrowPaid:false,
     // Boons are held as a plain list of ids and every effect is DERIVED from it
     // (see boonCount and the boon* helpers). The five loose bonusX counters that
     // used to live here were written only by the old boon screen and read from
@@ -3973,7 +5841,7 @@ function castsPerLevel(){
 }
 function rerollsPerCast(){
   if(hasTrial('locked')) return 0;
-  return 2 + (hasRelic('dust')?1:0) + boonRerolls();
+  return 2 + (hasRelic('dust')?1:0) + boonRerolls() + runRite('extraReroll');
 }
 // No boon term here, and none in altarSlots() either — deliberately. A boon may
 // never hand out cup or altar space: those are the two scarcities the whole
@@ -6640,8 +8508,15 @@ function renderGrimoire(){
     h += '</div>';
   }
   else if(grimTab === 'relics'){
+    // The Grimoire is the run's reference book, so it answers "what can I find
+    // down here?" — it lists what the ledger has opened, at the shard price the
+    // Ossuary will actually charge. Listing a locked relic here would quote a
+    // price for something the counter can never lay out, which reads as a bug
+    // rather than as a goal. Locked content gets its shopfront in The Archive
+    // (design §4), where a Marrow price is the honest number to show.
     for(const tier of [4,3,2,1]){
-      const ids = Object.keys(RELICS).filter(id=>RELICS[id].tier===tier);
+      const ids = Object.keys(RELICS).filter(id=>RELICS[id].tier===tier && runKnowsRelic(id));
+      if(!ids.length) continue;   // no bare "CURSED" heading over an empty tier
       h += '<div class="grimSec"><h4>' + TIER_NAME[tier] + '</h4>';
       for(const id of ids){
         const r = RELICS[id];
@@ -6654,6 +8529,7 @@ function renderGrimoire(){
   else if(grimTab === 'dice'){
     h += '<div class="grimSec"><h4>THE BONES</h4>';
     for(const k of DIE_ORDER){
+      if(!runKnowsDie(k)) continue;   // same reasoning as the relic tab above
       const T = DIE_TYPES[k];
       const n = S ? S.dicePool.filter(d=>d.type===k).length : 0;
       h += grimRow(T.icon, T.name, n ? ('x'+n+' HELD') : '-', T.desc, n>0);
@@ -6751,7 +8627,13 @@ function startRun(){
   $('trialFx').classList.remove('decree');
   S = freshState();
   S.board = emptyBoard();
-  for(let i=0;i<6;i++) S.dicePool.push(makeDie('bone'));
+  // The Ninth Bone adds to the opening handful. Clamped to the pool cap for
+  // the same reason every other pool write is: the cup is the one scarcity the
+  // whole build decision rests on, and nothing may quietly widen it past its
+  // ceiling. At today's numbers (6 + 3 against a cap of 12) it never bites —
+  // the clamp is here so it still cannot if either number ever moves.
+  const bones = Math.min(maxPool(), STARTING_BONES + S.rites.extraDie);
+  for(let i=0;i<bones;i++) S.dicePool.push(makeDie('bone'));
   hide('shopOverlay'); hide('gameoverOverlay'); hide('boonOverlay'); hide('settingsOverlay');
   closeSwap(); closeCull();
   $('grimoire').classList.remove('open');
@@ -7144,6 +9026,16 @@ function flushDecree(){
 }
 
 function gameOver(){
+  // The ledger is settled here and nowhere else, and exactly once: gameOver()
+  // has a single caller today, but the run's other one-shot trackers are all
+  // flagged rather than trusted (see startRun), and paying a career currency
+  // twice is the one bookkeeping bug that would be worth a player's anger.
+  let award = null;
+  if(!S.marrowPaid){
+    S.marrowPaid = true;
+    award = closeOutRun();
+  }
+
   // one slab per number, landing in sequence after the title has burned in
   const slab = (ico, label, val, cls, i) =>
     '<div class="gslab" style="animation-delay:' + (700 + i*90) + 'ms">' +
@@ -7158,6 +9050,33 @@ function gameOver(){
     slab('sealCheck',   'TRIALS BROKEN',  S.stats.trialsCleared,            '',        4) +
     slab('warningOctagon','FELL SHORT BY',
          Math.max(0, S.quota - S.levelScore).toLocaleString(),              'crimson', 5);
+
+  // What the descent is worth to the NEXT one. The six slabs above are the run
+  // and are all past tense; this is the only line on the screen pointing
+  // forward, so it is staged apart from them and lands after they have all
+  // settled. The breakdown is shown rather than a bare total because the whole
+  // point of design §5's formula is to teach that depth pays best — a player
+  // who can see DEPTH +75 next to BLOOD +55 learns that in one glance.
+  const mp = $('goMarrow');
+  if(award){
+    const chip = (label, v, cls) => v > 0
+      ? '<span class="' + (cls||'') + '">' + label + ' <b>+' + v + '</b></span>' : '';
+    mp.innerHTML =
+      '<div class="goMarrowHead">' + (award.pb ? 'A NEW DEEPEST — THE ARCHIVE PAYS' : 'THE ARCHIVE PAYS') + '</div>' +
+      '<div class="goMarrowVal">' + icon('bone') + '+' + award.total.toLocaleString() + '</div>' +
+      '<div class="goMarrowParts">' +
+        chip('DEPTH', award.depth) +
+        chip('BLOOD', award.blood) +
+        chip('OFFERING', award.roll) +
+        chip('DEEPER THAN EVER', award.pb, 'pb') +
+      '</div>' +
+      '<div class="goMarrowFoot">the Archive holds <b>' +
+        Meta.data.marrow.toLocaleString() + '</b> marrow</div>';
+    mp.style.display = '';
+  } else {
+    mp.style.display = 'none';
+  }
+
   show('gameoverOverlay');
   buildBoneFrames($('gameoverOverlay'));
   showTally(false);
@@ -7169,9 +9088,20 @@ function gameOver(){
 //======================================================================
 // 22. THE OSSUARY
 //======================================================================
-function shopRerollCost(){ return hasRelic('key') ? 1 : 3 + S.shopRerolls; }
+// Skeleton Key still wins outright and is checked first: a flat 1 beats
+// anything the Oath can reach, which is deliberate — see RITE_REROLL_FLOOR.
+// The Oath discounts the whole cost, escalation included, so a player who has
+// paid for it feels it on the fourth re-roll of a shop as well as the first.
+function shopRerollCost(){
+  if(hasRelic('key')) return 1;
+  return Math.max(RITE_REROLL_FLOOR, 3 + S.shopRerolls - runRite('cheapReroll'));
+}
 function rollOffers(){
-  const bag = SHOP_POOL.filter(it=>{
+  // S.wares, not SHOP_POOL: the Ossuary lays out what this run has unlocked,
+  // not everything that exists. The filters below are the run's OWN reasons to
+  // withhold a ware (already bound, no line left to chalk); the unlock gate has
+  // already happened upstream and never needs restating here.
+  const bag = S.wares.filter(it=>{
     if(it.kind==='relic' && S.relics.includes(it.relic)) return false;
     if(it.id==='chalk_deepen' && !S.chalks.length) return false;
     if(it.kind==='chalk' && it.axis!=='deepen'){
@@ -7815,7 +9745,21 @@ function boonTierBias(level){ return 1 + Math.min(3, Math.max(0, level - 5)/8); 
 // of being offered its third Sworn Oath.
 function rollBoons(){
   const bias = boonTierBias(S.level);
-  const bag = BOONS.filter(b => S.level >= b.min);
+  // DEEPEN THE CHALK sharpens chalk lines, so on a run that can never have one
+  // it is a card that cannot do anything. A boon is a forced one-of-three at a
+  // Trial rather than a purchase the player can decline, so a guaranteed-dead
+  // card there quietly costs them a third of their reward for breaking it.
+  //
+  // The question is "can a line exist this descent?", which has three answers
+  // and needs all three: a line already scrawled, a chalk ware the run may
+  // still buy, or the Ninth Sigil, which draws one free every level and so
+  // keeps the boon live even on a save that has unlocked no chalk at all.
+  // Note this is NOT "has drawn no line yet" — taking it early against lines
+  // you intend to chalk later is a real gamble, and stays available.
+  const chalkPossible = S.chalks.length > 0 ||
+                        S.wares.some(w => w.kind === 'chalk') ||
+                        hasRelic('sigil');
+  const bag = BOONS.filter(b => S.level >= b.min && (b.id !== 'deepchalk' || chalkPossible));
   const out = [];
   while(out.length < 3 && bag.length){
     const w = bag.map(b=>{
@@ -8248,17 +10192,527 @@ window.addEventListener('keydown', e=>{
   if(e.code==='KeyA' && S.phase==='placed') rerollAll();
   if(e.code==='KeyG'){ toggleGrimoire(); }
   if(e.code==='Escape'){
-    if(!$('swapOverlay').classList.contains('hidden')) closeSwap();
+    // innermost first: the purchase dialog sits over the Archive, which sits
+    // over the title screen, so Escape backs out one layer at a time
+    if(!$('wipeOverlay').classList.contains('hidden')) closeWipe();
+    else if(!$('arcConfirmOverlay').classList.contains('hidden')) closeArchiveBuy();
+    else if(!$('swapOverlay').classList.contains('hidden')) closeSwap();
+    else if(!$('logOverlay').classList.contains('hidden')) closeChangelog();
     else if($('grimoire').classList.contains('open')) $('grimoire').classList.remove('open');
     else if(!$('settingsOverlay').classList.contains('hidden')) closeSettings();
+    else if(!$('menuArchive').classList.contains('hidden')) menuScreen('menuHome');
+    else if(!$('menuRules').classList.contains('hidden')) menuScreen('menuHome');
+    // ...and once there is nothing left to back out of, Escape at the title
+    // screen opens the Veil. The corner button says ESC on its face so this is
+    // discoverable rather than folklore.
+    else if(menuMode) { Sound.unlock(); openSettings(); }
   }
 });
 window.addEventListener('pointerdown', ()=>Sound.unlock(), {once:false});
 
 //---- title screen ----
 function menuScreen(id){
-  ['menuHome','menuRules'].forEach(s=>$(s).classList.toggle('hidden', s!==id));
+  ['menuHome','menuRules','menuArchive'].forEach(s=>$(s).classList.toggle('hidden', s!==id));
+  // The settings gear belongs to the title screen only. The Archive is a full
+  // panel and the corner it sits in is the corner the panel wants; Escape
+  // still reaches the Veil from either, once the screen above it is closed.
+  $('menuVeilBtn').classList.toggle('hidden', id !== 'menuHome');
 }
+
+//---- THE ARCHIVE -----------------------------------------------------
+// Rendered fresh whenever anything it shows could have changed. Fifty-two
+// tiles of static markup costs nothing next to keeping a diff of them in sync.
+//
+// What the screen has to solve, and where each answer lives:
+//   too much at once  -> the filters below, which cut the rack down rather
+//                        than shrinking what is in it
+//   nothing lines up  -> one uniform tile, built around a fixed art window
+//   it scrolled away  -> the panel owns its height and only #arcBody scrolls
+const ARC_TIER_LABEL = {1:'COMMON', 2:'UNCOMMON', 3:'RARE', 4:'CURSED'};
+const ARC_KIND_ICON  = {die:'cube', chalk:'paintBrush', relic:'crownSimple'};
+const ARC_KIND_LABEL = {die:'THE BONES', chalk:'THE CHALKS', relic:'THE RELICS'};
+
+// The five states, resolved in one place so the tile, the click handler and
+// the confirm dialog can never disagree about what an entry is.
+//   owned  — already paid for, or free from a fresh save (may also be `off`)
+//   gated  — design §9's depth key not yet cut, whatever the purse holds
+//   buy    — affordable and unlocked
+//   locked — known, priced, and simply not affordable yet
+//   sealed — design §12: it exists, and that is all the player is told
+function arcState(e){
+  if(isSealed(e)) return 'sealed';
+  if(e.owned) return 'owned';
+  if(!depthGateMet(e.tier)) return 'gated';
+  return Meta.data.marrow >= e.price ? 'buy' : 'locked';
+}
+
+// An owned tile's footer is the loadout switch (design §11) — the only control
+// in the Archive that costs nothing and undoes itself. A real button rather
+// than the whole tile, so that reading a rack can never switch something off
+// by accident, and so it can carry aria-pressed. Nothing unowned gets one:
+// there is no loadout state to keep for a thing the player has not got.
+function arcFoot(e, state){
+  // No icon here, and no number. Every other footer on this screen leads with
+  // a glyph and most of them lead with a price; a bare word is the fastest way
+  // to read "this is not a transaction you are being offered".
+  if(state === 'sealed') return 'SEALED';
+  if(state === 'owned'){
+    return '<button type="button" class="aSwitch' + (e.off ? '' : ' on') + '"' +
+             ' aria-pressed="' + (e.off ? 'false' : 'true') + '">' +
+             '<i class="sTrack"><i class="sKnob"></i></i>' +
+             '<span>' + (e.off ? 'SET ASIDE' : 'IN THE POOL') + '</span>' +
+           '</button>';
+  }
+  if(state === 'gated')  return icon('stairs') + 'REACH DESCENT ' + depthGateFor(e.tier);
+  return icon('bone') + e.price + (state === 'locked' ? ' — NOT ENOUGH' : '');
+}
+
+//---- what the screen is currently showing ----
+// Held here rather than read back off the DOM, so a re-render after a purchase
+// or a toggle cannot drop the player back to a view they had filtered away.
+let arcTab    = 'roster';     // roster | oaths
+let arcGroup  = 'all';        // all | die | chalk | relic
+let arcFilter = 'all';        // all | owned | buy | locked | off
+let arcQuery  = '';
+// Set for exactly one render after a purchase, so the tile that was just paid
+// for can flash and an Oath's new rung can pour. Cleared as it is consumed —
+// the flash belongs to the transaction, not to the state it left behind.
+let arcJustPaid = null;       // {kind, id} | {kind:'rite', key, level}
+
+// Kinds sort in the order the roster builds them; tiers ascend inside a kind.
+// Sorting here rather than in section headers is what let the headers go: the
+// rack is still dice-then-chalks-then-relics, cheapest tier first, but it is
+// one continuous grid that any filter can cut without leaving empty headings.
+// Sealed rows sort to the end of their own kind, whatever tier they claim: an
+// unknown thing belongs after every known one, not interleaved by a number the
+// player cannot see.
+const ARC_KIND_RANK = {die:0, chalk:1, relic:2};
+function arcSorted(rows){
+  return rows.map((e, i) => ({e, i})).sort((a, b) =>
+    (ARC_KIND_RANK[a.e.kind] - ARC_KIND_RANK[b.e.kind]) ||
+    ((isSealed(a.e) ? 1 : 0) - (isSealed(b.e) ? 1 : 0)) ||
+    (a.e.tier - b.e.tier) || (a.i - b.i)).map(x => x.e);
+}
+function arcMatches(e){
+  if(arcGroup !== 'all' && e.kind !== arcGroup) return false;
+  // A sealed row answers none of the state questions — it is not owned, not
+  // affordable, not locked behind a price, and cannot be set aside. It shows
+  // under ALL and under its own kind, and nowhere else. Putting it under
+  // LOCKED in particular would be the exact confusion design §12 forbids:
+  // "locked" on this screen means "you could save up for this".
+  if(isSealed(e)){
+    if(arcFilter !== 'all') return false;
+    return !arcQuery;                       // it has no name to be found by
+  }
+  const st = arcState(e);
+  if(arcFilter === 'owned'  && st !== 'owned') return false;
+  if(arcFilter === 'buy'    && st !== 'buy') return false;
+  if(arcFilter === 'locked' && st !== 'locked' && st !== 'gated') return false;
+  if(arcFilter === 'off'    && !e.off) return false;
+  // NAME only, deliberately. Searching the rule text as well meant that typing
+  // "run" to find the Runt Die also returned everything that mentions a RUN
+  // conduit, which is most of the relic table — the results buried the thing
+  // being looked for. A search box on a roster is for finding a known item by
+  // the word on its face; browsing by effect is what the filters are for.
+  if(arcQuery && !e.name.toLowerCase().includes(arcQuery.toLowerCase())) return false;
+  return true;
+}
+
+// The two filter axes, as data. Rendering the menus and resolving a click both
+// read this, so a label and what it selects cannot drift apart.
+const ARC_GROUP_OPTS = [
+  {v:'all',   label:'EVERYTHING'},
+  {v:'die',   label:'DICE'},
+  {v:'chalk', label:'CHALKS'},
+  {v:'relic', label:'RELICS'},
+];
+const ARC_STATE_OPTS = [
+  {v:'all',    label:'ALL'},
+  {v:'owned',  label:'OWNED'},
+  {v:'buy',    label:'AFFORDABLE'},
+  {v:'locked', label:'LOCKED'},
+  {v:'off',    label:'SET ASIDE'},
+];
+// Counts are about the ECONOMY, so sealed rows are excluded from every one of
+// them. A denominator that included something unbuyable would make "7/38" a
+// number a player can never close, and the whole point of the count is that it
+// is a target.
+function arcOptCount(axis, v, roster){
+  const real = roster.filter(e => !isSealed(e));
+  const inGroup = real.filter(e => arcGroup === 'all' || e.kind === arcGroup);
+  if(axis === 'group'){
+    const mine = v === 'all' ? real : real.filter(e => e.kind === v);
+    return mine.filter(e => e.owned).length + '/' + mine.length;
+  }
+  if(v === 'all')    return String(inGroup.length);
+  if(v === 'owned')  return String(inGroup.filter(e => e.owned).length);
+  if(v === 'buy')    return String(inGroup.filter(e => arcState(e) === 'buy').length);
+  if(v === 'locked') return String(inGroup.filter(e => {
+    const s = arcState(e); return s === 'locked' || s === 'gated'; }).length);
+  return String(inGroup.filter(e => e.off).length);
+}
+function arcBuildDrop(axis, opts, current, roster){
+  const listId = axis === 'group' ? 'arcGroupList' : 'arcStateList';
+  const btnId  = axis === 'group' ? 'arcGroupBtn'  : 'arcStateBtn';
+  $(listId).innerHTML = opts.map(o =>
+    '<div class="dropOpt' + (o.v === current ? ' on' : '') + '" data-v="' + o.v + '">' +
+      '<span>' + o.label + '</span><b>' + arcOptCount(axis, o.v, roster) + '</b>' +
+    '</div>').join('');
+  const sel = opts.find(o => o.v === current) || opts[0];
+  $(btnId).innerHTML = '<span>' + sel.label + '</span>' +
+    '<b>' + arcOptCount(axis, sel.v, roster) + '</b>' +
+    icon('caretDown');
+}
+
+function renderArchive(opts){
+  const fresh = !opts || opts.fresh !== false;   // a rebuilt rack, not a touched one
+  const m = Meta.data;
+  $('arcMarrow').innerHTML =
+    icon('bone') + m.marrow.toLocaleString() + '<small>MARROW</small>';
+  $('arcLife').innerHTML =
+    '<span>' + icon('pentagram') + 'RITES <b>' + m.lifetime.runs.toLocaleString() + '</b></span>' +
+    '<span>' + icon('stairs')    + 'DEEPEST <b>' + m.lifetime.deepestLevel + '</b></span>' +
+    '<span>' + icon('fire')      + 'BEST OFFERING <b>' + m.lifetime.bestOffering.toLocaleString() + '</b></span>' +
+    '<span>' + icon('sealCheck') + 'TRIALS <b>' + m.lifetime.trialsCleared.toLocaleString() + '</b></span>';
+
+  const roster = archiveRoster();
+  // Sealed rows are not part of any count — see arcOptCount. The tab reports
+  // what a career can actually close.
+  const real   = roster.filter(e => !isSealed(e));
+  $('arcTabRosterN').textContent =
+    real.filter(e => e.owned).length + '/' + real.length;
+  $('arcTabOathsN').textContent =
+    RITES.reduce((a, r) => a + riteLevel(r.key), 0) + '/' +
+    RITES.reduce((a, r) => a + RITE_MAX[r.key], 0);
+
+  // ---- the two filter menus, counted off the live roster ----
+  // The state counts respect the group filter, because that is the question
+  // being asked: "of what I am looking at, how much can I buy right now".
+  arcBuildDrop('group', ARC_GROUP_OPTS, arcGroup, roster);
+  arcBuildDrop('state', ARC_STATE_OPTS, arcFilter, roster);
+  $('arcSearchClear').classList.toggle('hidden', !arcQuery);
+  const filtered = arcGroup !== 'all' || arcFilter !== 'all' || !!arcQuery;
+  $('btnArcClearFilters').classList.toggle('hidden', !filtered);
+
+  // ---- the rack ----
+  const shown = arcSorted(roster.filter(arcMatches));
+  const shownReal = shown.filter(e => !isSealed(e)).length;
+  $('arcShowing').innerHTML = shownReal === real.length
+    ? 'showing <b>all ' + real.length + '</b>'
+    : 'showing <b>' + shownReal + '</b> of ' + real.length;
+  let h = '';
+  // Setting everything aside is allowed — design §11 exists to let a player
+  // impose their own constraints, and refusing the far end of that would be
+  // the system second-guessing its own point. But an Ossuary with nothing to
+  // lay out is a screen that does nothing when it opens, so it is said here
+  // rather than discovered at the first shop of a run already begun.
+  if(!runShopPool().length)
+    h += '<div class="arcWarn arcSpan">' + icon('warningOctagon') +
+         'Everything is set aside. The Ossuary will have nothing to lay out, ' +
+         'and the next rite will be run on its opening bones alone.</div>';
+  if(!shown.length)
+    h += '<div class="arcEmpty arcSpan">' + icon('eye') +
+         (arcQuery ? 'Nothing in the Archive answers to that name.'
+                   : 'Nothing here yet under that reading.') + '</div>';
+  shown.forEach((e, i)=>{
+    const state = arcState(e);
+    // A sealed row is built from nothing the roster holds — no name, no icon,
+    // no rule, no price (design §12). The redacted bars where the rule would
+    // go are the point: the shape of a description is visible, its content is
+    // not, so the slot reads as WITHHELD rather than as empty or as broken.
+    if(state === 'sealed'){
+      h += '<div class="arcCard sealed" style="--i:' + i + '"' +
+             ' data-kind="' + e.kind + '" data-id="' + e.id + '" aria-hidden="true">' +
+             '<div class="acTop">' +
+               '<span class="acTier">UNKNOWN</span>' +
+               '<span class="acKind">' + icon(ARC_KIND_ICON[e.kind]) + '</span>' +
+             '</div>' +
+             '<div class="acArt"><span class="acSeal">?</span></div>' +
+             '<div class="acName">???</div>' +
+             '<div class="acDesc sealBars"><i></i><i></i><i></i></div>' +
+             '<div class="acFoot">' + arcFoot(e, state) + '</div>' +
+           '</div>';
+      return;
+    }
+    // `off` rides alongside `owned` rather than replacing it. Set aside is a
+    // state of a thing you HAVE; locked is a thing you have not earned.
+    const paid = arcJustPaid && arcJustPaid.kind === e.kind && arcJustPaid.id === e.id;
+    h += '<div class="arcCard tier' + e.tier + ' ' + state + (e.off ? ' off' : '') +
+           (paid ? ' justPaid' : '') + '" style="--i:' + i + '"' +
+           ' data-kind="' + e.kind + '" data-id="' + e.id + '">' +
+           '<div class="acTop">' +
+             '<span class="acTier">' + ARC_TIER_LABEL[e.tier] + '</span>' +
+             '<span class="acKind">' + icon(ARC_KIND_ICON[e.kind]) + '</span>' +
+           '</div>' +
+           '<div class="acArt">' + icon(e.icon) + '</div>' +
+           '<div class="acName" title="' + e.name + '">' + e.name + '</div>' +
+           '<div class="acDesc">' + e.desc + '</div>' +
+           '<div class="acFoot">' + arcFoot(e, state) + '</div>' +
+         '</div>';
+  });
+  $('arcRoster').innerHTML = h;
+  $('arcRoster').classList.toggle('fresh', fresh);
+
+  renderOaths(fresh);
+  arcJustPaid = null;
+}
+
+// ---- THE OATHS ----
+// A ladder is not a tile: it is never simply owned or not owned, so the card
+// answers three questions at once — how far up am I, what does the next rung
+// cost, and what is it doing for me now. The rungs carry the first as pips
+// filled with the same liquid the Soul Quota bar is filled with, recoloured
+// from blood to marrow; the footer carries the second; the line above it
+// states the total standing effect, because "+2 re-rolls on every cast" is
+// what a player actually wants read back, not "+1 per level".
+function oathState(key){
+  const next = riteNextLevel(key);
+  if(!next) return 'owned';                     // topped out
+  if(!riteGateMet(key, next)) return 'gated';
+  return Meta.data.marrow >= ritePrice(key, next) ? 'buy' : 'locked';
+}
+function oathFoot(key, state){
+  const next = riteNextLevel(key);
+  if(state === 'owned') return icon('sealCheck') + 'SWORN IN FULL';
+  if(state === 'gated') return icon('stairs') + 'REACH DESCENT ' + riteDepthGate(key, next);
+  return icon('bone') + ritePrice(key, next) +
+         (state === 'locked' ? ' — NOT ENOUGH' : '') +
+         '<em class="rStep">RUNG ' + next + '</em>';
+}
+function renderOaths(fresh){
+  const sworn = RITES.filter(r => riteLevel(r.key) > 0).length;
+  let h = '<div class="oathIntro">' +
+            '<h3>' + ARC_OATH_LABEL + '</h3>' +
+            '<div class="arcFlavor">Bought once and kept for good. ' +
+            'Every rite after begins under them.</div>' +
+            '<em class="oathCount">' + sworn + '/' + RITES.length + ' SWORN</em>' +
+          '</div><div class="oathGrid">';
+  RITES.forEach((r, idx)=>{
+    const lvl = riteLevel(r.key), max = RITE_MAX[r.key], state = oathState(r.key);
+    const paid = arcJustPaid && arcJustPaid.kind === 'rite' && arcJustPaid.key === r.key;
+    let pips = '';
+    for(let i = 1; i <= max; i++){
+      // A rung paid for, one merely reachable, and one still behind a descent
+      // key are three different things and read as three.
+      const on = i <= lvl;
+      const cls = (on ? ' on' : (riteDepthGate(r.key, i) ? ' gated' : '')) +
+                  (paid && arcJustPaid.level === i ? ' pour' : '');
+      pips += '<span class="oPip' + cls + '"><span class="oPipFill"></span></span>';
+    }
+    h += '<div class="oathCard ' + state + (paid ? ' justPaid' : '') +
+           '" style="--i:' + idx + '" data-rite="' + r.key + '">' +
+           '<div class="acTop">' +
+             '<span class="acTier">' + (lvl ? 'RUNG ' + lvl + ' OF ' + max : 'UNSWORN') + '</span>' +
+             '<span class="acKind">' + icon('handFist') + '</span>' +
+           '</div>' +
+           '<div class="acArt">' + icon(r.icon) + '</div>' +
+           '<div class="acName">' + r.name + '</div>' +
+           '<div class="acDesc">' + r.per + '</div>' +
+           '<div class="oPips">' + pips + '</div>' +
+           '<div class="oathNow">' +
+             (lvl ? icon('sparkle') + r.now(lvl)
+                  : '<span class="oathNone">not yet sworn</span>') +
+           '</div>' +
+           '<div class="acFoot">' + oathFoot(r.key, state) + '</div>' +
+         '</div>';
+  });
+  $('arcOaths').innerHTML = h + '</div>';
+}
+
+// Which half of the Archive is showing. The filters belong to the roster, so
+// they leave with it rather than sitting dead above the Oaths.
+function arcShowTab(which){
+  arcTab = which;
+  $('arcRoster').classList.toggle('hidden', which !== 'roster');
+  $('arcOaths').classList.toggle('hidden', which !== 'oaths');
+  $('arcFilters').classList.toggle('hidden', which !== 'roster');
+  $('arcTabRoster').classList.toggle('on', which === 'roster');
+  $('arcTabOaths').classList.toggle('on', which === 'oaths');
+  $('arcBody').scrollTop = 0;
+}
+$('arcTabRoster').onclick = ()=>{ sfx('click'); arcShowTab('roster'); renderArchive(); };
+$('arcTabOaths').onclick  = ()=>{ sfx('click'); arcShowTab('oaths');  renderArchive(); };
+
+// The filter menus. Same .drop component the Veil uses, so opening, the caret
+// and the dismiss-on-outside-click all behave the way they already do there.
+// Delegated, because renderArchive rebuilds the options on every pass.
+function arcDropWire(dropId, btnId, listId, apply){
+  $(btnId).onclick = e=>{
+    e.stopPropagation();
+    // only one menu open at a time, or the second sits under the first
+    for(const other of ['arcGroupDrop','arcStateDrop'])
+      if(other !== dropId) $(other).classList.remove('open');
+    $(dropId).classList.toggle('open');
+    sfx('click');
+  };
+  $(listId).onclick = e=>{
+    const o = e.target.closest('.dropOpt'); if(!o) return;
+    e.stopPropagation();
+    apply(o.dataset.v);
+    $(dropId).classList.remove('open');
+    sfx('click');
+    renderArchive();
+  };
+}
+arcDropWire('arcGroupDrop','arcGroupBtn','arcGroupList', v => { arcGroup = v; });
+arcDropWire('arcStateDrop','arcStateBtn','arcStateList', v => { arcFilter = v; });
+document.addEventListener('click', ()=>{
+  $('arcGroupDrop').classList.remove('open');
+  $('arcStateDrop').classList.remove('open');
+});
+
+$('arcSearch').addEventListener('input', ()=>{
+  arcQuery = $('arcSearch').value.trim();
+  renderArchive();
+});
+$('arcSearchClear').onclick = ()=>{
+  $('arcSearch').value = ''; arcQuery = ''; sfx('click'); renderArchive();
+};
+$('btnArcClearFilters').onclick = ()=>{
+  arcGroup = 'all'; arcFilter = 'all'; arcQuery = '';
+  $('arcSearch').value = '';
+  sfx('click');
+  renderArchive();
+};
+
+function openArchive(){
+  arcShowTab(arcTab);
+  renderArchive();
+  menuScreen('menuArchive');
+}
+
+// The pending purchase. Held here rather than on the button so a stale click
+// on a re-rendered tile cannot pay for something else.
+let arcPending = null;
+function askArchiveBuy(kind, id){
+  const e = archiveRoster().find(x => x.kind === kind && x.id === id);
+  if(!e || arcState(e) !== 'buy') return;
+  arcPending = {kind, id};
+  $('arcWhat').innerHTML = icon(e.icon) + e.name;
+  $('arcWhatDesc').textContent = e.desc;
+  $('arcCost').innerHTML =
+    '<div>YOU HOLD<b>' + Meta.data.marrow.toLocaleString() + '</b></div>' +
+    '<div class="pay">THIS COSTS<b>' + e.price.toLocaleString() + '</b></div>' +
+    '<div class="after">YOU KEEP<b>' + (Meta.data.marrow - e.price).toLocaleString() + '</b></div>';
+  show('arcConfirmOverlay');
+  sfx('click');
+}
+// Same dialog, same two buttons, same confirmation — an Oath is permanent
+// spend exactly as an unlock is, and a player should not have to learn a
+// second way to buy something on the same screen. Only the middle of it
+// differs: a rung is bought at a level, so it names which one.
+function askOathBuy(key){
+  const r = RITE_BY_KEY[key];
+  if(!r || oathState(key) !== 'buy') return;
+  const next = riteNextLevel(key), price = ritePrice(key, next);
+  arcPending = {kind:'rite', key};
+  $('arcWhat').innerHTML = icon(r.icon) + r.name +
+    '<em class="rRung">RUNG ' + next + ' OF ' + RITE_MAX[key] + '</em>';
+  $('arcWhatDesc').textContent = r.per + ' Once sworn: ' + r.now(next) + '.';
+  $('arcCost').innerHTML =
+    '<div>YOU HOLD<b>' + Meta.data.marrow.toLocaleString() + '</b></div>' +
+    '<div class="pay">THIS COSTS<b>' + price.toLocaleString() + '</b></div>' +
+    '<div class="after">YOU KEEP<b>' + (Meta.data.marrow - price).toLocaleString() + '</b></div>';
+  show('arcConfirmOverlay');
+  sfx('click');
+}
+function closeArchiveBuy(){ arcPending = null; hide('arcConfirmOverlay'); }
+
+$('arcRoster').addEventListener('mouseenter', e=>{
+  if(!e.target.closest) return;
+  if(e.target.closest('.arcCard.buy') || e.target.closest('.aSwitch')) sfx('hover');
+}, true);
+$('arcRoster').onclick = ev=>{
+  // The loadout switch first: it lives inside an owned tile, which is never
+  // buyable, so the two paths can never both want the same click.
+  const sw = ev.target.closest('.aSwitch');
+  if(sw){
+    const owner = sw.closest('.arcCard');
+    if(!owner) return;
+    const wasOff = owner.classList.contains('off');
+    if(!toggleItem(owner.dataset.kind, owner.dataset.id)) return;
+    // Borrowed from the altar: socketing is a thing joining, snatching is a
+    // thing being taken back off. Same two gestures, so they sound the same.
+    sfx(wasOff ? 'socket' : 'snatch');
+    // Not a rebuilt rack — one tile changed, and replaying fifty-two entrance
+    // animations on every switch is the blink the Ossuary was fixed for.
+    renderArchive({fresh:false});
+    return;
+  }
+  const el = ev.target.closest('.arcCard');
+  if(!el || !el.classList.contains('buy')) return;
+  askArchiveBuy(el.dataset.kind, el.dataset.id);
+};
+$('arcOaths').addEventListener('mouseenter', e=>{
+  if(e.target.closest && e.target.closest('.oathCard.buy')) sfx('hover');
+}, true);
+$('arcOaths').onclick = ev=>{
+  const el = ev.target.closest('.oathCard');
+  if(!el || !el.classList.contains('buy')) return;
+  askOathBuy(el.dataset.rite);
+};
+//---- scouring the Archive --------------------------------------------
+// Deliberately a dialog rather than the arm-then-confirm pattern the ABANDON
+// button next to it uses. Arming in place is two clicks on the same spot,
+// which a double-click satisfies on its own — fine for forfeiting one run,
+// not for erasing a career that cannot be got back.
+function openWipe(){
+  const m = Meta.data;
+  const unlocks = m.unlockedDice.length + m.unlockedChalks.length + m.unlockedRelics.length;
+  $('wipeWhat').innerHTML =
+    '<div class="marrow">MARROW<b>' + m.marrow.toLocaleString() + '</b></div>' +
+    '<div>UNLOCKED<b>' + unlocks + '</b></div>' +
+    '<div>RITES RUN<b>' + m.lifetime.runs.toLocaleString() + '</b></div>' +
+    '<div>DEEPEST<b>' + m.lifetime.deepestLevel + '</b></div>';
+  show('wipeOverlay');
+  sfx('mark');
+}
+function closeWipe(){ hide('wipeOverlay'); }
+$('btnWipe').onclick = ()=>{ sfx('click'); openWipe(); };
+$('btnWipeCancel').onclick = ()=>{ sfx('click'); closeWipe(); };
+$('btnWipeConfirm').onclick = ()=>{
+  Meta.reset();
+  closeWipe();
+  // A run in progress keeps whatever it was already holding — the ledger only
+  // ever decides what the NEXT run may draw — but at the menu the snapshot is
+  // stale the instant the ledger changes, exactly as after a purchase.
+  if(menuMode && S) S.wares = runShopPool();
+  if(!$('menuArchive').classList.contains('hidden')) renderArchive();
+  sfx('shatter');
+  toast('THE ARCHIVE IS SCOURED', 'trash');
+};
+
+$('btnArcCancel').onclick = ()=>{ sfx('click'); closeArchiveBuy(); };
+$('btnArcConfirm').onclick = ()=>{
+  if(!arcPending) return;
+  // An Oath and an unlock are the same transaction to the player and two
+  // different ledger writes underneath, so they part company here and nowhere
+  // else. Both read what they are about to buy BEFORE buying it, because the
+  // purchase is what makes the description stale.
+  if(arcPending.kind === 'rite'){
+    // Read everything off arcPending BEFORE closing: closeArchiveBuy() nulls
+    // it, and the flash below needs to know what was just paid for.
+    const key = arcPending.key;
+    const r = RITE_BY_KEY[key];
+    const rung = riteNextLevel(key);
+    if(!buyRite(key)){ closeArchiveBuy(); return; }
+    closeArchiveBuy();
+    sfx('socket');
+    toast(r.name.toUpperCase() + ' SWORN — RUNG ' + rung, r.icon);
+    // The rung that was just paid for pours rather than simply being full on
+    // the next paint. Consumed by the render it triggers.
+    arcJustPaid = {kind:'rite', key, level:rung};
+    renderArchive({fresh:false});
+    return;
+  }
+  const e = archiveRoster().find(x => x.kind === arcPending.kind && x.id === arcPending.id);
+  if(!buyUnlock(arcPending.kind, arcPending.id)){ closeArchiveBuy(); return; }
+  closeArchiveBuy();
+  sfx('socket');
+  toast(e.name.toUpperCase() + ' JOINS THE POOL', e.icon);
+  arcJustPaid = {kind:e.kind, id:e.id};
+  renderArchive({fresh:false});
+};
 function openMenu(){
   menuMode = true;
   document.body.classList.add('menuMode');
@@ -8275,8 +10729,17 @@ function leaveMenu(){
 $('miStart').onclick = ()=>{ sfx('click'); startRun(); };
 $('miRules').onclick = ()=>{ sfx('click'); menuScreen('menuRules'); };
 $('miRulesBack').onclick = ()=>{ sfx('click'); menuScreen('menuHome'); };
-$('miGrim').onclick  = ()=>{ toggleGrimoire(); };
-$('miVeil').onclick  = ()=>{ Sound.unlock(); openSettings(); };
+// Both full-panel screens close from the corner as well as from the foot �
+// the same X, in the same place, as every other panel in the game.
+$('btnRulesX').onclick = ()=>{ sfx('click'); menuScreen('menuHome'); };
+$('btnArcX').onclick   = ()=>{ sfx('click'); menuScreen('menuHome'); };
+$('miArchive').onclick = ()=>{ sfx('click'); openArchive(); };
+$('miArchiveBack').onclick = ()=>{ sfx('click'); menuScreen('menuHome'); };
+// No Grimoire on the title screen. It is a reference for a run in progress —
+// what the conduits pay, what is bound to the altar, what this descent's pool
+// holds — and at the menu it has no run to describe. It stays on the HUD and
+// on G, where it is actually wanted. One less item on a list that was long.
+$('menuVeilBtn').onclick = ()=>{ Sound.unlock(); openSettings(); };
 $('miLog').onclick   = ()=>openChangelog();
 document.querySelectorAll('.menuItem').forEach(b=>
   b.addEventListener('mouseenter', ()=>sfx('hover')));
@@ -8639,6 +11102,7 @@ $('btnAbandon').onclick = ()=>{
 };
 $('btnSettings').onclick = openSettings;
 $('btnSettingsClose').onclick = closeSettings;
+$('btnVeilX').onclick = closeSettings;
 // The MIASMA slider is gone: Detail already decides how many fog veils are
 // baked (Perf.veils), so the two controls disagreed — dropping to LOW thinned
 // the fog while the slider still read 100. fogAmt stays as the internal knob
@@ -8734,6 +11198,10 @@ buildBoneFrames(document);
 hydrateIcons(document);
 View.load();
 Perf.restore();
+// The career ledger is read before anything can ask what the player owns — and
+// something does now: freshState() snapshots the unlocked pool the moment a run
+// is born, including the boot-time state built a few lines below.
+Meta.load();
 // Detail owns the miasma now that the Veil's MIASMA slider is gone, so derive
 // it here rather than trusting a fog value saved back when it was separate —
 // otherwise a player who had once slid it to zero would sit at HIGH detail

@@ -51,6 +51,151 @@ Rules:
 
 ---
 
+## the_bone_sieve_v1.0.0_beta.10 — "WHAT OUTLIVES THE RITE" · 2026-08-03
+
+> **On the number.** There is no `beta.9`. This release jumps from `beta.8` to
+> `beta.10` deliberately — it is the largest change the game has had, and the
+> number is rounded up to say so.
+
+*The game gets a second ledger. Everything up to now has been about one descent;
+this release is about what a player carries between them — a currency earned by
+going deep, a career screen to spend it in, permanent upgrades, and a set of
+locks that turn the whole existing content table into something earned rather
+than something handed over on the first run.*
+
+**Returning players start smaller.** There is no migration path for this and
+there deliberately isn't one: a save that has never held a Marrow ledger reads
+as a fresh career, so anyone already playing will find the counter offering the
+bone die and seven tier-1 relics and nothing else. That is the intended shape —
+the gating exists so the content arrives over a career instead of all at once —
+but it will read as a loss to anyone who was mid-run on the old build, and it is
+called out on screen for that reason.
+
+### Added
+
+- **Marrow, and the ledger that holds it.** A second persistent store,
+  `boneSieveMeta`, kept apart from the audio/detail/view preference keys because
+  those are preferences and this is a career. Load, save, repair and reset all
+  treat what comes off disk as untrusted input: numbers clamped, ids validated
+  for shape, unknown keys dropped, corrupt saves falling back to a fresh ledger
+  rather than refusing to boot. Unlock ids are deliberately **not** validated
+  against the live content tables, so a story-generated die cannot be silently
+  deleted by a table that has not heard of it yet.
+- **The earn formula.** `marrowFor(level, blood, bestOffering, priorDeepest)` —
+  `level × 3` uncapped, `min(60, √blood / 10)`, `min(20, bestOffering / 1000)`,
+  and a one-time `+50` the run a player beats their lifetime deepest. Depth is
+  linear and uncapped while blood and best-offering are compressed and capped,
+  because depth is the thing the system exists to reward and raw blood would
+  otherwise drown it. Paid in `gameOver()`, once, guarded by a flag on the run
+  state. The death screen shows the payout and its working as its own band
+  rather than a seventh stat slab — the six slabs are what the run lost, this is
+  what it kept.
+- **The Archive.** A career screen off the title menu: every die, chalk and relic
+  in the game as a uniform tile, grouped by nothing and filtered by everything.
+  Two tabs (roster and Oaths) over one ledger bar, since both spend one purse.
+  Filters for group and state plus a name search, and a fixed-height panel with
+  exactly one scrolling region so the purse and the filters can never scroll
+  away. Purchases are confirmed before they are spent, because this is permanent
+  spend rather than a run-scoped shop pick.
+- **The Oaths** (design §3, restructured from the original "small one-time
+  purchases"). Four ladders bought a rung at a time: `+1` bone in the opening
+  cup and `+1` re-roll on every cast cap at 3 rungs, `−1` shard on the Ossuary's
+  re-roll cost and `+3` opening shards cap at 5. Levels stack. Progression is
+  strict — `riteNextLevel()` only ever offers the rung above the one already
+  paid for, so a full purse cannot skip. The re-roll discount floors at 2 rather
+  than 1 so `Skeleton Key`, which reaches a flat 1 *and* lays out a fifth ware,
+  stays strictly the better thing.
+- **Loadout toggles** (design §11). Any owned item can be set aside and brought
+  back, free and instantly, with no confirmation — the ceremony around a
+  purchase exists because Marrow is permanent, and a reversible choice that
+  costs nothing should not wear it. Stored as sparse off-lists rather than a
+  flag per item, so they cannot drift out of sync as content is added.
+- **Story-gate scaffold** (design §12, shape only). A third card state that
+  shows a silhouette, `???`, redacted rule text and no price at all — visibly
+  not a dimmer "locked", because "waiting on the story" and "could save up for
+  this" must never be confused. `storyBeatsFired` and `storyComplete` have been
+  reserved on the ledger since the first phase and remain unwritten. No
+  death-generated dice, no story items, no trigger logic: that is a content pass
+  and it is not scheduled.
+- **`SCOUR THE ARCHIVE`.** A save wipe in the Veil, behind its own dialog rather
+  than the arm-then-confirm pattern beside it — arming in place is two clicks on
+  one spot, which a double-click satisfies alone. Fine for forfeiting a run, not
+  for erasing a career. It counts out what is at stake and resets to a state
+  byte-identical to a never-played save.
+
+### Changed
+
+- **Content is gated.** `runShopPool()` derives the per-run catalogue from
+  `SHOP_POOL` and is snapshotted into `S.wares` when a run is born, so a toggle
+  flipped or an unlock bought between runs can never change what the Ossuary is
+  already holding. A fresh ledger opens with the `bone` die and the seven tier-1
+  relics. The Grimoire reads the same snapshot, so the book and the counter
+  cannot disagree.
+- **Depth gates.** Tier-3 content requires having reached descent 15 once,
+  tier-4 descent 25, layered *on top of* the Marrow cost. Marrow is earned at
+  any depth; the deep content needs a one-time key as well, so a shallow grinder
+  can stockpile and still not buy the top of the game.
+- **The title screen, the Archive and the Veil rebuilt.** One panel language
+  across the game. The menu's nav buttons stop clearing the carved-stone
+  material with `!important` and are cut slabs with broken corners; the entrance
+  animation drops from 1.2s to under 0.5s because the menu is returned to
+  constantly. Settings moves to a labelled corner control that answers `ESC`.
+  The Grimoire leaves the title screen — it describes a run in progress and
+  there is no run at the menu. `THE RITE` becomes `HOW TO PLAY`, since a *rite*
+  is what this game calls a run and the one item a lost player needs was named
+  after something else.
+- **One close button** across the whole game, drawn with a Hellbone capital `X`
+  rather than the icon set's glyph, which does not fill its own viewBox evenly
+  and sat visibly high and left however the button was centred. Visible
+  scrollbars removed everywhere; the scrolling is untouched.
+- **The ornamental frame is off the workbenches.** It overhangs its box by 18px
+  and is a reveal; the Veil, the Archive and How To Play are workbenches.
+
+### Balance
+
+- **Chalks are gated too.** They were exempt on the theory that they were board
+  garnish. Playtesting killed that: a fresh save with no relic support was still
+  reaching descent 20+ on stacked chalk alone, because a chalk multiplies a
+  conduit that a deepened chalk then multiplies again. That is not a garnish on
+  a build, it *is* a build.
+- **`Deepen the Sigil` moves from tier 2 to tier 4**, 22 → 30 shards. It is the
+  one ware in the game with no ceiling — it can be bought again and again
+  against the same line. Moving the tier raises its cost, moves it onto the
+  tier-4 rarity curve so it surfaces late and rarely, and puts its unlock behind
+  descent 25.
+- **`DEEP CHALK` is withheld when no line can exist that descent.** A boon is a
+  forced one-of-three at a Trial rather than a purchase that can be declined, so
+  a guaranteed-dead card there quietly costs a third of the reward.
+
+### Known and deliberately unresolved
+
+- **Pricing is a placeholder.** Marrow prices are shard price × 3; the Oath
+  ladders are hand-set. A headless career simulator (`tools/sim/career.js`)
+  playing whole careers against the shipped model puts a full Archive at 36–80
+  runs for strong play, against design §6's 15–25 target. Not tuned in this
+  release — the data exists now and the numbers are a separate pass.
+- **`tierWeight()` under-serves tier 4.** Against the pool it draws from, the
+  counter offers tier 4 at roughly a third of its share. Simulation shows the
+  loadout toggles close most of that gap without touching the curve, which
+  makes it as much a discoverability question as a balance one.
+
+### Tooling
+
+- `tools/test/` — ten harnesses, 593 assertions, driving the real code and the
+  real markup out of `index.html` rather than a second model of it. Includes a
+  jsdom pass that loads the real stylesheet and asserts computed style, added
+  after a bug where tab panes were switched with a class no CSS rule matched and
+  every `classList` assertion passed while both tabs rendered on top of each
+  other.
+- `tools/test/shoot.js` — drives the installed Chrome through puppeteer-core to
+  screenshot the real game and report whether panels fit, whether the page
+  scrolls when it should not, and whether tiles are a uniform size. Three
+  releases were shipped claiming layout was unverified "because there is no
+  browser in the dev environment". There was.
+- `tools/sim/career.js` — the career simulator described above.
+
+---
+
 ## the_bone_sieve_v1.0.0_beta.8 — "WHAT THE DEEP OWES" · 2026-07-30
 
 *A balance release, driven by roughly 40,000 simulated runs against the shipped
