@@ -69,9 +69,14 @@ const SEEDED = {
   await page.goto(GAME, { waitUntil: 'load' });
   await new Promise(r => setTimeout(r, 1200));           // fonts, canvas, intro
 
-  // The release notes open once per version and sit over everything. The
-  // version id is a module-scoped const, so it cannot be pre-seeded from here
-  // — dismissing it after the fact is simpler and does not care what it says.
+  // The release notes open once per version and sit over everything. Shot on
+  // the way past, because for a release build this IS the thing to check.
+  const shotEarly = async (name)=>{
+    const f = path.join(OUT, name + '.png');
+    await page.screenshot({ path: f });
+    console.log('  ' + name.padEnd(22) + WIDTH + 'x' + HEIGHT + '  -> ' + path.relative(process.cwd(), f));
+  };
+  if(await page.$('#logOverlay:not(.hidden)')) await shotEarly('changelog');
   await page.evaluate(()=>{ const b = document.getElementById('btnLogOk'); if(b) b.click(); });
   await new Promise(r => setTimeout(r, 400));
 
